@@ -124,7 +124,7 @@
   .rec-del{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:12px;text-decoration:underline;padding:0;margin-top:8px;}
   .rec-del:hover{color:var(--expense);}
 
-  .cat-chips{margin-top:8px;}
+  .cat-chips{margin-top:8px;display:none;}
   .cat-chip{display:inline-flex;align-items:center;gap:5px;background:var(--paper);border-radius:20px;padding:3px 6px 3px 10px;font-size:11.5px;margin:2px 5px 2px 0;color:var(--ink-soft);}
   .cat-chip button{background:none;border:none;cursor:pointer;color:inherit;opacity:.6;font-size:12px;line-height:1;padding:0 2px;}
   .cat-chip button:hover{opacity:1;}
@@ -247,7 +247,6 @@
   </header>
 
   <div class="filter-bar">
-    <span class="filter-label">Ver por</span>
     <div class="period-toggle" id="periodToggle">
       <button type="button" class="period-btn" data-period="dia">Día</button>
       <button type="button" class="period-btn active" data-period="mes">Mes</button>
@@ -270,12 +269,8 @@
       <div class="stat-value" id="statExpense">$0.00</div>
     </div>
     <div class="stat">
-      <div class="stat-label">Utilidad (Ingresos − Gastos)</div>
+      <div class="stat-label">Utilidad</div>
       <div class="stat-value" id="statUtilidad">$0.00</div>
-    </div>
-    <div class="stat">
-      <div class="stat-label">Balance disponible</div>
-      <div class="stat-value" id="statBalance">$0.00</div>
     </div>
     <div class="stat savings">
       <div class="stat-label">Fondo de ahorro</div>
@@ -295,9 +290,9 @@
 
   <div class="card">
     <div class="tabs" id="mainTabs">
-      <button type="button" class="tab-btn active" data-tab="form">Nuevo movimiento</button>
-      <button type="button" class="tab-btn" data-tab="budget">Presupuesto mensual</button>
-      <button type="button" class="tab-btn" data-tab="resumen">Resúmenes</button>
+      <button type="button" class="tab-btn active" data-tab="form">Registro</button>
+      <button type="button" class="tab-btn" data-tab="budget">Presupuesto</button>
+      <button type="button" class="tab-btn" data-tab="resumen">Resumen</button>
     </div>
 
     <div class="tab-panel" id="tabPanelForm">
@@ -578,7 +573,6 @@
     backupNote: document.getElementById('backupNote'),
     statIncome: document.getElementById('statIncome'),
     statExpense: document.getElementById('statExpense'),
-    statBalance: document.getElementById('statBalance'),
     statUtilidad: document.getElementById('statUtilidad'),
     statSavings: document.getElementById('statSavings'),
     statTopCategory: document.getElementById('statTopCategory'),
@@ -1140,7 +1134,6 @@
     const savingsFundTotal = computeAllTimeSavingsFund();
     els.statIncome.textContent = fmt.format(income);
     els.statExpense.textContent = fmt.format(expense);
-    els.statBalance.textContent = fmt.format(balance);
     els.statSavings.textContent = fmt.format(savingsFundTotal);
     els.statUtilidad.textContent = fmt.format(utilidad);
     els.statUtilidad.classList.remove('pos','neg');
