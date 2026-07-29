@@ -247,21 +247,22 @@
   .ledger-empty{text-align:center;padding:30px 10px;color:var(--ink-soft);font-size:13.5px;}
   .ledger-row{padding:10px 0;border-bottom:1px dashed var(--line);}
   .ledger-row:last-child{border-bottom:none;}
-  .ledger-row-top{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
-  .ledger-date{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink-soft);width:56px;flex-shrink:0;}
-  .ledger-desc{flex-shrink:1;min-width:0;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ledger-row-line1{display:flex;align-items:baseline;gap:8px;}
+  .ledger-date{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);flex-shrink:0;}
+  .ledger-desc{flex:1;min-width:0;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ledger-row-line2{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:5px;}
+  .ledger-badges{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
   .ledger-cat{font-size:10.5px;color:var(--ink-soft);background:var(--paper);padding:2px 7px;border-radius:20px;flex-shrink:0;white-space:nowrap;}
   .ledger-pay{font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);border:1px solid var(--line);padding:2px 6px;border-radius:20px;flex-shrink:0;white-space:nowrap;}
   .ledger-msi-badge{font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;color:#fff;background:var(--gold);padding:2px 6px;border-radius:20px;flex-shrink:0;}
   .ledger-subtype-badge{font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;padding:2px 6px;border-radius:20px;flex-shrink:0;}
   .ledger-subtype-badge.aporte{background:var(--income-soft);color:var(--income);} .ledger-subtype-badge.retiro{background:var(--expense-soft);color:var(--expense);}
-  .ledger-leader{flex:1;border-bottom:1px dotted var(--line);margin:0 4px;min-width:10px;}
-  .ledger-amount{font-family:'IBM Plex Mono',monospace;font-size:13.5px;font-weight:500;font-variant-numeric:tabular-nums;flex-shrink:0;width:92px;text-align:right;}
+  .ledger-amount{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;flex-shrink:0;margin-left:auto;}
   .ledger-amount.ingreso{color:var(--income);} .ledger-amount.gasto{color:var(--expense);} .ledger-amount.ahorro{color:var(--gold);}
-  .ledger-del{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:16px;line-height:1;padding:2px 4px;flex-shrink:0;}
+  .ledger-del{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:18px;line-height:1;padding:4px 2px 4px 8px;flex-shrink:0;}
   .ledger-del:hover{color:var(--expense);}
   .ledger-list{max-height:440px;overflow-y:auto;padding-right:4px;}
-  .msi-progress-mini{margin-top:7px;padding-left:64px;}
+  .msi-progress-mini{margin-top:7px;}
   .msi-progress-mini .msi-track{height:5px;} .msi-progress-mini .msi-meta{margin-top:4px;font-size:10.5px;}
   .loading-note{font-size:12.5px;color:var(--ink-soft);text-align:center;padding:20px;}
 </style>
@@ -1400,16 +1401,19 @@
           </div>`;
         }
         return `<div class="ledger-row">
-          <div class="ledger-row-top">
-            <div class="ledger-date">${shortDate}</div>
-            <div class="ledger-desc">${escapeHtml(desc)}</div>
-            <div class="ledger-cat">${escapeHtml(catLabel)}</div>
-            ${payBadge}
-            ${msiBadge}
-            ${subtypeBadge}
-            <div class="ledger-leader"></div>
-            <div class="ledger-amount ${t.type}">${sign} ${fmt.format(t.amount)}</div>
+          <div class="ledger-row-line1">
+            <span class="ledger-date">${shortDate}</span>
+            <span class="ledger-desc">${escapeHtml(desc)}</span>
             <button class="ledger-del" data-id="${t.id}" title="Eliminar" aria-label="Eliminar movimiento">✕</button>
+          </div>
+          <div class="ledger-row-line2">
+            <div class="ledger-badges">
+              <span class="ledger-cat">${escapeHtml(catLabel)}</span>
+              ${payBadge}
+              ${msiBadge}
+              ${subtypeBadge}
+            </div>
+            <span class="ledger-amount ${t.type}">${sign} ${fmt.format(t.amount)}</span>
           </div>
           ${msiMini}
         </div>`;
