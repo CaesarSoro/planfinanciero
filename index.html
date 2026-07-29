@@ -45,13 +45,14 @@
   .period-input{padding:7px 10px;font-size:13px;border:1px solid var(--line);border-radius:6px;background:#fff;font-family:'Inter',sans-serif;color:var(--ink);}
   .filter-current{font-size:12px;color:var(--ink-soft);font-style:italic;}
 
-  .budget-compare{margin-top:6px;margin-bottom:22px;padding-top:14px;border-top:1px dashed var(--line);}
+  .budget-compare{margin-top:6px;margin-bottom:24px;padding:16px 16px 14px;background:var(--paper);border-radius:8px;}
   .compare-title{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:10px;font-weight:700;}
   .compare-row{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:12.5px;border-bottom:1px dashed var(--line);}
   .compare-row:last-child{border-bottom:none;}
   .compare-row.compare-header{border-bottom:1px solid var(--line);padding-bottom:8px;}
   .compare-row.compare-header span{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);font-weight:700;}
   .compare-name{flex:1;min-width:0;}
+  .compare-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:middle;}
   .compare-presu{font-family:'IBM Plex Mono',monospace;width:88px;text-align:right;color:var(--ink-soft);}
   .compare-real{font-family:'IBM Plex Mono',monospace;width:88px;text-align:right;font-weight:600;}
   .compare-diff{font-family:'IBM Plex Mono',monospace;width:96px;text-align:right;font-size:11.5px;}
@@ -79,10 +80,11 @@
   .type-toggle button.active[data-subtype="aporte"]{background:var(--income);color:#fff;}
   .type-toggle button.active[data-subtype="retiro"]{background:var(--expense);color:#fff;}
 
-  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
-  .tab-btn{background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:9px 18px;font-family:'Inter',sans-serif;font-weight:700;font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-soft);cursor:pointer;transition:background .15s, color .15s, border-color .15s;}
+  .tabs{display:flex;gap:8px;margin-bottom:20px;}
+  .tab-btn{flex:1;min-width:0;background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:9px 10px;font-family:'Inter',sans-serif;font-weight:700;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);cursor:pointer;transition:background .15s, color .15s, border-color .15s;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .tab-btn.active{background:var(--ink);color:var(--surface);border-color:var(--ink);}
   .tab-btn:hover:not(.active){border-color:var(--gold);color:var(--ink);}
+  @media (min-width:560px){.tab-btn{font-size:12px;letter-spacing:.07em;padding:9px 18px;}}
   #txForm.form-grid{display:grid;grid-template-columns:1fr 1fr;column-gap:24px;align-items:start;}
   #txForm.form-grid .span-2{grid-column:1 / -1;}
   @media (max-width:640px){ #txForm.form-grid{grid-template-columns:1fr;} }
@@ -161,6 +163,18 @@
   .cat-bar-fill{height:100%;border-radius:4px;background:var(--gold);}
   .cat-amount{font-family:'IBM Plex Mono',monospace;font-size:12.5px;width:78px;text-align:right;flex-shrink:0;}
 
+  .donut-wrap{display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--line);}
+  .donut-chart{border-radius:50%;position:relative;flex-shrink:0;}
+  .donut-hole{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:62%;height:62%;background:var(--surface);border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center;padding:6px;}
+  .donut-total{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:var(--ink);line-height:1.3;}
+  .donut-total .donut-total-lbl{display:block;font-family:'Inter',sans-serif;font-size:8.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);font-weight:600;margin-bottom:2px;}
+  .donut-legend{flex:1;min-width:170px;}
+  .donut-legend-row{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12.5px;}
+  .donut-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+  .donut-legend-label{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .donut-legend-pct{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink-soft);width:44px;text-align:right;flex-shrink:0;}
+  .donut-legend-amt{font-family:'IBM Plex Mono',monospace;font-size:11.5px;width:80px;text-align:right;flex-shrink:0;}
+
   .msi-plan{padding:12px 0;border-bottom:1px dashed var(--line);}
   .msi-plan:last-child{border-bottom:none;}
   .msi-plan-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:6px;}
@@ -190,7 +204,15 @@
   .budget-summary .b-item{min-width:112px;}
   .budget-summary .lbl{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);margin-bottom:3px;}
   .budget-summary .val{font-family:'IBM Plex Mono',monospace;font-size:14.5px;}
-  .budget-group{margin-bottom:20px;}
+  .budget-group{margin-bottom:20px;border-left:4px solid var(--line);padding-left:14px;}
+  .budget-group[data-key="fijos"]{border-left-color:var(--expense);}
+  .budget-group[data-key="fijos"] .budget-group-title{color:var(--expense);border-bottom-color:var(--expense-soft);}
+  .budget-group[data-key="variables"]{border-left-color:#A15C4A;}
+  .budget-group[data-key="variables"] .budget-group-title{color:#A15C4A;border-bottom-color:#EAD9D2;}
+  .budget-group[data-key="inversiones"]{border-left-color:var(--gold);}
+  .budget-group[data-key="inversiones"] .budget-group-title{color:var(--gold);border-bottom-color:var(--gold-soft);}
+  .budget-group[data-key="ingresos"]{border-left-color:var(--income);}
+  .budget-group[data-key="ingresos"] .budget-group-title{color:var(--income);border-bottom-color:var(--income-soft);}
   .budget-group:last-child{margin-bottom:0;}
   .budget-group-title{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--line);}
   .budget-group-title .subtotal{font-family:'IBM Plex Mono',monospace;color:var(--ink);font-weight:600;font-size:13px;text-transform:none;letter-spacing:0;}
@@ -200,8 +222,21 @@
   .budget-freq{font-size:9px;text-transform:uppercase;color:var(--ink-soft);background:var(--paper);padding:2px 6px;border-radius:20px;flex-shrink:0;}
   .budget-cost{font-family:'IBM Plex Mono',monospace;font-size:12px;width:78px;text-align:right;flex-shrink:0;color:var(--ink-soft);}
   .budget-equiv{font-family:'IBM Plex Mono',monospace;font-size:12.5px;width:78px;text-align:right;flex-shrink:0;font-weight:500;}
+  .budget-row-header{display:flex;align-items:center;gap:8px;padding:0 0 6px;}
+  .budget-row-header .budget-name, .budget-row-header .budget-freq, .budget-row-header .budget-cost, .budget-row-header .budget-equiv{
+    font-family:'Inter',sans-serif;font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);font-weight:700;background:none;padding:0;
+  }
   .budget-del{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:14px;padding:2px 4px;flex-shrink:0;}
   .budget-del:hover{color:var(--expense);}
+  .budget-edit{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:13px;padding:2px 4px;flex-shrink:0;}
+  .budget-edit:hover{color:var(--gold);}
+  .budget-row-editing{display:flex;gap:6px;flex-wrap:wrap;align-items:center;background:var(--gold-soft);border-radius:6px;padding:8px;margin:2px 0;}
+  .budget-row-editing input, .budget-row-editing select{padding:6px 8px;font-size:12px;border:1px solid var(--line);border-radius:6px;background:#fff;}
+  .budget-row-editing .be-name{flex:1.6 1 110px;}
+  .budget-row-editing .be-cost{flex:1 1 80px;}
+  .budget-row-editing .be-freq{flex:1 1 100px;}
+  .budget-save{background:var(--income);border:none;color:#fff;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:13px;flex-shrink:0;}
+  .budget-cancel{background:none;border:1px solid var(--line);color:var(--ink-soft);border-radius:6px;padding:6px 9px;cursor:pointer;font-size:12px;flex-shrink:0;}
   .budget-add-row{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
   .budget-add-row input[type=text]{flex:1.6 1 120px;}
   .budget-add-row input[type=number]{flex:1 1 80px;}
@@ -257,30 +292,6 @@
     <input type="month" id="periodMonth" class="period-input">
     <input type="number" id="periodYear" class="period-input" style="display:none;" min="2000" max="2100">
     <span class="filter-current" id="periodDisplay"></span>
-  </div>
-
-  <div class="stats">
-    <div class="stat income">
-      <div class="stat-label">Ingresos</div>
-      <div class="stat-value" id="statIncome">$0.00</div>
-    </div>
-    <div class="stat expense">
-      <div class="stat-label">Gastos (a la fecha)</div>
-      <div class="stat-value" id="statExpense">$0.00</div>
-    </div>
-    <div class="stat">
-      <div class="stat-label">Utilidad</div>
-      <div class="stat-value" id="statUtilidad">$0.00</div>
-    </div>
-    <div class="stat savings">
-      <div class="stat-label">Fondo de ahorro</div>
-      <div class="stat-value" id="statSavings">$0.00</div>
-    </div>
-    <div class="stat expense">
-      <div class="stat-label">Categoría con más gasto</div>
-      <div class="stat-value text" id="statTopCategory">—</div>
-      <div class="stat-subvalue" id="statTopCategoryAmount"></div>
-    </div>
   </div>
 
   <div class="card" id="msiCard" style="display:none;">
@@ -359,6 +370,13 @@
 
         <button type="submit" class="submit-btn span-2" id="submitBtn">Registrar movimiento</button>
       </form>
+
+      <div class="resumen-section" style="margin-top:28px;padding-top:24px;border-top:1px solid var(--line);">
+        <h3 class="section-title">Movimientos <span class="h2-note">toca ✕ para eliminar</span></h3>
+        <div id="ledgerList">
+          <p class="loading-note">Cargando movimientos…</p>
+        </div>
+      </div>
     </div>
 
     <div class="tab-panel" id="tabPanelBudget" style="display:none;">
@@ -367,13 +385,35 @@
 
     <div class="tab-panel" id="tabPanelResumen" style="display:none;">
       <div class="resumen-section">
-        <h3 class="section-title">Por cobrar <span class="h2-note">clientes y personas que te deben</span></h3>
-        <div id="receivablesPanel"></div>
+        <h3 class="section-title">Resumen general</h3>
+        <div class="stats">
+          <div class="stat income">
+            <div class="stat-label">Ingresos</div>
+            <div class="stat-value" id="statIncome">$0.00</div>
+          </div>
+          <div class="stat expense">
+            <div class="stat-label">Gastos</div>
+            <div class="stat-value" id="statExpense">$0.00</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Utilidad</div>
+            <div class="stat-value" id="statUtilidad">$0.00</div>
+          </div>
+          <div class="stat savings">
+            <div class="stat-label">Fondo de ahorro</div>
+            <div class="stat-value" id="statSavings">$0.00</div>
+          </div>
+          <div class="stat expense">
+            <div class="stat-label">Categoría con más gasto</div>
+            <div class="stat-value text" id="statTopCategory">—</div>
+            <div class="stat-subvalue" id="statTopCategoryAmount"></div>
+          </div>
+        </div>
       </div>
 
       <div class="resumen-section">
-        <h3 class="section-title">Presupuesto mensual <span class="h2-note">resumen</span></h3>
-        <div id="budgetResumenPanel"></div>
+        <h3 class="section-title">Por cobrar <span class="h2-note">clientes y personas que te deben</span></h3>
+        <div id="receivablesPanel"></div>
       </div>
 
       <div class="resumen-section" id="savingsCard">
@@ -383,15 +423,17 @@
 
       <div class="resumen-section">
         <h3 class="section-title">Gastos por categoría</h3>
+        <div id="expenseDonut"></div>
         <div id="catBreakdown">
           <p class="ledger-empty">Aún no hay gastos registrados.</p>
         </div>
       </div>
 
       <div class="resumen-section">
-        <h3 class="section-title">Movimientos</h3>
-        <div id="ledgerList">
-          <p class="loading-note">Cargando movimientos…</p>
+        <h3 class="section-title">Ingresos por categoría</h3>
+        <div id="incomeDonut"></div>
+        <div id="incomeBreakdown">
+          <p class="ledger-empty">Aún no hay ingresos registrados.</p>
         </div>
       </div>
     </div>
@@ -534,6 +576,7 @@
   let transactions = [];
   let categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
   let budget = JSON.parse(JSON.stringify(DEFAULT_BUDGET));
+  let editingBudgetItem = null; // { key, id } del renglón que se está editando, o null
   let receivables = [];
   let currentType = "ingreso";
   let currentSubtype = "aporte";
@@ -578,13 +621,15 @@
     statTopCategory: document.getElementById('statTopCategory'),
     statTopCategoryAmount: document.getElementById('statTopCategoryAmount'),
     catBreakdown: document.getElementById('catBreakdown'),
+    expenseDonut: document.getElementById('expenseDonut'),
+    incomeBreakdown: document.getElementById('incomeBreakdown'),
+    incomeDonut: document.getElementById('incomeDonut'),
     ledgerList: document.getElementById('ledgerList'),
     msiCard: document.getElementById('msiCard'),
     msiPanel: document.getElementById('msiPanel'),
     msiPendingNote: document.getElementById('msiPendingNote'),
     savingsPanel: document.getElementById('savingsPanel'),
     budgetPanel: document.getElementById('budgetPanel'),
-    budgetResumenPanel: document.getElementById('budgetResumenPanel'),
     receivablesPanel: document.getElementById('receivablesPanel'),
   };
 
@@ -791,26 +836,59 @@
     await saveBudget();
     render();
   }
+  async function updateBudgetItem(key, id, nombre, costo, frecuencia){
+    const item = (budget[key]||[]).find(i=>i.id === id);
+    if(!item) return;
+    item.nombre = nombre;
+    item.costo = costo;
+    item.frecuencia = frecuencia;
+    editingBudgetItem = null;
+    await saveBudget();
+    render();
+  }
 
   function renderBudgetGroup(meta){
     const items = budget[meta.key] || [];
     const total = groupTotal(meta.key);
     const rows = items.length
-      ? items.map(i => `
-        <div class="budget-row">
+      ? items.map(i => {
+          const isEditing = editingBudgetItem && editingBudgetItem.key === meta.key && editingBudgetItem.id === i.id;
+          if(isEditing){
+            return `<div class="budget-row budget-row-editing">
+              <input type="text" class="be-name" data-group="${meta.key}" data-id="${i.id}" value="${escapeHtml(i.nombre)}">
+              <input type="number" class="be-cost" data-group="${meta.key}" data-id="${i.id}" min="0" step="0.01" value="${i.costo}">
+              <select class="be-freq" data-group="${meta.key}" data-id="${i.id}">
+                <option value="mensual" ${i.frecuencia==='mensual'?'selected':''}>Mensual</option>
+                <option value="trimestral" ${i.frecuencia==='trimestral'?'selected':''}>Trimestral</option>
+                <option value="anual" ${i.frecuencia==='anual'?'selected':''}>Anual</option>
+              </select>
+              <button type="button" class="budget-save" data-group="${meta.key}" data-id="${i.id}" title="Guardar">✓</button>
+              <button type="button" class="budget-cancel" title="Cancelar">✕</button>
+            </div>`;
+          }
+          return `<div class="budget-row">
           <div class="budget-name">${escapeHtml(i.nombre)}</div>
           <div class="budget-freq">${FREQ_LABELS[i.frecuencia] || i.frecuencia}</div>
           <div class="budget-cost">${fmt.format(i.costo)}</div>
-          <div class="budget-equiv">${fmt.format(monthlyEq(i))}/mes</div>
+          <div class="budget-equiv">${fmt.format(monthlyEq(i))}</div>
+          <button class="budget-edit" data-group="${meta.key}" data-id="${i.id}" title="Editar">✎</button>
           <button class="budget-del" data-group="${meta.key}" data-id="${i.id}" title="Eliminar">✕</button>
-        </div>`).join('')
+        </div>`;
+        }).join('')
       : `<p class="ledger-empty" style="padding:10px 0;">Sin elementos todavía.</p>`;
+    const header = items.length ? `<div class="budget-row-header">
+        <div class="budget-name">Concepto</div>
+        <div class="budget-freq">Frecuencia</div>
+        <div class="budget-cost">Costo</div>
+        <div class="budget-equiv">Equiv. mensual</div>
+      </div>` : '';
 
-    return `<div class="budget-group">
+    return `<div class="budget-group" data-key="${meta.key}">
       <div class="budget-group-title">
         <span>${meta.label}</span>
         <span class="subtotal">${fmt.format(total)}/mes</span>
       </div>
+      ${header}
       ${rows}
       <div class="budget-add-row">
         <input type="text" placeholder="Nombre" class="b-name" data-group="${meta.key}">
@@ -825,34 +903,13 @@
     </div>`;
   }
 
-  function renderBudgetGroupReadonly(meta){
-    const items = budget[meta.key] || [];
-    const total = groupTotal(meta.key);
-    const rows = items.length
-      ? items.map(i => `
-        <div class="budget-row">
-          <div class="budget-name">${escapeHtml(i.nombre)}</div>
-          <div class="budget-freq">${FREQ_LABELS[i.frecuencia] || i.frecuencia}</div>
-          <div class="budget-cost">${fmt.format(i.costo)}</div>
-          <div class="budget-equiv">${fmt.format(monthlyEq(i))}/mes</div>
-        </div>`).join('')
-      : `<p class="ledger-empty" style="padding:10px 0;">Sin elementos todavía.</p>`;
-
-    return `<div class="budget-group">
-      <div class="budget-group-title">
-        <span>${meta.label}</span>
-        <span class="subtotal">${fmt.format(total)}/mes</span>
-      </div>
-      ${rows}
-    </div>`;
-  }
-
-  function compareRow(name, presu, real, lowerIsBetter){
+  function compareRow(name, presu, real, lowerIsBetter, dotColor){
     const diff = real - presu;
     const good = lowerIsBetter ? diff <= 0 : diff >= 0;
     const diffText = diff === 0 ? 'Igual al presupuesto' : (diff > 0 ? `+${fmt.format(diff)}` : `−${fmt.format(Math.abs(diff))}`);
+    const dot = dotColor ? `<span class="compare-dot" style="background:${dotColor};"></span>` : '';
     return `<div class="compare-row">
-      <span class="compare-name">${escapeHtml(name)}</span>
+      <span class="compare-name">${dot}${escapeHtml(name)}</span>
       <span class="compare-presu">${fmt.format(presu)}</span>
       <span class="compare-real ${good ? 'good' : 'bad'}">${fmt.format(real)}</span>
       <span class="compare-diff ${good ? 'good' : 'bad'}">${diffText}</span>
@@ -872,9 +929,9 @@
         <span class="compare-real">Real</span>
         <span class="compare-diff">Diferencia</span>
       </div>
-      ${compareRow('Gastos fijos', totalFijos, realFijos, true)}
-      ${compareRow('Gastos variables', totalVariables, realVariables, true)}
-      ${compareRow('Ingresos fijos', totalIngresos, realIngresos, false)}
+      ${compareRow('Gastos fijos', totalFijos, realFijos, true, 'var(--expense)')}
+      ${compareRow('Gastos variables', totalVariables, realVariables, true, '#A15C4A')}
+      ${compareRow('Ingresos fijos', totalIngresos, realIngresos, false, 'var(--income)')}
       <p class="backup-note" style="margin-top:8px;">"Inversiones y seguros" no se compara porque hoy no tiene categorías de gasto vinculadas.</p>
     </div>`;
   }
@@ -895,17 +952,37 @@
     ${buildBudgetCompareHtml()}`;
   }
 
-  function renderBudgetSummary(){
-    els.budgetResumenPanel.innerHTML = buildBudgetSummaryHtml() + BUDGET_GROUP_META.map(renderBudgetGroupReadonly).join('');
-  }
-
   function renderBudget(){
-    renderBudgetSummary();
     let html = buildBudgetSummaryHtml() + BUDGET_GROUP_META.map(renderBudgetGroup).join('');
     els.budgetPanel.innerHTML = html;
 
     els.budgetPanel.querySelectorAll('.budget-del').forEach(btn=>{
       btn.addEventListener('click', ()=> deleteBudgetItem(btn.dataset.group, Number(btn.dataset.id)));
+    });
+    els.budgetPanel.querySelectorAll('.budget-edit').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        editingBudgetItem = { key: btn.dataset.group, id: Number(btn.dataset.id) };
+        renderBudget();
+      });
+    });
+    els.budgetPanel.querySelectorAll('.budget-cancel').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        editingBudgetItem = null;
+        renderBudget();
+      });
+    });
+    els.budgetPanel.querySelectorAll('.budget-save').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const g = btn.dataset.group;
+        const id = Number(btn.dataset.id);
+        const nameInput = els.budgetPanel.querySelector(`.be-name[data-group="${g}"][data-id="${id}"]`);
+        const costInput = els.budgetPanel.querySelector(`.be-cost[data-group="${g}"][data-id="${id}"]`);
+        const freqInput = els.budgetPanel.querySelector(`.be-freq[data-group="${g}"][data-id="${id}"]`);
+        const nombre = nameInput.value.trim();
+        const costo = parseFloat(costInput.value);
+        if(!nombre || !costo || costo <= 0) return;
+        updateBudgetItem(g, id, nombre, costo, freqInput.value);
+      });
     });
     els.budgetPanel.querySelectorAll('.b-add').forEach(btn=>{
       btn.addEventListener('click', ()=>{
@@ -1104,6 +1181,40 @@
     });
     return Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
   }
+  function computeIncomeBreakdown(){
+    const byCat = {};
+    transactions.filter(t=>t.type==='ingreso' && isInPeriod(t.date)).forEach(t=>{
+      byCat[t.category] = (byCat[t.category]||0) + t.amount;
+    });
+    return Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  }
+  function buildDonutHtml(entries, totalLabel, size){
+    size = size || 140;
+    const total = entries.reduce((s,[,v])=> s + v, 0);
+    if(total <= 0 || entries.length === 0) return '';
+    let acc = 0;
+    const stops = entries.map(([,val], i)=>{
+      const pct = (val/total)*100;
+      const start = acc;
+      acc += pct;
+      return `${CAT_COLORS[i % CAT_COLORS.length]} ${start}% ${acc}%`;
+    }).join(', ');
+    const legend = entries.map(([label,val], i)=>{
+      const pct = ((val/total)*100).toFixed(1);
+      return `<div class="donut-legend-row">
+        <span class="donut-dot" style="background:${CAT_COLORS[i % CAT_COLORS.length]};"></span>
+        <span class="donut-legend-label">${escapeHtml(label)}</span>
+        <span class="donut-legend-pct">${pct}%</span>
+        <span class="donut-legend-amt">${fmt.format(val)}</span>
+      </div>`;
+    }).join('');
+    return `<div class="donut-wrap">
+      <div class="donut-chart" style="width:${size}px;height:${size}px;background:conic-gradient(${stops});">
+        <div class="donut-hole"><span class="donut-total"><span class="donut-total-lbl">${escapeHtml(totalLabel)}</span>${fmt.format(total)}</span></div>
+      </div>
+      <div class="donut-legend">${legend}</div>
+    </div>`;
+  }
   function computeSavingsByFund(){
     const byFund = {};
     transactions.filter(t=>t.type==='ahorro' && isInPeriod(t.date)).forEach(t=>{
@@ -1157,6 +1268,7 @@
 
     if(breakdown.length === 0){
       els.catBreakdown.innerHTML = '<p class="ledger-empty">Sin gastos registrados en este periodo.</p>';
+      els.expenseDonut.innerHTML = '';
     } else {
       const max = breakdown[0][1];
       els.catBreakdown.innerHTML = breakdown.map(([cat, amt], i)=>{
@@ -1168,6 +1280,25 @@
           <div class="cat-amount">${fmt.format(amt)}</div>
         </div>`;
       }).join('');
+      els.expenseDonut.innerHTML = buildDonutHtml(breakdown, 'Gastos');
+    }
+
+    const incomeBreakdown = computeIncomeBreakdown();
+    if(incomeBreakdown.length === 0){
+      els.incomeBreakdown.innerHTML = '<p class="ledger-empty">Sin ingresos registrados en este periodo.</p>';
+      els.incomeDonut.innerHTML = '';
+    } else {
+      const maxInc = incomeBreakdown[0][1];
+      els.incomeBreakdown.innerHTML = incomeBreakdown.map(([cat, amt], i)=>{
+        const pct = maxInc ? Math.max(6, (amt/maxInc)*100) : 0;
+        const color = CAT_COLORS[i % CAT_COLORS.length];
+        return `<div class="cat-row">
+          <div class="cat-name">${escapeHtml(cat)}</div>
+          <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${pct}%;background:${color};"></div></div>
+          <div class="cat-amount">${fmt.format(amt)}</div>
+        </div>`;
+      }).join('');
+      els.incomeDonut.innerHTML = buildDonutHtml(incomeBreakdown, 'Ingresos');
     }
 
     const savingsMoves = transactions.filter(t=>t.type==='ahorro' && isInPeriod(t.date)).sort((a,b)=> b.date.localeCompare(a.date) || b.id - a.id);
