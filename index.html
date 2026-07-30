@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Finanzas Personales</title>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
@@ -283,6 +286,17 @@
   .msi-progress-mini .msi-track{height:5px;} .msi-progress-mini .msi-meta{margin-top:4px;font-size:10.5px;}
   .loading-note{font-size:12.5px;color:var(--ink-soft);text-align:center;padding:20px;}
 
+  .auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--paper);}
+  .auth-card{width:100%;max-width:360px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:28px 26px;text-align:center;}
+  .auth-card h1{font-family:'Fraunces',serif;font-size:24px;}
+  #authForm{display:flex;flex-direction:column;gap:10px;}
+  #authForm input{padding:11px 12px;font-size:14px;border:1px solid var(--line);border-radius:8px;background:#fff;font-family:'Inter',sans-serif;text-transform:none;}
+  #authForm button{padding:11px 12px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;border:none;border-radius:8px;background:var(--ink);color:#fff;cursor:pointer;margin-top:4px;}
+  .auth-error{color:var(--expense);font-size:12.5px;margin-top:10px;min-height:1em;}
+  .account-bar{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--ink-soft);}
+  .account-bar button{background:none;border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--ink-soft);cursor:pointer;font-family:'Inter',sans-serif;text-transform:uppercase;letter-spacing:.03em;}
+  .account-bar button:hover{border-color:var(--expense-soft);color:var(--expense);}
+
   /* ---------- Tablet / escritorio: mejor aprovechamiento del espacio ---------- */
   @media (min-width:860px){
     .wrap{max-width:1180px;}
@@ -300,7 +314,22 @@
 </style>
 </head>
 <body>
-<div class="wrap">
+
+<div id="authScreen" class="auth-screen">
+  <div class="auth-card">
+    <p class="brand-eyebrow">Registro personal &middot; hoja de movimientos</p>
+    <h1 style="margin:4px 0 18px;">Finanzas Personales</h1>
+    <form id="authForm">
+      <input type="email" id="authEmail" placeholder="Correo" autocomplete="email" required>
+      <input type="password" id="authPassword" placeholder="Contraseña" autocomplete="current-password" required minlength="6">
+      <button type="submit" id="authSubmitBtn">Entrar</button>
+    </form>
+    <p class="auth-error" id="authError"></p>
+    <button type="button" id="authToggleMode" class="manage-cat-link" style="margin-top:14px;">¿No tienes cuenta? Créala aquí</button>
+  </div>
+</div>
+
+<div class="wrap" id="appRoot" style="display:none;">
 
   <header>
     <div>
@@ -504,17 +533,44 @@
     <input type="file" id="importFile" accept="application/json" style="display:none;">
     <span class="backup-note" id="backupNote"></span>
   </div>
+
+  <div class="account-bar" style="margin-top:14px;">
+    <span id="accountEmail"></span>
+    <button type="button" id="logoutBtn">Cerrar sesión</button>
+  </div>
 </div>
 
 <script>
 (function(){
+  /* ---------- Firebase (sincronización en la nube) ---------- */
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyD_PwmobMGUuVY66G1W9nVnjshUH1BV3oo",
+    authDomain: "financepersonal-9ca3e.firebaseapp.com",
+    projectId: "financepersonal-9ca3e",
+    storageBucket: "financepersonal-9ca3e.firebasestorage.app",
+    messagingSenderId: "303324742852",
+    appId: "1:303324742852:web:7da682c411d26300a67591",
+    measurementId: "G-783JD4L2S6"
+  };
+  firebase.initializeApp(FIREBASE_CONFIG);
+  const fbAuth = firebase.auth();
+  const fbDb = firebase.firestore();
+  let currentUser = null;
+
   /* ---------- Adaptador de almacenamiento universal ----------
+     Si hay sesión de Firebase activa, usa Firestore (sincroniza en la nube).
      Dentro de Claude.ai usa window.storage (memoria ligada a tu cuenta).
      Si el archivo se abre fuera de Claude (descargado, hospedado, etc.)
      usa localStorage del navegador automáticamente, sin cambiar nada más. */
   const hasClaudeStorage = typeof window.storage !== 'undefined' && window.storage && typeof window.storage.get === 'function';
   const storageAdapter = {
     async get(key){
+      if(currentUser){
+        try{
+          const snap = await fbDb.collection('users').doc(currentUser.uid).collection('appData').doc(key).get();
+          return snap.exists ? { key, value: snap.data().value } : null;
+        }catch(err){ console.error('Firestore get error:', err); return null; }
+      }
       if(hasClaudeStorage){
         try{ return await window.storage.get(key, false); }
         catch(err){ return null; }
@@ -525,6 +581,12 @@
       }catch(err){ return null; }
     },
     async set(key, value){
+      if(currentUser){
+        try{
+          await fbDb.collection('users').doc(currentUser.uid).collection('appData').doc(key).set({ value });
+          return { key, value };
+        }catch(err){ console.error('Firestore set error:', err); return null; }
+      }
       if(hasClaudeStorage){
         try{ return await window.storage.set(key, value, false); }
         catch(err){ return null; }
@@ -648,6 +710,16 @@
   const fmt = new Intl.NumberFormat('es-MX', { style:'currency', currency:'MXN' });
 
   const els = {
+    authScreen: document.getElementById('authScreen'),
+    appRoot: document.getElementById('appRoot'),
+    authForm: document.getElementById('authForm'),
+    authEmail: document.getElementById('authEmail'),
+    authPassword: document.getElementById('authPassword'),
+    authError: document.getElementById('authError'),
+    authSubmitBtn: document.getElementById('authSubmitBtn'),
+    authToggleMode: document.getElementById('authToggleMode'),
+    accountEmail: document.getElementById('accountEmail'),
+    logoutBtn: document.getElementById('logoutBtn'),
     typeToggle: document.getElementById('typeToggle'),
     ahorroSubtypeField: document.getElementById('ahorroSubtypeField'),
     ahorroSubtypeToggle: document.getElementById('ahorroSubtypeToggle'),
@@ -1872,14 +1944,105 @@
   els.periodMonth.addEventListener('change', ()=>{ periodValue = els.periodMonth.value; updatePeriodInputVisibility(); render(); });
   els.periodYear.addEventListener('input', ()=>{ periodValue = els.periodYear.value; updatePeriodInputVisibility(); render(); });
 
-  (async function init(){
+  /* ---------- Autenticación ---------- */
+  let authMode = 'login'; // 'login' | 'signup'
+
+  function friendlyAuthError(err){
+    const map = {
+      'auth/invalid-email': 'Ese correo no es válido.',
+      'auth/user-not-found': 'No existe una cuenta con ese correo.',
+      'auth/wrong-password': 'Contraseña incorrecta.',
+      'auth/invalid-credential': 'Correo o contraseña incorrectos.',
+      'auth/email-already-in-use': 'Ya existe una cuenta con ese correo. Intenta iniciar sesión.',
+      'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres.',
+      'auth/too-many-requests': 'Demasiados intentos. Espera un momento e intenta de nuevo.',
+      'auth/network-request-failed': 'No hay conexión a internet.'
+    };
+    return map[err.code] || 'Ocurrió un error. Intenta de nuevo.';
+  }
+
+  els.authToggleMode.addEventListener('click', ()=>{
+    authMode = authMode === 'login' ? 'signup' : 'login';
+    els.authSubmitBtn.textContent = authMode === 'login' ? 'Entrar' : 'Crear cuenta';
+    els.authToggleMode.textContent = authMode === 'login' ? '¿No tienes cuenta? Créala aquí' : '¿Ya tienes cuenta? Inicia sesión';
+    els.authError.textContent = '';
+  });
+
+  els.authForm.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    els.authError.textContent = '';
+    els.authSubmitBtn.disabled = true;
+    const email = els.authEmail.value.trim();
+    const password = els.authPassword.value;
+    try{
+      if(authMode === 'login'){
+        await fbAuth.signInWithEmailAndPassword(email, password);
+      } else {
+        await fbAuth.createUserWithEmailAndPassword(email, password);
+      }
+    }catch(err){
+      els.authError.textContent = friendlyAuthError(err);
+    }
+    els.authSubmitBtn.disabled = false;
+  });
+
+  els.logoutBtn.addEventListener('click', async ()=>{
+    await fbAuth.signOut();
+  });
+
+  // Si ya tenías datos guardados en este navegador (localStorage) antes de sincronizar
+  // en la nube, los sube una sola vez a tu cuenta la primera vez que inicias sesión.
+  async function migrateLocalDataIfNeeded(){
+    const keys = [TX_KEY, CAT_KEY, BUDGET_KEY, RECV_KEY, CATGROUPS_KEY];
+    const cloudTx = await fbDb.collection('users').doc(currentUser.uid).collection('appData').doc(TX_KEY).get();
+    if(cloudTx.exists) return; // ya hay datos en la nube, no migrar
+    let migrated = false;
+    for(const key of keys){
+      const raw = localStorage.getItem(key);
+      if(raw !== null){
+        await fbDb.collection('users').doc(currentUser.uid).collection('appData').doc(key).set({ value: raw });
+        migrated = true;
+      }
+    }
+    if(migrated) alert('Tus datos guardados en este dispositivo se subieron a tu cuenta. Ya puedes verlos también desde otros dispositivos.');
+  }
+
+  async function loadAllDataAndRender(){
+    await Promise.all([loadCategories(), loadBudget(), loadTransactions(), loadReceivables(), loadCategoryGroups()]);
+    setType('ingreso');
+    render();
+  }
+
+  fbAuth.onAuthStateChanged(async (user)=>{
+    if(hasClaudeStorage){
+      // Vista previa dentro de Claude.ai: sigue usando window.storage como siempre, sin pedir login.
+      els.authScreen.style.display = 'none';
+      els.appRoot.style.display = 'block';
+      document.querySelector('.account-bar').style.display = 'none';
+      await loadAllDataAndRender();
+      return;
+    }
+    if(user){
+      currentUser = user;
+      els.authScreen.style.display = 'none';
+      els.appRoot.style.display = 'block';
+      els.accountEmail.textContent = user.email || '';
+      await migrateLocalDataIfNeeded();
+      await loadAllDataAndRender();
+    } else {
+      currentUser = null;
+      els.appRoot.style.display = 'none';
+      els.authScreen.style.display = 'flex';
+      els.authEmail.value = '';
+      els.authPassword.value = '';
+    }
+  });
+
+  (function init(){
     els.periodDate.value = todayStr();
     els.periodMonth.value = todayStr().slice(0,7);
     els.periodYear.value = todayStr().slice(0,4);
     updatePeriodInputVisibility();
-    await Promise.all([loadCategories(), loadBudget(), loadTransactions(), loadReceivables(), loadCategoryGroups()]);
-    setType('ingreso');
-    render();
   })();
 })();
 </script>
