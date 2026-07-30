@@ -56,6 +56,15 @@
   .compare-presu{font-family:'IBM Plex Mono',monospace;width:88px;text-align:right;color:var(--ink-soft);}
   .compare-real{font-family:'IBM Plex Mono',monospace;width:88px;text-align:right;font-weight:600;}
   .compare-diff{font-family:'IBM Plex Mono',monospace;width:96px;text-align:right;font-size:11.5px;}
+  .compare-chart{margin-bottom:16px;}
+  .cc-group{margin-bottom:12px;}
+  .cc-label{font-size:12px;font-weight:600;margin-bottom:5px;}
+  .cc-line{display:flex;align-items:center;gap:8px;margin-bottom:3px;}
+  .cc-tag{font-family:'Inter',sans-serif;font-size:9.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-soft);width:34px;flex-shrink:0;}
+  .cc-track{flex:1;height:9px;background:var(--paper-dark);border-radius:5px;overflow:hidden;min-width:0;}
+  .cc-fill{height:100%;border-radius:5px;}
+  .cc-fill.ghost{background:var(--ink-soft);opacity:.4;}
+  .cc-val{font-family:'IBM Plex Mono',monospace;font-size:11px;width:76px;text-align:right;flex-shrink:0;}
   .compare-real.good, .compare-diff.good{color:var(--income);}
   .compare-real.bad, .compare-diff.bad{color:var(--expense);}
 
@@ -66,6 +75,10 @@
   .card + .card{margin-top:22px;}
   .card h2{font-family:'Fraunces',serif;font-size:16px;font-weight:600;margin:0 0 16px;padding-bottom:10px;border-bottom:1px solid var(--line);}
   .card h2 .h2-note{font-family:'Inter',sans-serif;font-weight:400;font-size:11.5px;color:var(--ink-soft);float:right;}
+  .msi-toggle{display:block;width:100%;background:none;border:none;cursor:pointer;padding:0;text-align:left;font-family:inherit;}
+  .msi-toggle h2{margin:0;}
+  .msi-chevron{font-size:14px;color:var(--ink-soft);margin-left:6px;}
+  .msi-toggle .h2-note{display:block;float:none;margin-top:4px;font-size:12px;}
 
   .field{margin-bottom:14px;}
   .field label{display:block;font-size:11.5px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:5px;}
@@ -153,6 +166,7 @@
   @media (max-width:900px){.stats{grid-template-columns:repeat(3,1fr);}}
   @media (max-width:560px){.stats{grid-template-columns:repeat(2,1fr);}}
   @media (max-width:380px){.stats{grid-template-columns:1fr;}}
+  @media (max-width:420px){.donut-wrap{flex-direction:column;align-items:center;}.donut-legend{width:100%;}}
   .stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;border-left:4px solid var(--ink);}
   .stat.income{border-left-color:var(--income);} .stat.expense{border-left-color:var(--expense);} .stat.savings{border-left-color:var(--gold);}
   .stat-label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);margin-bottom:6px;}
@@ -168,17 +182,19 @@
   .cat-bar-fill{height:100%;border-radius:4px;background:var(--gold);}
   .cat-amount{font-family:'IBM Plex Mono',monospace;font-size:12.5px;width:78px;text-align:right;flex-shrink:0;}
 
-  .donut-wrap{display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--line);}
-  .donut-chart{border-radius:50%;position:relative;flex-shrink:0;}
+  .donut-wrap{display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap;margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--line);}
+  .donut-chart{border-radius:50%;position:relative;flex-shrink:0;margin:0 auto;}
   .donut-hole{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:62%;height:62%;background:var(--surface);border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center;padding:6px;}
   .donut-total{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:var(--ink);line-height:1.3;}
   .donut-total .donut-total-lbl{display:block;font-family:'Inter',sans-serif;font-size:8.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);font-weight:600;margin-bottom:2px;}
-  .donut-legend{flex:1;min-width:170px;}
-  .donut-legend-row{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12.5px;}
+  .donut-legend{flex:1 1 220px;min-width:0;}
+  .donut-legend-row{display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;padding:6px 0;font-size:12.5px;border-bottom:1px dashed var(--line);}
+  .donut-legend-row:last-child{border-bottom:none;}
   .donut-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
-  .donut-legend-label{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .donut-legend-pct{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink-soft);width:44px;text-align:right;flex-shrink:0;}
-  .donut-legend-amt{font-family:'IBM Plex Mono',monospace;font-size:11.5px;width:80px;text-align:right;flex-shrink:0;}
+  .donut-legend-label{flex:1 1 auto;min-width:80px;white-space:normal;overflow:visible;text-overflow:clip;word-break:break-word;}
+  .donut-legend-pct{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink-soft);flex-shrink:0;}
+  .donut-legend-amt{font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:600;flex-basis:100%;text-align:right;}
+
 
   .msi-plan{padding:12px 0;border-bottom:1px dashed var(--line);}
   .msi-plan:last-child{border-bottom:none;}
@@ -301,8 +317,11 @@
   </div>
 
   <div class="card" id="msiCard" style="display:none;">
-    <h2>Meses sin intereses <span class="h2-note" id="msiPendingNote"></span></h2>
-    <div id="msiPanel"></div>
+    <button type="button" class="msi-toggle" id="msiToggle">
+      <h2>Meses sin intereses <span class="msi-chevron" id="msiChevron">▾</span></h2>
+      <span class="h2-note" id="msiPendingNote"></span>
+    </button>
+    <div id="msiPanel" style="display:none;"></div>
   </div>
 
   <div class="card">
@@ -432,6 +451,11 @@
       <div class="resumen-section" id="savingsCard">
         <h3 class="section-title">Fondo de ahorro <span class="h2-note">alcancía</span></h3>
         <div id="savingsPanel"></div>
+      </div>
+
+      <div class="resumen-section">
+        <h3 class="section-title">Gastos por grupo <span class="h2-note">fijos / variables / inversión</span></h3>
+        <div id="groupDonut"></div>
       </div>
 
       <div class="resumen-section">
@@ -639,12 +663,15 @@
     statTopCategory: document.getElementById('statTopCategory'),
     statTopCategoryAmount: document.getElementById('statTopCategoryAmount'),
     catBreakdown: document.getElementById('catBreakdown'),
+    groupDonut: document.getElementById('groupDonut'),
     expenseDonut: document.getElementById('expenseDonut'),
     incomeBreakdown: document.getElementById('incomeBreakdown'),
     incomeDonut: document.getElementById('incomeDonut'),
     ledgerList: document.getElementById('ledgerList'),
     msiCard: document.getElementById('msiCard'),
     msiPanel: document.getElementById('msiPanel'),
+    msiToggle: document.getElementById('msiToggle'),
+    msiChevron: document.getElementById('msiChevron'),
     msiPendingNote: document.getElementById('msiPendingNote'),
     savingsPanel: document.getElementById('savingsPanel'),
     budgetPanel: document.getElementById('budgetPanel'),
@@ -775,6 +802,11 @@
     els.toggleCatChips.textContent = showing
       ? 'Gestionar categorías (editar grupo / eliminar) ▾'
       : 'Ocultar categorías ▴';
+  });
+  els.msiToggle.addEventListener('click', ()=>{
+    const showing = els.msiPanel.style.display !== 'none';
+    els.msiPanel.style.display = showing ? 'none' : 'block';
+    els.msiChevron.textContent = showing ? '▾' : '▴';
   });
 
   /* ---------- Payment method / MSI / Ahorro visibility ---------- */
@@ -969,6 +1001,33 @@
     </div>`;
   }
 
+  function buildBudgetCompareChart(){
+    const totalFijos = groupTotal('fijos');
+    const totalVariables = groupTotal('variables');
+    const totalInversiones = groupTotal('inversiones');
+    const totalIngresos = groupTotal('ingresos');
+    const { realFijos, realVariables, realInversiones, realIngresos } = computeRealTotals();
+    const rows = [
+      { label:'Gastos fijos', presu:totalFijos, real:realFijos, color:'var(--expense)' },
+      { label:'Gastos variables', presu:totalVariables, real:realVariables, color:'#A15C4A' },
+      { label:'Inversiones y seguros', presu:totalInversiones, real:realInversiones, color:'var(--gold)' },
+      { label:'Ingresos fijos', presu:totalIngresos, real:realIngresos, color:'var(--income)' }
+    ];
+    const max = Math.max(1, ...rows.flatMap(r=>[r.presu, r.real]));
+    const bar = (val, color, ghost) => {
+      const pct = Math.min(100, (val/max)*100);
+      return `<div class="cc-track"><div class="cc-fill${ghost?' ghost':''}" style="width:${pct}%;${ghost?'':'background:'+color+';'}"></div></div>`;
+    };
+    return `<div class="compare-chart">
+      ${rows.map(r=>`
+        <div class="cc-group">
+          <div class="cc-label">${escapeHtml(r.label)}</div>
+          <div class="cc-line"><span class="cc-tag">Presu.</span>${bar(r.presu, r.color, true)}<span class="cc-val">${fmt.format(r.presu)}</span></div>
+          <div class="cc-line"><span class="cc-tag">Real</span>${bar(r.real, r.color, false)}<span class="cc-val">${fmt.format(r.real)}</span></div>
+        </div>`).join('')}
+    </div>`;
+  }
+
   function compareRow(name, presu, real, lowerIsBetter, dotColor){
     const diff = real - presu;
     const good = lowerIsBetter ? diff <= 0 : diff >= 0;
@@ -990,6 +1049,7 @@
     const { realFijos, realVariables, realInversiones, realIngresos } = computeRealTotals();
     return `<div class="budget-compare">
       <div class="compare-title">Presupuestado vs. real — ${escapeHtml(periodLabel())}</div>
+      ${buildBudgetCompareChart()}
       <div class="compare-row compare-header">
         <span class="compare-name"></span>
         <span class="compare-presu">Presupuestado</span>
@@ -1256,6 +1316,44 @@
     });
     return Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
   }
+  const GROUP_COLORS = { 'Fijos':'#8B3A3A', 'Variables':'#A15C4A', 'Inversiones y seguros':'#C9A227', 'Generales':'#8a8578' };
+  function computeGroupBreakdown(){
+    const byGroup = {};
+    transactions.filter(t=>t.type==='gasto' && isInPeriod(t.date)).forEach(t=>{
+      const amt = expenseContribution(t);
+      const grp = CATEGORY_GROUPS[t.category] || 'Generales';
+      byGroup[grp] = (byGroup[grp]||0) + amt;
+    });
+    const order = ['Fijos','Variables','Inversiones y seguros','Generales'];
+    return Object.entries(byGroup).sort((a,b)=> order.indexOf(a[0]) - order.indexOf(b[0]));
+  }
+  function buildGroupDonutHtml(entries, totalLabel, size){
+    size = size || 140;
+    const total = entries.reduce((s,[,v])=> s + v, 0);
+    if(total <= 0 || entries.length === 0) return '';
+    let acc = 0;
+    const stops = entries.map(([label,val])=>{
+      const pct = (val/total)*100;
+      const start = acc;
+      acc += pct;
+      return `${GROUP_COLORS[label] || '#8a8578'} ${start}% ${acc}%`;
+    }).join(', ');
+    const legend = entries.map(([label,val])=>{
+      const pct = ((val/total)*100).toFixed(1);
+      return `<div class="donut-legend-row">
+        <span class="donut-dot" style="background:${GROUP_COLORS[label] || '#8a8578'};"></span>
+        <span class="donut-legend-label">${escapeHtml(label)}</span>
+        <span class="donut-legend-pct">${pct}%</span>
+        <span class="donut-legend-amt">${fmt.format(val)}</span>
+      </div>`;
+    }).join('');
+    return `<div class="donut-wrap">
+      <div class="donut-chart" style="width:${size}px;height:${size}px;background:conic-gradient(${stops});">
+        <div class="donut-hole"><span class="donut-total"><span class="donut-total-lbl">${escapeHtml(totalLabel)}</span>${fmt.format(total)}</span></div>
+      </div>
+      <div class="donut-legend">${legend}</div>
+    </div>`;
+  }
   function buildDonutHtml(entries, totalLabel, size){
     size = size || 140;
     const total = entries.reduce((s,[,v])=> s + v, 0);
@@ -1325,6 +1423,11 @@
 
     renderBudget();
     renderReceivables();
+
+    const groupBreakdown = computeGroupBreakdown();
+    els.groupDonut.innerHTML = groupBreakdown.length > 0
+      ? buildGroupDonutHtml(groupBreakdown, 'Gastos')
+      : '<p class="ledger-empty">Sin gastos registrados en este periodo.</p>';
 
     const breakdown = computeCategoryBreakdown();
     if(breakdown.length > 0){
@@ -1414,7 +1517,8 @@
     } else {
       els.msiCard.style.display = 'block';
       const totalPending = msiPlans.reduce((sum,t)=> sum + msiInfo(t).remaining, 0);
-      els.msiPendingNote.textContent = 'Pendiente total: ' + fmt.format(totalPending);
+      const totalMonthly = msiPlans.reduce((sum,t)=> { const info = msiInfo(t); return sum + (info.finished ? 0 : info.monthlyPayment); }, 0);
+      els.msiPendingNote.textContent = 'Mensualidad total: ' + fmt.format(totalMonthly) + ' · Pendiente total: ' + fmt.format(totalPending);
       els.msiPanel.innerHTML = [...msiPlans].sort((a,b)=> b.date.localeCompare(a.date)).map(t=>{
         const info = msiInfo(t);
         const pct = Math.round((info.monthsElapsed / t.months) * 100);
