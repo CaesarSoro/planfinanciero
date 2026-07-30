@@ -455,17 +455,8 @@
       <div class="resumen-section">
         <h3 class="section-title">Gastos por grupo <span class="h2-note">fijos / variables / inversión</span></h3>
         <div id="groupDonut"></div>
-        <button type="button" id="toggleGroupBreakdown" class="manage-cat-link">Ver desglose por categoría (Fijos/Variables) ▾</button>
-        <div id="groupBreakdownDetail" style="display:none;margin-top:12px;">
-          <div class="group-detail-block">
-            <div class="group-detail-title">Fijos</div>
-            <div id="fijosBars"></div>
-          </div>
-          <div class="group-detail-block">
-            <div class="group-detail-title">Variables</div>
-            <div id="variablesBars"></div>
-          </div>
-        </div>
+        <button type="button" id="toggleGroupBreakdown" class="manage-cat-link">Ver desglose por categoría ▾</button>
+        <div id="groupBreakdownDetail" style="display:none;margin-top:12px;"></div>
       </div>
 
       <div class="resumen-section">
@@ -683,8 +674,6 @@
     groupDonut: document.getElementById('groupDonut'),
     toggleGroupBreakdown: document.getElementById('toggleGroupBreakdown'),
     groupBreakdownDetail: document.getElementById('groupBreakdownDetail'),
-    fijosBars: document.getElementById('fijosBars'),
-    variablesBars: document.getElementById('variablesBars'),
     paymentDonut: document.getElementById('paymentDonut'),
     expenseDonut: document.getElementById('expenseDonut'),
     incomeBreakdown: document.getElementById('incomeBreakdown'),
@@ -834,7 +823,7 @@
     const showing = els.groupBreakdownDetail.style.display !== 'none';
     els.groupBreakdownDetail.style.display = showing ? 'none' : 'block';
     els.toggleGroupBreakdown.textContent = showing
-      ? 'Ver desglose por categoría (Fijos/Variables) ▾'
+      ? 'Ver desglose por categoría ▾'
       : 'Ocultar desglose ▴';
   });
 
@@ -954,6 +943,27 @@
   function groupTotal(key){
     return (budget[key]||[]).reduce((s,i)=> s + monthlyEq(i), 0);
   }
+  async function syncMsiToBudget(){
+    const activeMsi = transactions.filter(t=>t.isMsi).map(t=>({ t, info: msiInfo(t) })).filter(x=>!x.info.finished);
+    if(!budget.variables) budget.variables = [];
+    const activeIds = new Set(activeMsi.map(x=>x.t.id));
+    budget.variables = budget.variables.filter(i => !i.msiTxId || activeIds.has(i.msiTxId));
+    let added = 0, updated = 0;
+    activeMsi.forEach(({t, info})=>{
+      const costo = Math.round(info.monthlyPayment * 100) / 100;
+      const nombre = `MSI: ${t.description ? t.description : t.category}`;
+      const existing = budget.variables.find(i => i.msiTxId === t.id);
+      if(existing){
+        if(existing.costo !== costo || existing.nombre !== nombre){ existing.costo = costo; existing.nombre = nombre; updated++; }
+      } else {
+        budget.variables.push({ id:newId(), nombre, costo, frecuencia:'mensual', msiTxId: t.id });
+        added++;
+      }
+    });
+    await saveBudget();
+    render();
+    return { added, updated, total: activeMsi.length };
+  }
   async function addBudgetItem(key, nombre, costo, frecuencia){
     if(!budget[key]) budget[key] = [];
     budget[key].push({id:newId(), nombre, costo, frecuencia});
@@ -1012,11 +1022,17 @@
         <div class="budget-equiv">Equiv. mensual</div>
       </div>` : '';
 
+    const syncBtn = meta.key === 'variables'
+      ? `<button type="button" id="syncMsiBtn" class="manage-cat-link" style="display:block;margin:2px 0 4px;">↻ Sincronizar mensualidades de MSI activos</button>
+         <p class="backup-note" style="margin-bottom:10px;">Crea o actualiza una línea aquí por cada MSI que no hayas terminado de pagar, con su mensualidad. Se quita sola cuando el MSI se liquida.</p>`
+      : '';
+
     return `<div class="budget-group" data-key="${meta.key}">
       <div class="budget-group-title">
         <span>${meta.label}</span>
         <span class="subtotal">${fmt.format(total)}/mes</span>
       </div>
+      ${syncBtn}
       ${header}
       ${rows}
       <div class="budget-add-row">
@@ -1097,6 +1113,18 @@
   function renderBudget(){
     let html = buildBudgetSummaryHtml() + BUDGET_GROUP_META.map(renderBudgetGroup).join('');
     els.budgetPanel.innerHTML = html;
+
+    const syncMsiBtn = els.budgetPanel.querySelector('#syncMsiBtn');
+    if(syncMsiBtn){
+      syncMsiBtn.addEventListener('click', async ()=>{
+        const result = await syncMsiToBudget();
+        if(result.total === 0){
+          alert('No tienes ningún MSI activo en este momento.');
+        } else {
+          alert(`Listo. MSI activos: ${result.total}. Agregadas: ${result.added}. Actualizadas: ${result.updated}.`);
+        }
+      });
+    }
 
     els.budgetPanel.querySelectorAll('.budget-del').forEach(btn=>{
       btn.addEventListener('click', ()=> deleteBudgetItem(btn.dataset.group, Number(btn.dataset.id)));
@@ -1508,8 +1536,12 @@
     els.groupDonut.innerHTML = groupBreakdown.length > 0
       ? buildGroupDonutHtml(groupBreakdown, 'Gastos')
       : '<p class="ledger-empty">Sin gastos registrados en este periodo.</p>';
-    els.fijosBars.innerHTML = buildCategoryBarsHtml(computeCategoryBreakdownByGroup('Fijos'));
-    els.variablesBars.innerHTML = buildCategoryBarsHtml(computeCategoryBreakdownByGroup('Variables'));
+    els.groupBreakdownDetail.innerHTML = groupBreakdown.map(([groupName])=>{
+      return `<div class="group-detail-block">
+        <div class="group-detail-title">${escapeHtml(groupName)}</div>
+        ${buildCategoryBarsHtml(computeCategoryBreakdownByGroup(groupName))}
+      </div>`;
+    }).join('');
 
     const paymentBreakdown = computePaymentBreakdown();
     els.paymentDonut.innerHTML = paymentBreakdown.length > 0
