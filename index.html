@@ -50,16 +50,17 @@
   .compare-chart{margin-bottom:16px;}
   .cc-group{margin-bottom:14px;padding-bottom:12px;border-bottom:1px dashed var(--line);}
   .cc-group:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
-  .cc-label{font-size:12px;font-weight:600;margin-bottom:5px;}
-  .cc-line{display:flex;align-items:center;gap:8px;margin-bottom:3px;}
-  .cc-tag{font-family:'Inter',sans-serif;font-size:9.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-soft);width:34px;flex-shrink:0;}
+  .cc-label{font-size:12px;font-weight:700;margin-bottom:6px;}
+  .cc-row{margin-bottom:6px;}
+  .cc-tag-full{font-family:'Inter',sans-serif;font-size:10.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-soft);margin-bottom:3px;}
+  .cc-line{display:flex;align-items:center;gap:8px;}
   .cc-track{flex:1;height:9px;background:var(--paper-dark);border-radius:5px;overflow:hidden;min-width:0;}
   .cc-fill{height:100%;border-radius:5px;}
   .cc-fill.ghost{background:var(--ink-soft);opacity:.4;}
-  .cc-val{font-family:'IBM Plex Mono',monospace;font-size:11px;width:76px;text-align:right;flex-shrink:0;}
-  .cc-diff{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;text-align:right;margin-top:2px;}
-  .cc-diff.good{color:var(--income);}
-  .cc-diff.bad{color:var(--expense);}
+  .cc-val{font-family:'IBM Plex Mono',monospace;font-size:11.5px;width:80px;text-align:right;flex-shrink:0;}
+  .cc-diff{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;text-align:right;margin-top:6px;margin-left:auto;padding:4px 10px;border-radius:6px;display:table;}
+  .cc-diff.good{color:var(--income);background:var(--income-soft);}
+  .cc-diff.bad{color:var(--expense);background:var(--expense-soft);}
 
   .grid{display:grid;grid-template-columns:340px 1fr;gap:22px;}
   @media (max-width:760px){.grid{grid-template-columns:1fr;}}
@@ -211,10 +212,13 @@
   .ledger-amount.aporte{color:var(--income);} .ledger-amount.retiro{color:var(--expense);}
 
   /* budget / presupuesto */
-  .budget-summary{display:flex;flex-wrap:wrap;gap:18px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--line);}
-  .budget-summary .b-item{min-width:112px;}
+  .budget-summary{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--line);}
+  .budget-summary .b-item{min-width:0;border-left:3px solid var(--line);padding-left:9px;}
+  .budget-summary .b-item.balance{grid-column:1 / -1;border-left:none;border-top:1px dashed var(--line);padding-left:0;padding-top:12px;margin-top:2px;}
   .budget-summary .lbl{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);margin-bottom:3px;}
-  .budget-summary .val{font-family:'IBM Plex Mono',monospace;font-size:14.5px;}
+  .budget-summary .val{font-family:'IBM Plex Mono',monospace;font-size:15.5px;font-weight:600;}
+  .budget-summary .balance .val{font-size:19px;}
+  @media (min-width:560px){.budget-summary{grid-template-columns:repeat(4,1fr);}.budget-summary .b-item.balance{grid-column:1 / -1;}}
   .budget-group{margin-bottom:20px;border-left:4px solid var(--line);padding-left:14px;}
   .budget-group[data-key="fijos"]{border-left-color:var(--expense);}
   .budget-group[data-key="fijos"] .budget-group-title{color:var(--expense);border-bottom-color:var(--expense-soft);}
@@ -1050,9 +1054,15 @@
         const good = r.lowerIsBetter ? diff <= 0 : diff >= 0;
         const diffText = diff === 0 ? 'Igual al presupuesto' : (diff > 0 ? `+${fmt.format(diff)}` : `−${fmt.format(Math.abs(diff))}`);
         return `<div class="cc-group">
-          <div class="cc-label">${escapeHtml(r.label)}</div>
-          <div class="cc-line"><span class="cc-tag">Presu.</span>${bar(r.presu, r.color, true)}<span class="cc-val">${fmt.format(r.presu)}</span></div>
-          <div class="cc-line"><span class="cc-tag">Real</span>${bar(r.real, r.color, false)}<span class="cc-val">${fmt.format(r.real)}</span></div>
+          <div class="cc-label" style="color:${r.color};">${escapeHtml(r.label)}</div>
+          <div class="cc-row">
+            <div class="cc-tag-full">Presupuestado</div>
+            <div class="cc-line">${bar(r.presu, r.color, true)}<span class="cc-val">${fmt.format(r.presu)}</span></div>
+          </div>
+          <div class="cc-row">
+            <div class="cc-tag-full">Real</div>
+            <div class="cc-line">${bar(r.real, r.color, false)}<span class="cc-val">${fmt.format(r.real)}</span></div>
+          </div>
           <div class="cc-diff ${good ? 'good' : 'bad'}">Diferencia: ${diffText}</div>
         </div>`;
       }).join('')}
@@ -1074,11 +1084,11 @@
     const totalIngresos = groupTotal('ingresos');
     const balancePresupuestado = totalIngresos - (totalFijos + totalVariables + totalInversiones);
     return `<div class="budget-summary">
-      <div class="b-item"><span class="lbl">Fijos/mes</span><span class="val" style="color:var(--expense);">${fmt.format(totalFijos)}</span></div>
-      <div class="b-item"><span class="lbl">Variables/mes</span><span class="val" style="color:var(--expense);">${fmt.format(totalVariables)}</span></div>
-      <div class="b-item"><span class="lbl">Inversiones y seguros/mes</span><span class="val" style="color:var(--gold);">${fmt.format(totalInversiones)}</span></div>
-      <div class="b-item"><span class="lbl">Ingresos fijos/mes</span><span class="val" style="color:var(--income);">${fmt.format(totalIngresos)}</span></div>
-      <div class="b-item"><span class="lbl">Balance presupuestado</span><span class="val" style="color:${balancePresupuestado>=0?'var(--income)':'var(--expense)'};">${fmt.format(balancePresupuestado)}</span></div>
+      <div class="b-item" style="border-left-color:var(--expense);"><span class="lbl">Fijos/mes</span><span class="val" style="color:var(--expense);">${fmt.format(totalFijos)}</span></div>
+      <div class="b-item" style="border-left-color:#A15C4A;"><span class="lbl">Variables/mes</span><span class="val" style="color:#A15C4A;">${fmt.format(totalVariables)}</span></div>
+      <div class="b-item" style="border-left-color:var(--gold);"><span class="lbl">Inversiones y seguros/mes</span><span class="val" style="color:var(--gold);">${fmt.format(totalInversiones)}</span></div>
+      <div class="b-item" style="border-left-color:var(--income);"><span class="lbl">Ingresos fijos/mes</span><span class="val" style="color:var(--income);">${fmt.format(totalIngresos)}</span></div>
+      <div class="b-item balance"><span class="lbl">Balance presupuestado</span><span class="val" style="color:${balancePresupuestado>=0?'var(--income)':'var(--expense)'};">${fmt.format(balancePresupuestado)}</span></div>
     </div>
     ${buildBudgetCompareHtml()}`;
   }
