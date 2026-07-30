@@ -60,13 +60,6 @@
   .cc-diff{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;text-align:right;margin-top:2px;}
   .cc-diff.good{color:var(--income);}
   .cc-diff.bad{color:var(--expense);}
-  .trend-chart{display:flex;align-items:flex-end;gap:10px;height:170px;padding:10px 4px 0;}
-  .trend-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0;}
-  .trend-val{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-soft);margin-bottom:4px;white-space:nowrap;}
-  .trend-track{width:100%;max-width:34px;flex:1;display:flex;align-items:flex-end;background:var(--paper-dark);border-radius:5px 5px 0 0;overflow:hidden;}
-  .trend-fill{width:100%;background:var(--income);border-radius:5px 5px 0 0;min-height:2px;}
-  .trend-col.current .trend-fill{background:var(--gold);}
-  .trend-label{font-family:'Inter',sans-serif;font-size:10.5px;color:var(--ink-soft);margin-top:6px;text-transform:capitalize;}
 
   .grid{display:grid;grid-template-columns:340px 1fr;gap:22px;}
   @media (max-width:760px){.grid{grid-template-columns:1fr;}}
@@ -175,6 +168,7 @@
   .stat-value.pos{color:var(--income);} .stat-value.neg{color:var(--expense);}
   .stat-value.text{font-family:'Inter',sans-serif;font-size:16px;font-weight:600;line-height:1.3;}
   .stat-subvalue{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);margin-top:3px;}
+  .stat-subvalue.up{color:var(--income);} .stat-subvalue.down{color:var(--expense);}
 
   .cat-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:13px;}
   .cat-name{width:110px;flex-shrink:0;color:var(--ink-soft);}
@@ -211,14 +205,7 @@
   .savings-mini-stats{display:flex;gap:28px;margin-bottom:16px;}
   .savings-mini-stats .lbl{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:3px;}
   .savings-mini-stats .val{font-family:'IBM Plex Mono',monospace;font-size:15px;}
-  .savings-row{display:flex;align-items:baseline;gap:8px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:13px;}
-  .savings-row:last-child{border-bottom:none;}
-  .savings-date{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);width:52px;flex-shrink:0;}
-  .savings-desc{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .savings-badge{font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;padding:2px 7px;border-radius:20px;flex-shrink:0;}
-  .savings-badge.aporte{background:var(--income-soft);color:var(--income);} .savings-badge.retiro{background:var(--expense-soft);color:var(--expense);}
-  .savings-amount{font-family:'IBM Plex Mono',monospace;font-weight:500;width:92px;text-align:right;flex-shrink:0;}
-  .savings-amount.aporte{color:var(--income);} .savings-amount.retiro{color:var(--expense);}
+  .ledger-amount.aporte{color:var(--income);} .ledger-amount.retiro{color:var(--expense);}
 
   /* budget / presupuesto */
   .budget-summary{display:flex;flex-wrap:wrap;gap:18px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--line);}
@@ -430,6 +417,7 @@
           <div class="stat income">
             <div class="stat-label">Ingresos</div>
             <div class="stat-value" id="statIncome">$0.00</div>
+            <div class="stat-subvalue" id="statIncomeTrend"></div>
           </div>
           <div class="stat expense">
             <div class="stat-label">Gastos</div>
@@ -451,11 +439,6 @@
         </div>
       </div>
 
-      <div class="resumen-section">
-        <h3 class="section-title">Tendencia de ingresos <span class="h2-note">últimos 6 meses</span></h3>
-        <div id="incomeTrendChart"></div>
-      </div>
-
       <div class="resumen-section" id="savingsCard">
         <h3 class="section-title">Fondo de ahorro <span class="h2-note">alcancía</span></h3>
         <div id="savingsPanel"></div>
@@ -472,6 +455,11 @@
         <div id="catBreakdown">
           <p class="ledger-empty">Aún no hay gastos registrados.</p>
         </div>
+      </div>
+
+      <div class="resumen-section">
+        <h3 class="section-title">Gastos por forma de pago</h3>
+        <div id="paymentDonut"></div>
       </div>
 
       <div class="resumen-section">
@@ -666,6 +654,7 @@
     importFile: document.getElementById('importFile'),
     backupNote: document.getElementById('backupNote'),
     statIncome: document.getElementById('statIncome'),
+    statIncomeTrend: document.getElementById('statIncomeTrend'),
     statExpense: document.getElementById('statExpense'),
     statUtilidad: document.getElementById('statUtilidad'),
     statSavings: document.getElementById('statSavings'),
@@ -673,7 +662,7 @@
     statTopCategoryAmount: document.getElementById('statTopCategoryAmount'),
     catBreakdown: document.getElementById('catBreakdown'),
     groupDonut: document.getElementById('groupDonut'),
-    incomeTrendChart: document.getElementById('incomeTrendChart'),
+    paymentDonut: document.getElementById('paymentDonut'),
     expenseDonut: document.getElementById('expenseDonut'),
     incomeBreakdown: document.getElementById('incomeBreakdown'),
     incomeDonut: document.getElementById('incomeDonut'),
@@ -1315,35 +1304,27 @@
     return Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
   }
   const GROUP_COLORS = { 'Fijos':'#8B3A3A', 'Variables':'#A15C4A', 'Inversiones y seguros':'#C9A227', 'Generales':'#8a8578' };
-  const MONTH_ABBR = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
-  function computeMonthlyIncomeTrend(monthsCount){
-    monthsCount = monthsCount || 6;
+  function computeIncomeMoMChange(){
     const now = new Date();
-    const months = [];
-    for(let i = monthsCount - 1; i >= 0; i--){
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      months.push({ key: d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'), label: MONTH_ABBR[d.getMonth()], year: d.getFullYear(), isCurrent: i === 0 });
-    }
-    const totals = {};
+    const curKey = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+    const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const prevKey = prevDate.getFullYear() + '-' + String(prevDate.getMonth()+1).padStart(2,'0');
+    let curTotal = 0, prevTotal = 0;
     transactions.filter(t=>t.type==='ingreso').forEach(t=>{
       const key = t.date.slice(0,7);
-      totals[key] = (totals[key]||0) + t.amount;
+      if(key === curKey) curTotal += t.amount;
+      else if(key === prevKey) prevTotal += t.amount;
     });
-    return months.map(m=> ({ ...m, total: totals[m.key] || 0 }));
+    const prevLabel = prevDate.toLocaleDateString('es-MX', { month:'long' });
+    return { curTotal, prevTotal, prevLabel };
   }
-  function buildIncomeTrendHtml(monthsCount){
-    const data = computeMonthlyIncomeTrend(monthsCount);
-    const max = Math.max(1, ...data.map(m=>m.total));
-    return `<div class="trend-chart">
-      ${data.map(m=>{
-        const pct = Math.max(m.total>0?4:0, (m.total/max)*100);
-        return `<div class="trend-col${m.isCurrent?' current':''}">
-          <div class="trend-val">${m.total>0 ? fmt.format(m.total).replace('.00','') : ''}</div>
-          <div class="trend-track"><div class="trend-fill" style="height:${pct}%;"></div></div>
-          <div class="trend-label">${m.label}</div>
-        </div>`;
-      }).join('')}
-    </div>`;
+  function computePaymentBreakdown(){
+    const byPay = {};
+    transactions.filter(t=>t.type==='gasto' && isInPeriod(t.date)).forEach(t=>{
+      const amt = expenseContribution(t);
+      byPay[t.paymentMethod] = (byPay[t.paymentMethod]||0) + amt;
+    });
+    return Object.entries(byPay).sort((a,b)=>b[1]-a[1]);
   }
   function computeGroupBreakdown(){
     const byGroup = {};
@@ -1439,6 +1420,20 @@
     const { income, expense, savingsIn, savingsOut, savingsNetPeriod, utilidad, balance } = computeTotals();
     const savingsFundTotal = computeAllTimeSavingsFund();
     els.statIncome.textContent = fmt.format(income);
+    const momChange = computeIncomeMoMChange();
+    if(momChange.prevTotal > 0){
+      const pct = ((momChange.curTotal - momChange.prevTotal) / momChange.prevTotal) * 100;
+      const up = pct >= 0;
+      els.statIncomeTrend.textContent = `${up ? '↑' : '↓'} ${Math.abs(pct).toFixed(1)}% vs. ${momChange.prevLabel}`;
+      els.statIncomeTrend.classList.remove('up','down');
+      els.statIncomeTrend.classList.add(up ? 'up' : 'down');
+    } else if(momChange.curTotal > 0){
+      els.statIncomeTrend.textContent = `Sin ingresos en ${momChange.prevLabel} para comparar`;
+      els.statIncomeTrend.classList.remove('up','down');
+    } else {
+      els.statIncomeTrend.textContent = '';
+      els.statIncomeTrend.classList.remove('up','down');
+    }
     els.statExpense.textContent = fmt.format(expense);
     els.statSavings.textContent = fmt.format(savingsFundTotal);
     els.statUtilidad.textContent = fmt.format(utilidad);
@@ -1452,11 +1447,14 @@
     renderBudget();
     renderReceivables();
 
-    els.incomeTrendChart.innerHTML = buildIncomeTrendHtml(6);
-
     const groupBreakdown = computeGroupBreakdown();
     els.groupDonut.innerHTML = groupBreakdown.length > 0
       ? buildGroupDonutHtml(groupBreakdown, 'Gastos')
+      : '<p class="ledger-empty">Sin gastos registrados en este periodo.</p>';
+
+    const paymentBreakdown = computePaymentBreakdown();
+    els.paymentDonut.innerHTML = paymentBreakdown.length > 0
+      ? buildDonutHtml(paymentBreakdown, 'Gastos')
       : '<p class="ledger-empty">Sin gastos registrados en este periodo.</p>';
 
     const breakdown = computeCategoryBreakdown();
@@ -1530,12 +1528,18 @@
         const shortDate = t.date.slice(5).split('-').reverse().join('/');
         const desc = t.description ? t.description : t.category;
         const sign = t.subtype === 'retiro' ? '−' : '+';
-        return `<div class="savings-row">
-          <span class="savings-date">${shortDate}</span>
-          <span class="savings-desc">${escapeHtml(desc)}</span>
-          <span class="ledger-cat">${escapeHtml(t.category)}</span>
-          <span class="savings-badge ${t.subtype}">${t.subtype === 'retiro' ? 'Retiro' : 'Aporte'}</span>
-          <span class="savings-amount ${t.subtype}">${sign} ${fmt.format(t.amount)}</span>
+        return `<div class="ledger-row">
+          <div class="ledger-row-line1">
+            <span class="ledger-date">${shortDate}</span>
+            <span class="ledger-desc">${escapeHtml(desc)}</span>
+          </div>
+          <div class="ledger-row-line2">
+            <div class="ledger-badges">
+              <span class="ledger-cat">${escapeHtml(t.category)}</span>
+              <span class="ledger-subtype-badge ${t.subtype}">${t.subtype === 'retiro' ? 'Retiro' : 'Aporte'}</span>
+            </div>
+            <span class="ledger-amount ${t.subtype}">${sign} ${fmt.format(t.amount)}</span>
+          </div>
         </div>`;
       }).join('');
     }
