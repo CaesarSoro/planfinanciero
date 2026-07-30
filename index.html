@@ -234,18 +234,19 @@
   .budget-group-title .subtotal{font-family:'IBM Plex Mono',monospace;color:var(--ink);font-weight:600;font-size:13px;text-transform:none;letter-spacing:0;}
   .budget-row-compact{border-bottom:1px dashed var(--line);}
   .budget-row-compact:last-child{border-bottom:none;}
-  .budget-row-toggle{display:flex;align-items:center;gap:8px;width:100%;background:none;border:none;cursor:pointer;padding:9px 0;font-family:inherit;text-align:left;}
+  .budget-row-main{display:flex;align-items:center;gap:4px;padding:8px 0;}
+  .budget-row-toggle{display:flex;align-items:center;gap:8px;flex:1;min-width:0;background:none;border:none;cursor:pointer;padding:2px 0;font-family:inherit;text-align:left;}
   .budget-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12.5px;}
   .budget-equiv-compact{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;flex-shrink:0;}
   .budget-caret{font-size:11px;color:var(--ink-soft);flex-shrink:0;}
+  .budget-row-actions{display:flex;align-items:center;gap:2px;flex-shrink:0;margin-left:6px;}
   .budget-row-detail{padding:0 0 12px;}
   .budget-detail-line{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--ink-soft);padding:3px 0;}
   .budget-detail-line span:last-child{font-family:'IBM Plex Mono',monospace;color:var(--ink);}
-  .budget-detail-actions{display:flex;gap:14px;margin-top:6px;}
-  .budget-del{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:12px;padding:2px 0;}
-  .budget-del:hover{color:var(--expense);}
-  .budget-edit{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:12px;padding:2px 0;}
-  .budget-edit:hover{color:var(--gold);}
+  .budget-del{background:none;border:1px solid var(--line);border-radius:6px;color:var(--ink-soft);cursor:pointer;font-size:13px;width:30px;height:30px;flex-shrink:0;}
+  .budget-del:hover{color:var(--expense);border-color:var(--expense-soft);background:var(--expense-soft);}
+  .budget-edit{background:none;border:1px solid var(--line);border-radius:6px;color:var(--ink-soft);cursor:pointer;font-size:13px;width:30px;height:30px;flex-shrink:0;}
+  .budget-edit:hover{color:var(--gold);border-color:var(--gold-soft);background:var(--gold-soft);}
   .budget-row-editing{display:flex;gap:6px;flex-wrap:wrap;align-items:center;background:var(--gold-soft);border-radius:6px;padding:8px;margin:2px 0;}
   .budget-row-editing input, .budget-row-editing select{padding:6px 8px;font-size:12px;border:1px solid var(--line);border-radius:6px;background:#fff;}
   .budget-row-editing .be-name{flex:1.6 1 110px;}
@@ -281,6 +282,21 @@
   .msi-progress-mini{margin-top:7px;}
   .msi-progress-mini .msi-track{height:5px;} .msi-progress-mini .msi-meta{margin-top:4px;font-size:10.5px;}
   .loading-note{font-size:12.5px;color:var(--ink-soft);text-align:center;padding:20px;}
+
+  /* ---------- Tablet / escritorio: mejor aprovechamiento del espacio ---------- */
+  @media (min-width:860px){
+    .wrap{max-width:1180px;}
+    .card{padding:30px 36px;}
+    .donut-legend{column-count:2;column-gap:28px;}
+    .donut-legend-row{break-inside:avoid;-webkit-column-break-inside:avoid;}
+    .budget-groups-wrap{display:grid;grid-template-columns:1fr 1fr;column-gap:36px;align-items:start;}
+    .budget-group{margin-bottom:20px;}
+    .compare-chart{display:grid;grid-template-columns:1fr 1fr;column-gap:32px;row-gap:4px;}
+    .cc-group{border-bottom:none;border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:0;}
+    #groupBreakdownDetail{display:flex;flex-wrap:wrap;gap:0 32px;}
+    .group-detail-block{flex:1 1 260px;}
+    .stats{grid-template-columns:repeat(5,1fr);}
+  }
 </style>
 </head>
 <body>
@@ -1009,18 +1025,20 @@
           const itemKey = meta.key + ':' + i.id;
           const isOpen = expandedBudgetItems.has(itemKey);
           return `<div class="budget-row-compact">
-          <button type="button" class="budget-row-toggle" data-toggle="${itemKey}">
-            <span class="budget-name">${escapeHtml(i.nombre)}</span>
-            <span class="budget-equiv-compact">${fmt.format(monthlyEq(i))}</span>
-            <span class="budget-caret">${isOpen ? '▴' : '▾'}</span>
-          </button>
+          <div class="budget-row-main">
+            <button type="button" class="budget-row-toggle" data-toggle="${itemKey}">
+              <span class="budget-name">${escapeHtml(i.nombre)}</span>
+              <span class="budget-equiv-compact">${fmt.format(monthlyEq(i))}</span>
+              <span class="budget-caret">${isOpen ? '▴' : '▾'}</span>
+            </button>
+            <div class="budget-row-actions">
+              <button type="button" class="budget-edit" data-group="${meta.key}" data-id="${i.id}" title="Editar">✎</button>
+              <button type="button" class="budget-del" data-group="${meta.key}" data-id="${i.id}" title="Eliminar">✕</button>
+            </div>
+          </div>
           <div class="budget-row-detail" style="display:${isOpen ? 'block' : 'none'};">
             <div class="budget-detail-line"><span>Frecuencia</span><span>${FREQ_LABELS[i.frecuencia] || i.frecuencia}</span></div>
             <div class="budget-detail-line"><span>Costo (${FREQ_LABELS[i.frecuencia] || i.frecuencia})</span><span>${fmt.format(i.costo)}</span></div>
-            <div class="budget-detail-actions">
-              <button type="button" class="budget-edit" data-group="${meta.key}" data-id="${i.id}">✎ Editar</button>
-              <button type="button" class="budget-del" data-group="${meta.key}" data-id="${i.id}">✕ Eliminar</button>
-            </div>
           </div>
         </div>`;
         }).join('')
@@ -1115,7 +1133,7 @@
   }
 
   function renderBudget(){
-    let html = buildBudgetSummaryHtml() + BUDGET_GROUP_META.map(renderBudgetGroup).join('');
+    let html = buildBudgetSummaryHtml() + '<div class="budget-groups-wrap">' + BUDGET_GROUP_META.map(renderBudgetGroup).join('') + '</div>';
     els.budgetPanel.innerHTML = html;
 
     const syncMsiBtn = els.budgetPanel.querySelector('#syncMsiBtn');
