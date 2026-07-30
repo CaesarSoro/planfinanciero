@@ -232,19 +232,19 @@
   .budget-group:last-child{margin-bottom:0;}
   .budget-group-title{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--line);}
   .budget-group-title .subtotal{font-family:'IBM Plex Mono',monospace;color:var(--ink);font-weight:600;font-size:13px;text-transform:none;letter-spacing:0;}
-  .budget-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:12.5px;}
-  .budget-row:last-child{border-bottom:none;}
-  .budget-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .budget-freq{font-size:9px;text-transform:uppercase;color:var(--ink-soft);background:var(--paper);padding:2px 6px;border-radius:20px;flex-shrink:0;}
-  .budget-cost{font-family:'IBM Plex Mono',monospace;font-size:12px;width:78px;text-align:right;flex-shrink:0;color:var(--ink-soft);}
-  .budget-equiv{font-family:'IBM Plex Mono',monospace;font-size:12.5px;width:78px;text-align:right;flex-shrink:0;font-weight:500;}
-  .budget-row-header{display:flex;align-items:center;gap:8px;padding:0 0 6px;}
-  .budget-row-header .budget-name, .budget-row-header .budget-freq, .budget-row-header .budget-cost, .budget-row-header .budget-equiv{
-    font-family:'Inter',sans-serif;font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);font-weight:700;background:none;padding:0;
-  }
-  .budget-del{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:14px;padding:2px 4px;flex-shrink:0;}
+  .budget-row-compact{border-bottom:1px dashed var(--line);}
+  .budget-row-compact:last-child{border-bottom:none;}
+  .budget-row-toggle{display:flex;align-items:center;gap:8px;width:100%;background:none;border:none;cursor:pointer;padding:9px 0;font-family:inherit;text-align:left;}
+  .budget-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12.5px;}
+  .budget-equiv-compact{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;flex-shrink:0;}
+  .budget-caret{font-size:11px;color:var(--ink-soft);flex-shrink:0;}
+  .budget-row-detail{padding:0 0 12px;}
+  .budget-detail-line{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--ink-soft);padding:3px 0;}
+  .budget-detail-line span:last-child{font-family:'IBM Plex Mono',monospace;color:var(--ink);}
+  .budget-detail-actions{display:flex;gap:14px;margin-top:6px;}
+  .budget-del{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:12px;padding:2px 0;}
   .budget-del:hover{color:var(--expense);}
-  .budget-edit{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:13px;padding:2px 4px;flex-shrink:0;}
+  .budget-edit{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:12px;padding:2px 0;}
   .budget-edit:hover{color:var(--gold);}
   .budget-row-editing{display:flex;gap:6px;flex-wrap:wrap;align-items:center;background:var(--gold-soft);border-radius:6px;padding:8px;margin:2px 0;}
   .budget-row-editing input, .budget-row-editing select{padding:6px 8px;font-size:12px;border:1px solid var(--line);border-radius:6px;background:#fff;}
@@ -623,6 +623,7 @@
   let categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
   let budget = JSON.parse(JSON.stringify(DEFAULT_BUDGET));
   let editingBudgetItem = null; // { key, id } del renglón que se está editando, o null
+  let expandedBudgetItems = new Set(); // claves "key:id" de renglones de presupuesto expandidos
   let receivables = [];
   let customCategoryGroups = {}; // categorías nuevas que el usuario clasificó como Fijo/Variable/Inversión/General
   let currentType = "ingreso";
@@ -1005,22 +1006,25 @@
               <button type="button" class="budget-cancel" title="Cancelar">✕</button>
             </div>`;
           }
-          return `<div class="budget-row">
-          <div class="budget-name">${escapeHtml(i.nombre)}</div>
-          <div class="budget-freq">${FREQ_LABELS[i.frecuencia] || i.frecuencia}</div>
-          <div class="budget-cost">${fmt.format(i.costo)}</div>
-          <div class="budget-equiv">${fmt.format(monthlyEq(i))}</div>
-          <button class="budget-edit" data-group="${meta.key}" data-id="${i.id}" title="Editar">✎</button>
-          <button class="budget-del" data-group="${meta.key}" data-id="${i.id}" title="Eliminar">✕</button>
+          const itemKey = meta.key + ':' + i.id;
+          const isOpen = expandedBudgetItems.has(itemKey);
+          return `<div class="budget-row-compact">
+          <button type="button" class="budget-row-toggle" data-toggle="${itemKey}">
+            <span class="budget-name">${escapeHtml(i.nombre)}</span>
+            <span class="budget-equiv-compact">${fmt.format(monthlyEq(i))}</span>
+            <span class="budget-caret">${isOpen ? '▴' : '▾'}</span>
+          </button>
+          <div class="budget-row-detail" style="display:${isOpen ? 'block' : 'none'};">
+            <div class="budget-detail-line"><span>Frecuencia</span><span>${FREQ_LABELS[i.frecuencia] || i.frecuencia}</span></div>
+            <div class="budget-detail-line"><span>Costo (${FREQ_LABELS[i.frecuencia] || i.frecuencia})</span><span>${fmt.format(i.costo)}</span></div>
+            <div class="budget-detail-actions">
+              <button type="button" class="budget-edit" data-group="${meta.key}" data-id="${i.id}">✎ Editar</button>
+              <button type="button" class="budget-del" data-group="${meta.key}" data-id="${i.id}">✕ Eliminar</button>
+            </div>
+          </div>
         </div>`;
         }).join('')
       : `<p class="ledger-empty" style="padding:10px 0;">Sin elementos todavía.</p>`;
-    const header = items.length ? `<div class="budget-row-header">
-        <div class="budget-name">Concepto</div>
-        <div class="budget-freq">Frecuencia</div>
-        <div class="budget-cost">Costo</div>
-        <div class="budget-equiv">Equiv. mensual</div>
-      </div>` : '';
 
     const syncBtn = meta.key === 'variables'
       ? `<button type="button" id="syncMsiBtn" class="manage-cat-link" style="display:block;margin:2px 0 4px;">↻ Sincronizar mensualidades de MSI activos</button>
@@ -1033,7 +1037,6 @@
         <span class="subtotal">${fmt.format(total)}/mes</span>
       </div>
       ${syncBtn}
-      ${header}
       ${rows}
       <div class="budget-add-row">
         <input type="text" placeholder="Nombre" class="b-name" data-group="${meta.key}">
@@ -1091,6 +1094,7 @@
       <div class="compare-title">Presupuestado vs. real — ${escapeHtml(periodLabel())}</div>
       ${buildBudgetCompareChart()}
       <p class="backup-note" style="margin-top:8px;">"Inversiones y seguros" solo compara categorías de gasto que hayas clasificado así al crearlas.</p>
+      <p class="backup-note" style="margin-top:6px;">Si tienes gastos trimestrales o anuales (como seguros), Presupuestado siempre muestra su equivalente mensual, pero Real muestra el cobro completo solo en el mes que se aplica. Para comparar de forma justa, cambia el filtro de arriba a "Año".</p>
     </div>`;
   }
 
@@ -1125,6 +1129,15 @@
         }
       });
     }
+
+    els.budgetPanel.querySelectorAll('.budget-row-toggle').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const key = btn.dataset.toggle;
+        if(expandedBudgetItems.has(key)) expandedBudgetItems.delete(key);
+        else expandedBudgetItems.add(key);
+        renderBudget();
+      });
+    });
 
     els.budgetPanel.querySelectorAll('.budget-del').forEach(btn=>{
       btn.addEventListener('click', ()=> deleteBudgetItem(btn.dataset.group, Number(btn.dataset.id)));
