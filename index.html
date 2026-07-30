@@ -2032,6 +2032,41 @@
     render();
   }
 
+  /* ---------- Sincronización en tiempo real entre dispositivos ---------- */
+  let realtimeUnsubs = [];
+  function detachRealtimeListeners(){
+    realtimeUnsubs.forEach(unsub=>{ try{ unsub(); }catch(err){} });
+    realtimeUnsubs = [];
+  }
+  function attachRealtimeListeners(){
+    detachRealtimeListeners();
+    const col = fbDb.collection('users').doc(currentUser.uid).collection('appData');
+    realtimeUnsubs.push(col.doc(TX_KEY).onSnapshot(snap=>{
+      if(!snap.exists) return;
+      try{ transactions = JSON.parse(snap.data().value) || []; render(); }catch(err){}
+    }));
+    realtimeUnsubs.push(col.doc(CAT_KEY).onSnapshot(snap=>{
+      if(!snap.exists) return;
+      try{ categories = JSON.parse(snap.data().value) || categories; render(); }catch(err){}
+    }));
+    realtimeUnsubs.push(col.doc(BUDGET_KEY).onSnapshot(snap=>{
+      if(!snap.exists) return;
+      try{ budget = JSON.parse(snap.data().value) || budget; render(); }catch(err){}
+    }));
+    realtimeUnsubs.push(col.doc(RECV_KEY).onSnapshot(snap=>{
+      if(!snap.exists) return;
+      try{ receivables = JSON.parse(snap.data().value) || []; render(); }catch(err){}
+    }));
+    realtimeUnsubs.push(col.doc(CATGROUPS_KEY).onSnapshot(snap=>{
+      if(!snap.exists) return;
+      try{
+        customCategoryGroups = JSON.parse(snap.data().value) || {};
+        Object.assign(CATEGORY_GROUPS, customCategoryGroups);
+        render();
+      }catch(err){}
+    }));
+  }
+
   fbAuth.onAuthStateChanged(async (user)=>{
     if(hasClaudeStorage){
       // Vista previa dentro de Claude.ai: sigue usando window.storage como siempre, sin pedir login.
@@ -2048,7 +2083,9 @@
       els.accountEmail.textContent = user.email || '';
       await migrateLocalDataIfNeeded();
       await loadAllDataAndRender();
+      attachRealtimeListeners();
     } else {
+      detachRealtimeListeners();
       currentUser = null;
       els.appRoot.style.display = 'none';
       els.authScreen.style.display = 'flex';
