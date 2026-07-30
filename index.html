@@ -286,9 +286,23 @@
   .msi-progress-mini .msi-track{height:5px;} .msi-progress-mini .msi-meta{margin-top:4px;font-size:10.5px;}
   .loading-note{font-size:12.5px;color:var(--ink-soft);text-align:center;padding:20px;}
 
-  .auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--paper);}
-  .auth-card{width:100%;max-width:360px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:28px 26px;text-align:center;}
+  .auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;
+    background:
+      linear-gradient(160deg, rgba(20,17,13,.72) 0%, rgba(43,36,26,.60) 45%, rgba(26,23,18,.75) 100%),
+      radial-gradient(ellipse 900px 600px at 15% 8%, rgba(201,162,39,.30), transparent 60%),
+      radial-gradient(ellipse 700px 700px at 90% 85%, rgba(122,46,46,.32), transparent 55%),
+      url('auth-bg.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-color:#1a1712;
+  }
+  .auth-credit{position:absolute;bottom:10px;right:14px;font-size:10px;color:rgba(255,255,255,.55);text-transform:none;}
+  .auth-credit a{color:rgba(255,255,255,.75);}
+  .auth-card{width:100%;max-width:360px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:28px 26px;text-align:center;box-shadow:0 24px 60px -12px rgba(0,0,0,.55);}
   .auth-card h1{font-family:'Fraunces',serif;font-size:24px;}
+  .auth-mode-label{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--gold);font-weight:700;margin:0 0 18px;}
   #authForm{display:flex;flex-direction:column;gap:10px;}
   #authForm input{padding:11px 12px;font-size:14px;border:1px solid var(--line);border-radius:8px;background:#fff;font-family:'Inter',sans-serif;text-transform:none;}
   #authForm button{padding:11px 12px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;border:none;border-radius:8px;background:var(--ink);color:#fff;cursor:pointer;margin-top:4px;}
@@ -317,16 +331,17 @@
 
 <div id="authScreen" class="auth-screen">
   <div class="auth-card">
-    <p class="brand-eyebrow">Registro personal &middot; hoja de movimientos</p>
-    <h1 style="margin:4px 0 18px;">Finanzas Personales</h1>
+    <h1 style="margin:0 0 4px;">Finanzas Personales</h1>
+    <p class="auth-mode-label" id="authModeLabel">Iniciar sesión</p>
     <form id="authForm">
       <input type="email" id="authEmail" placeholder="Correo" autocomplete="email" required>
       <input type="password" id="authPassword" placeholder="Contraseña" autocomplete="current-password" required minlength="6">
       <button type="submit" id="authSubmitBtn">Entrar</button>
     </form>
     <p class="auth-error" id="authError"></p>
-    <button type="button" id="authToggleMode" class="manage-cat-link" style="margin-top:14px;">¿No tienes cuenta? Créala aquí</button>
+    <button type="button" id="authToggleMode" class="manage-cat-link" style="margin-top:14px;">¿No tienes cuenta? Regístrate aquí</button>
   </div>
+  <p class="auth-credit">Foto: <a href="https://www.freepik.com" target="_blank" rel="noopener">Designed by Freepik</a></p>
 </div>
 
 <div class="wrap" id="appRoot" style="display:none;">
@@ -718,6 +733,7 @@
     authError: document.getElementById('authError'),
     authSubmitBtn: document.getElementById('authSubmitBtn'),
     authToggleMode: document.getElementById('authToggleMode'),
+    authModeLabel: document.getElementById('authModeLabel'),
     accountEmail: document.getElementById('accountEmail'),
     logoutBtn: document.getElementById('logoutBtn'),
     typeToggle: document.getElementById('typeToggle'),
@@ -1963,8 +1979,9 @@
 
   els.authToggleMode.addEventListener('click', ()=>{
     authMode = authMode === 'login' ? 'signup' : 'login';
+    els.authModeLabel.textContent = authMode === 'login' ? 'Iniciar sesión' : 'Registro';
     els.authSubmitBtn.textContent = authMode === 'login' ? 'Entrar' : 'Crear cuenta';
-    els.authToggleMode.textContent = authMode === 'login' ? '¿No tienes cuenta? Créala aquí' : '¿Ya tienes cuenta? Inicia sesión';
+    els.authToggleMode.textContent = authMode === 'login' ? '¿No tienes cuenta? Regístrate aquí' : '¿Ya tienes cuenta? Inicia sesión';
     els.authError.textContent = '';
   });
 
