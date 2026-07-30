@@ -47,17 +47,9 @@
 
   .budget-compare{margin-top:6px;margin-bottom:24px;padding:16px 16px 14px;background:var(--paper);border-radius:8px;}
   .compare-title{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:10px;font-weight:700;}
-  .compare-row{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:12.5px;border-bottom:1px dashed var(--line);}
-  .compare-row:last-child{border-bottom:none;}
-  .compare-row.compare-header{border-bottom:1px solid var(--line);padding-bottom:8px;}
-  .compare-row.compare-header span{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);font-weight:700;}
-  .compare-name{flex:1;min-width:0;}
-  .compare-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:middle;}
-  .compare-presu{font-family:'IBM Plex Mono',monospace;width:88px;text-align:right;color:var(--ink-soft);}
-  .compare-real{font-family:'IBM Plex Mono',monospace;width:88px;text-align:right;font-weight:600;}
-  .compare-diff{font-family:'IBM Plex Mono',monospace;width:96px;text-align:right;font-size:11.5px;}
   .compare-chart{margin-bottom:16px;}
-  .cc-group{margin-bottom:12px;}
+  .cc-group{margin-bottom:14px;padding-bottom:12px;border-bottom:1px dashed var(--line);}
+  .cc-group:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
   .cc-label{font-size:12px;font-weight:600;margin-bottom:5px;}
   .cc-line{display:flex;align-items:center;gap:8px;margin-bottom:3px;}
   .cc-tag{font-family:'Inter',sans-serif;font-size:9.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-soft);width:34px;flex-shrink:0;}
@@ -65,8 +57,16 @@
   .cc-fill{height:100%;border-radius:5px;}
   .cc-fill.ghost{background:var(--ink-soft);opacity:.4;}
   .cc-val{font-family:'IBM Plex Mono',monospace;font-size:11px;width:76px;text-align:right;flex-shrink:0;}
-  .compare-real.good, .compare-diff.good{color:var(--income);}
-  .compare-real.bad, .compare-diff.bad{color:var(--expense);}
+  .cc-diff{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;text-align:right;margin-top:2px;}
+  .cc-diff.good{color:var(--income);}
+  .cc-diff.bad{color:var(--expense);}
+  .trend-chart{display:flex;align-items:flex-end;gap:10px;height:170px;padding:10px 4px 0;}
+  .trend-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0;}
+  .trend-val{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-soft);margin-bottom:4px;white-space:nowrap;}
+  .trend-track{width:100%;max-width:34px;flex:1;display:flex;align-items:flex-end;background:var(--paper-dark);border-radius:5px 5px 0 0;overflow:hidden;}
+  .trend-fill{width:100%;background:var(--income);border-radius:5px 5px 0 0;min-height:2px;}
+  .trend-col.current .trend-fill{background:var(--gold);}
+  .trend-label{font-family:'Inter',sans-serif;font-size:10.5px;color:var(--ink-soft);margin-top:6px;text-transform:capitalize;}
 
   .grid{display:grid;grid-template-columns:340px 1fr;gap:22px;}
   @media (max-width:760px){.grid{grid-template-columns:1fr;}}
@@ -93,11 +93,11 @@
   .type-toggle button.active[data-subtype="aporte"]{background:var(--income);color:#fff;}
   .type-toggle button.active[data-subtype="retiro"]{background:var(--expense);color:#fff;}
 
-  .tabs{display:flex;gap:8px;margin-bottom:20px;}
-  .tab-btn{flex:1;min-width:0;background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:9px 10px;font-family:'Inter',sans-serif;font-weight:700;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);cursor:pointer;transition:background .15s, color .15s, border-color .15s;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;}
+  .tab-btn{min-width:0;background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:10px 8px;font-family:'Inter',sans-serif;font-weight:700;font-size:11.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-soft);cursor:pointer;transition:background .15s, color .15s, border-color .15s;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .tab-btn.active{background:var(--ink);color:var(--surface);border-color:var(--ink);}
   .tab-btn:hover:not(.active){border-color:var(--gold);color:var(--ink);}
-  @media (min-width:560px){.tab-btn{font-size:12px;letter-spacing:.07em;padding:9px 18px;}}
+  @media (min-width:560px){.tabs{display:flex;}.tab-btn{flex:1;font-size:12px;letter-spacing:.07em;padding:9px 18px;}}
   #txForm.form-grid{display:grid;grid-template-columns:1fr 1fr;column-gap:24px;align-items:start;}
   #txForm.form-grid .span-2{grid-column:1 / -1;}
   @media (max-width:640px){ #txForm.form-grid{grid-template-columns:1fr;} }
@@ -329,6 +329,7 @@
       <button type="button" class="tab-btn active" data-tab="form">Registro</button>
       <button type="button" class="tab-btn" data-tab="budget">Presupuesto</button>
       <button type="button" class="tab-btn" data-tab="resumen">Resumen</button>
+      <button type="button" class="tab-btn" data-tab="cobrar">Por cobrar</button>
     </div>
 
     <div class="tab-panel" id="tabPanelForm">
@@ -415,6 +416,13 @@
       <div id="budgetPanel"></div>
     </div>
 
+    <div class="tab-panel" id="tabPanelCobrar" style="display:none;">
+      <div class="resumen-section">
+        <h3 class="section-title">Por cobrar <span class="h2-note">clientes y personas que te deben</span></h3>
+        <div id="receivablesPanel"></div>
+      </div>
+    </div>
+
     <div class="tab-panel" id="tabPanelResumen" style="display:none;">
       <div class="resumen-section">
         <h3 class="section-title">Resumen general</h3>
@@ -444,8 +452,8 @@
       </div>
 
       <div class="resumen-section">
-        <h3 class="section-title">Por cobrar <span class="h2-note">clientes y personas que te deben</span></h3>
-        <div id="receivablesPanel"></div>
+        <h3 class="section-title">Tendencia de ingresos <span class="h2-note">últimos 6 meses</span></h3>
+        <div id="incomeTrendChart"></div>
       </div>
 
       <div class="resumen-section" id="savingsCard">
@@ -515,6 +523,7 @@
   /* ---------- Filtro de periodo (día / mes / año / todo) ---------- */
   const MONTH_NAMES_ES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
   let periodMode = 'mes';
+  let recListOpen = false;
   let periodValue = new Date().toISOString().slice(0,7); // YYYY-MM, mes actual por defecto
 
   function isInPeriod(dateStr){
@@ -664,6 +673,7 @@
     statTopCategoryAmount: document.getElementById('statTopCategoryAmount'),
     catBreakdown: document.getElementById('catBreakdown'),
     groupDonut: document.getElementById('groupDonut'),
+    incomeTrendChart: document.getElementById('incomeTrendChart'),
     expenseDonut: document.getElementById('expenseDonut'),
     incomeBreakdown: document.getElementById('incomeBreakdown'),
     incomeDonut: document.getElementById('incomeDonut'),
@@ -875,11 +885,12 @@
     setType(btn.dataset.type);
   });
 
-  /* ---------- Tabs: Nuevo movimiento / Presupuesto / Resúmenes ---------- */
+  /* ---------- Tabs: Nuevo movimiento / Presupuesto / Resúmenes / Por cobrar ---------- */
   const mainTabs = document.getElementById('mainTabs');
   const tabPanelForm = document.getElementById('tabPanelForm');
   const tabPanelBudget = document.getElementById('tabPanelBudget');
   const tabPanelResumen = document.getElementById('tabPanelResumen');
+  const tabPanelCobrar = document.getElementById('tabPanelCobrar');
   mainTabs.addEventListener('click', (e)=>{
     const btn = e.target.closest('.tab-btn');
     if(!btn) return;
@@ -890,6 +901,7 @@
     tabPanelForm.style.display = tab === 'form' ? 'block' : 'none';
     tabPanelBudget.style.display = tab === 'budget' ? 'block' : 'none';
     tabPanelResumen.style.display = tab === 'resumen' ? 'block' : 'none';
+    tabPanelCobrar.style.display = tab === 'cobrar' ? 'block' : 'none';
   });
 
   /* ---------- Storage: transactions ---------- */
@@ -1008,10 +1020,10 @@
     const totalIngresos = groupTotal('ingresos');
     const { realFijos, realVariables, realInversiones, realIngresos } = computeRealTotals();
     const rows = [
-      { label:'Gastos fijos', presu:totalFijos, real:realFijos, color:'var(--expense)' },
-      { label:'Gastos variables', presu:totalVariables, real:realVariables, color:'#A15C4A' },
-      { label:'Inversiones y seguros', presu:totalInversiones, real:realInversiones, color:'var(--gold)' },
-      { label:'Ingresos fijos', presu:totalIngresos, real:realIngresos, color:'var(--income)' }
+      { label:'Gastos fijos', presu:totalFijos, real:realFijos, color:'var(--expense)', lowerIsBetter:true },
+      { label:'Gastos variables', presu:totalVariables, real:realVariables, color:'#A15C4A', lowerIsBetter:true },
+      { label:'Inversiones y seguros', presu:totalInversiones, real:realInversiones, color:'var(--gold)', lowerIsBetter:true },
+      { label:'Ingresos fijos', presu:totalIngresos, real:realIngresos, color:'var(--income)', lowerIsBetter:false }
     ];
     const max = Math.max(1, ...rows.flatMap(r=>[r.presu, r.real]));
     const bar = (val, color, ghost) => {
@@ -1019,47 +1031,24 @@
       return `<div class="cc-track"><div class="cc-fill${ghost?' ghost':''}" style="width:${pct}%;${ghost?'':'background:'+color+';'}"></div></div>`;
     };
     return `<div class="compare-chart">
-      ${rows.map(r=>`
-        <div class="cc-group">
+      ${rows.map(r=>{
+        const diff = r.real - r.presu;
+        const good = r.lowerIsBetter ? diff <= 0 : diff >= 0;
+        const diffText = diff === 0 ? 'Igual al presupuesto' : (diff > 0 ? `+${fmt.format(diff)}` : `−${fmt.format(Math.abs(diff))}`);
+        return `<div class="cc-group">
           <div class="cc-label">${escapeHtml(r.label)}</div>
           <div class="cc-line"><span class="cc-tag">Presu.</span>${bar(r.presu, r.color, true)}<span class="cc-val">${fmt.format(r.presu)}</span></div>
           <div class="cc-line"><span class="cc-tag">Real</span>${bar(r.real, r.color, false)}<span class="cc-val">${fmt.format(r.real)}</span></div>
-        </div>`).join('')}
-    </div>`;
-  }
-
-  function compareRow(name, presu, real, lowerIsBetter, dotColor){
-    const diff = real - presu;
-    const good = lowerIsBetter ? diff <= 0 : diff >= 0;
-    const diffText = diff === 0 ? 'Igual al presupuesto' : (diff > 0 ? `+${fmt.format(diff)}` : `−${fmt.format(Math.abs(diff))}`);
-    const dot = dotColor ? `<span class="compare-dot" style="background:${dotColor};"></span>` : '';
-    return `<div class="compare-row">
-      <span class="compare-name">${dot}${escapeHtml(name)}</span>
-      <span class="compare-presu">${fmt.format(presu)}</span>
-      <span class="compare-real ${good ? 'good' : 'bad'}">${fmt.format(real)}</span>
-      <span class="compare-diff ${good ? 'good' : 'bad'}">${diffText}</span>
+          <div class="cc-diff ${good ? 'good' : 'bad'}">Diferencia: ${diffText}</div>
+        </div>`;
+      }).join('')}
     </div>`;
   }
 
   function buildBudgetCompareHtml(){
-    const totalFijos = groupTotal('fijos');
-    const totalVariables = groupTotal('variables');
-    const totalInversiones = groupTotal('inversiones');
-    const totalIngresos = groupTotal('ingresos');
-    const { realFijos, realVariables, realInversiones, realIngresos } = computeRealTotals();
     return `<div class="budget-compare">
       <div class="compare-title">Presupuestado vs. real — ${escapeHtml(periodLabel())}</div>
       ${buildBudgetCompareChart()}
-      <div class="compare-row compare-header">
-        <span class="compare-name"></span>
-        <span class="compare-presu">Presupuestado</span>
-        <span class="compare-real">Real</span>
-        <span class="compare-diff">Diferencia</span>
-      </div>
-      ${compareRow('Gastos fijos', totalFijos, realFijos, true, 'var(--expense)')}
-      ${compareRow('Gastos variables', totalVariables, realVariables, true, '#A15C4A')}
-      ${compareRow('Inversiones y seguros', totalInversiones, realInversiones, true, 'var(--gold)')}
-      ${compareRow('Ingresos fijos', totalIngresos, realIngresos, false, 'var(--income)')}
       <p class="backup-note" style="margin-top:8px;">"Inversiones y seguros" solo compara categorías de gasto que hayas clasificado así al crearlas.</p>
     </div>`;
   }
@@ -1201,8 +1190,9 @@
     if(receivables.length === 0){
       html += '<p class="rec-empty">Aún no registras a nadie que te deba dinero.</p>';
     } else {
+      html += `<button type="button" id="toggleRecList" class="manage-cat-link">${recListOpen ? 'Ocultar' : 'Ver'} deudas registradas (${receivables.length}) ${recListOpen ? '▴' : '▾'}</button>`;
       const sorted = [...receivables].sort((a,b)=> b.date.localeCompare(a.date) || b.id - a.id);
-      html += sorted.map(r=>{
+      html += `<div id="recItemsList" style="display:${recListOpen ? 'block' : 'none'};margin-top:10px;">` + sorted.map(r=>{
         const abonado = receivableAbonado(r);
         const pendiente = Math.max(0, r.monto - abonado);
         const pct = r.monto ? Math.min(100, Math.round((abonado / r.monto) * 100)) : 0;
@@ -1228,10 +1218,18 @@
           </div>` : ''}
           <button type="button" class="rec-del" data-id="${r.id}">Eliminar registro</button>
         </div>`;
-      }).join('');
+      }).join('') + '</div>';
     }
 
     els.receivablesPanel.innerHTML = html;
+
+    const toggleRecList = els.receivablesPanel.querySelector('#toggleRecList');
+    if(toggleRecList){
+      toggleRecList.addEventListener('click', ()=>{
+        recListOpen = !recListOpen;
+        renderReceivables();
+      });
+    }
 
     const addBtn = els.receivablesPanel.querySelector('#addRecBtn');
     if(addBtn){
@@ -1317,6 +1315,36 @@
     return Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
   }
   const GROUP_COLORS = { 'Fijos':'#8B3A3A', 'Variables':'#A15C4A', 'Inversiones y seguros':'#C9A227', 'Generales':'#8a8578' };
+  const MONTH_ABBR = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  function computeMonthlyIncomeTrend(monthsCount){
+    monthsCount = monthsCount || 6;
+    const now = new Date();
+    const months = [];
+    for(let i = monthsCount - 1; i >= 0; i--){
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push({ key: d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'), label: MONTH_ABBR[d.getMonth()], year: d.getFullYear(), isCurrent: i === 0 });
+    }
+    const totals = {};
+    transactions.filter(t=>t.type==='ingreso').forEach(t=>{
+      const key = t.date.slice(0,7);
+      totals[key] = (totals[key]||0) + t.amount;
+    });
+    return months.map(m=> ({ ...m, total: totals[m.key] || 0 }));
+  }
+  function buildIncomeTrendHtml(monthsCount){
+    const data = computeMonthlyIncomeTrend(monthsCount);
+    const max = Math.max(1, ...data.map(m=>m.total));
+    return `<div class="trend-chart">
+      ${data.map(m=>{
+        const pct = Math.max(m.total>0?4:0, (m.total/max)*100);
+        return `<div class="trend-col${m.isCurrent?' current':''}">
+          <div class="trend-val">${m.total>0 ? fmt.format(m.total).replace('.00','') : ''}</div>
+          <div class="trend-track"><div class="trend-fill" style="height:${pct}%;"></div></div>
+          <div class="trend-label">${m.label}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
   function computeGroupBreakdown(){
     const byGroup = {};
     transactions.filter(t=>t.type==='gasto' && isInPeriod(t.date)).forEach(t=>{
@@ -1423,6 +1451,8 @@
 
     renderBudget();
     renderReceivables();
+
+    els.incomeTrendChart.innerHTML = buildIncomeTrendHtml(6);
 
     const groupBreakdown = computeGroupBreakdown();
     els.groupDonut.innerHTML = groupBreakdown.length > 0
