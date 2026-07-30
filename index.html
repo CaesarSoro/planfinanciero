@@ -126,11 +126,16 @@
   .rec-del{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:12px;text-decoration:underline;padding:0;margin-top:8px;}
   .rec-del:hover{color:var(--expense);}
 
-  .cat-chips{margin-top:8px;display:none;}
+  .cat-chips{margin-top:8px;}
+  .manage-cat-link{background:none;border:none;color:var(--ink-soft);font-size:11.5px;text-decoration:underline;cursor:pointer;padding:6px 0 0;font-family:'Inter',sans-serif;}
+  .manage-cat-link:hover{color:var(--ink);}
+  .cat-chip select{border:none;background:none;color:inherit;font-size:10px;font-family:'Inter',sans-serif;margin-left:2px;cursor:pointer;}
   .cat-chip{display:inline-flex;align-items:center;gap:5px;background:var(--paper);border-radius:20px;padding:3px 6px 3px 10px;font-size:11.5px;margin:2px 5px 2px 0;color:var(--ink-soft);}
   .cat-chip button{background:none;border:none;cursor:pointer;color:inherit;opacity:.6;font-size:12px;line-height:1;padding:0 2px;}
   .cat-chip button:hover{opacity:1;}
-  .cat-add-row{display:flex;gap:6px;margin-top:8px;}
+  .cat-add-row{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+  .cat-add-row input[type=text]{flex:1.5 1 130px;}
+  .cat-add-row select{flex:1 1 110px;padding:7px 8px;font-size:12px;border:1px solid var(--line);border-radius:6px;background:#fff;}
   .cat-add-row input{flex:1;padding:7px 9px;font-size:12.5px;border:1px solid var(--line);border-radius:6px;}
   .cat-add-row button{padding:7px 12px;font-size:12px;font-weight:600;border:none;border-radius:6px;background:var(--ink);color:#fff;cursor:pointer;}
 
@@ -352,9 +357,16 @@
         <div class="field span-2" id="categoryFieldWrap">
           <label for="category" id="categoryLabel">Categoría</label>
           <select id="category"></select>
-          <div class="cat-chips" id="catChips"></div>
+          <button type="button" id="toggleCatChips" class="manage-cat-link" style="display:none;">Gestionar categorías (editar grupo / eliminar) ▾</button>
+          <div class="cat-chips" id="catChips" style="display:none;"></div>
           <div class="cat-add-row">
             <input type="text" id="newCatInput" placeholder="Nueva categoría...">
+            <select id="newCatGroup" style="display:none;">
+              <option value="Fijos">Fijo</option>
+              <option value="Variables" selected>Variable</option>
+              <option value="Inversiones y seguros">Inversión/Seguro</option>
+              <option value="Generales">General</option>
+            </select>
             <button type="button" id="addCatBtn">Agregar</button>
           </div>
         </div>
@@ -509,7 +521,7 @@
     ingreso: ["Salario","Freelance","Ventas","Inversiones","Cobranza","Otros ingresos"],
     gasto: [
       "Luz - Valle","Luz - Campestre","Luz - Elena","Agua - Valle","Agua - Elena","Wifi - Valle","Wifi - Elena","Wifi - Campestre","Vivienda","Servicios",
-      "Telcel - Celular","Google","Disney + Mercado Libre","Servidor Host","Amazon","Transporte","Comidas","Entretenimiento","Cine","Conciertos","Uber","Deportes",
+      "Telcel - Celular","Google","Disney + Mercado Libre","Servidor Host","Amazon","Transporte","Comidas","Entretenimiento","Cine","Conciertos","Uber","Deportes","Mandado","Remodelación",
       "Ropa","Salud","Equipo de Trabajo","Viajes","Cumpleaños","Banco","Amigos","Mascotas","Facturas","Educación","Otros gastos"
     ],
     ahorro: ["Ahorro Emergencia","Inversion GBM","Inversion ARQ","Inversion CETES","Ahorro Efectivo","Ahorro Banco"]
@@ -519,8 +531,9 @@
     "Wifi - Valle":"Fijos","Wifi - Elena":"Fijos","Wifi - Campestre":"Fijos","Vivienda":"Fijos","Servicios":"Fijos",
     "Telcel - Celular":"Variables","Google":"Variables","Disney + Mercado Libre":"Variables","Servidor Host":"Variables","Amazon":"Variables",
     "Transporte":"Variables","Comidas":"Variables","Entretenimiento":"Variables","Cine":"Variables","Conciertos":"Variables","Uber":"Variables","Deportes":"Variables",
-    "Ropa":"Generales","Salud":"Generales","Equipo de Trabajo":"Generales","Viajes":"Generales","Cumpleaños":"Generales",
-    "Banco":"Generales","Amigos":"Generales","Mascotas":"Generales","Facturas":"Generales","Educación":"Generales","Otros gastos":"Generales"
+    "IA":"Variables","Compras En Línea":"Variables","Mandado":"Variables","Remodelación":"Variables",
+    "Ropa":"Variables","Salud":"Variables","Equipo de Trabajo":"Variables","Viajes":"Variables","Cumpleaños":"Variables",
+    "Banco":"Variables","Amigos":"Variables","Mascotas":"Variables","Facturas":"Variables","Educación":"Variables","Otros gastos":"Variables"
   };
   const GROUP_ORDER = ["Fijos","Variables","Inversiones y seguros","Generales","Otras"];
 
@@ -538,6 +551,7 @@
   const CAT_KEY = "libro-cuentas:categories";
   const BUDGET_KEY = "libro-cuentas:budget";
   const RECV_KEY = "libro-cuentas:receivables";
+  const CATGROUPS_KEY = "libro-cuentas:categoryGroups";
 
   const DEFAULT_BUDGET = {
     fijos: [
@@ -579,6 +593,7 @@
   let budget = JSON.parse(JSON.stringify(DEFAULT_BUDGET));
   let editingBudgetItem = null; // { key, id } del renglón que se está editando, o null
   let receivables = [];
+  let customCategoryGroups = {}; // categorías nuevas que el usuario clasificó como Fijo/Variable/Inversión/General
   let currentType = "ingreso";
   let currentSubtype = "aporte";
 
@@ -592,7 +607,9 @@
     categoryLabel: document.getElementById('categoryLabel'),
     category: document.getElementById('category'),
     catChips: document.getElementById('catChips'),
+    toggleCatChips: document.getElementById('toggleCatChips'),
     newCatInput: document.getElementById('newCatInput'),
+    newCatGroup: document.getElementById('newCatGroup'),
     addCatBtn: document.getElementById('addCatBtn'),
     amount: document.getElementById('amount'),
     amountLabel: document.getElementById('amountLabel'),
@@ -665,6 +682,17 @@
     try{ await storageAdapter.set(CAT_KEY, JSON.stringify(categories)); }
     catch(err){ console.error('No se pudieron guardar las categorías:', err); }
   }
+  async function loadCategoryGroups(){
+    try{
+      const res = await storageAdapter.get(CATGROUPS_KEY);
+      customCategoryGroups = (res && res.value) ? JSON.parse(res.value) : {};
+      Object.assign(CATEGORY_GROUPS, customCategoryGroups);
+    }catch(err){ customCategoryGroups = {}; }
+  }
+  async function saveCategoryGroups(){
+    try{ await storageAdapter.set(CATGROUPS_KEY, JSON.stringify(customCategoryGroups)); }
+    catch(err){ console.error('No se pudieron guardar las clasificaciones de categoría:', err); }
+  }
 
   function populateCategories(){
     if(!categories[currentType]) return;
@@ -685,11 +713,21 @@
 
   function renderCatChips(){
     if(!categories[currentType]){ els.catChips.innerHTML=''; return; }
-    els.catChips.innerHTML = categories[currentType].map(c => `
-      <span class="cat-chip" data-cat="${escapeHtml(c)}">
+    const isGasto = currentType === 'gasto';
+    els.catChips.innerHTML = categories[currentType].map(c => {
+      const groupSelect = isGasto ? `
+        <select class="chip-group" data-cat="${escapeHtml(c)}" title="Grupo de presupuesto">
+          <option value="Fijos" ${CATEGORY_GROUPS[c]==='Fijos'?'selected':''}>Fijo</option>
+          <option value="Variables" ${CATEGORY_GROUPS[c]==='Variables'?'selected':''}>Variable</option>
+          <option value="Inversiones y seguros" ${CATEGORY_GROUPS[c]==='Inversiones y seguros'?'selected':''}>Inversión/Seguro</option>
+          <option value="Generales" ${(!CATEGORY_GROUPS[c] || CATEGORY_GROUPS[c]==='Generales' || CATEGORY_GROUPS[c]==='Otras')?'selected':''}>General</option>
+        </select>` : '';
+      return `<span class="cat-chip" data-cat="${escapeHtml(c)}">
         ${escapeHtml(c)}
+        ${groupSelect}
         <button type="button" class="chip-del" data-cat="${escapeHtml(c)}" title="Eliminar categoría">✕</button>
-      </span>`).join('');
+      </span>`;
+    }).join('');
     els.catChips.querySelectorAll('.chip-del').forEach(btn=>{
       btn.addEventListener('click', async ()=>{
         const cat = btn.dataset.cat;
@@ -697,6 +735,16 @@
         renderCatChips();
         populateCategories();
         await saveCategories();
+      });
+    });
+    els.catChips.querySelectorAll('.chip-group').forEach(sel=>{
+      sel.addEventListener('change', async ()=>{
+        const cat = sel.dataset.cat;
+        CATEGORY_GROUPS[cat] = sel.value;
+        customCategoryGroups[cat] = sel.value;
+        await saveCategoryGroups();
+        populateCategories();
+        render();
       });
     });
   }
@@ -707,6 +755,12 @@
     if(!categories[currentType].includes(name)){
       categories[currentType].push(name);
       await saveCategories();
+      if(currentType === 'gasto'){
+        const group = els.newCatGroup.value;
+        customCategoryGroups[name] = group;
+        CATEGORY_GROUPS[name] = group;
+        await saveCategoryGroups();
+      }
       populateCategories();
       els.category.value = name;
     }
@@ -714,6 +768,13 @@
   });
   els.newCatInput.addEventListener('keydown', (e)=>{
     if(e.key === 'Enter'){ e.preventDefault(); els.addCatBtn.click(); }
+  });
+  els.toggleCatChips.addEventListener('click', ()=>{
+    const showing = els.catChips.style.display !== 'none';
+    els.catChips.style.display = showing ? 'none' : 'block';
+    els.toggleCatChips.textContent = showing
+      ? 'Gestionar categorías (editar grupo / eliminar) ▾'
+      : 'Ocultar categorías ▴';
   });
 
   /* ---------- Payment method / MSI / Ahorro visibility ---------- */
@@ -767,6 +828,10 @@
     els.categoryFieldWrap.style.display = 'block';
     els.categoryLabel.textContent = isAhorro ? 'Tipo de ahorro' : 'Categoría';
     els.newCatInput.placeholder = isAhorro ? 'Nuevo tipo de ahorro...' : 'Nueva categoría...';
+    els.newCatGroup.style.display = (type === 'gasto') ? 'inline-block' : 'none';
+    els.toggleCatChips.style.display = (type === 'gasto') ? 'inline-block' : 'none';
+    els.catChips.style.display = 'none';
+    els.toggleCatChips.textContent = 'Gestionar categorías (editar grupo / eliminar) ▾';
     els.ahorroSubtypeField.style.display = isAhorro ? 'block' : 'none';
     populateCategories();
     populatePaymentMethods();
@@ -920,8 +985,9 @@
   function buildBudgetCompareHtml(){
     const totalFijos = groupTotal('fijos');
     const totalVariables = groupTotal('variables');
+    const totalInversiones = groupTotal('inversiones');
     const totalIngresos = groupTotal('ingresos');
-    const { realFijos, realVariables, realIngresos } = computeRealTotals();
+    const { realFijos, realVariables, realInversiones, realIngresos } = computeRealTotals();
     return `<div class="budget-compare">
       <div class="compare-title">Presupuestado vs. real — ${escapeHtml(periodLabel())}</div>
       <div class="compare-row compare-header">
@@ -932,8 +998,9 @@
       </div>
       ${compareRow('Gastos fijos', totalFijos, realFijos, true, 'var(--expense)')}
       ${compareRow('Gastos variables', totalVariables, realVariables, true, '#A15C4A')}
+      ${compareRow('Inversiones y seguros', totalInversiones, realInversiones, true, 'var(--gold)')}
       ${compareRow('Ingresos fijos', totalIngresos, realIngresos, false, 'var(--income)')}
-      <p class="backup-note" style="margin-top:8px;">"Inversiones y seguros" no se compara porque hoy no tiene categorías de gasto vinculadas.</p>
+      <p class="backup-note" style="margin-top:8px;">"Inversiones y seguros" solo compara categorías de gasto que hayas clasificado así al crearlas.</p>
     </div>`;
   }
 
@@ -1225,7 +1292,7 @@
     return Object.entries(byFund).sort((a,b)=>b[1]-a[1]);
   }
   function computeRealTotals(){
-    let realFijos = 0, realVariables = 0, realIngresos = 0;
+    let realFijos = 0, realVariables = 0, realInversiones = 0, realIngresos = 0;
     transactions.forEach(t=>{
       if(!isInPeriod(t.date)) return;
       if(t.type === 'gasto'){
@@ -1233,11 +1300,12 @@
         const amt = expenseContribution(t);
         if(grupo === 'Fijos') realFijos += amt;
         else if(grupo === 'Variables') realVariables += amt;
+        else if(grupo === 'Inversiones y seguros') realInversiones += amt;
       } else if(t.type === 'ingreso'){
         realIngresos += t.amount;
       }
     });
-    return { realFijos, realVariables, realIngresos };
+    return { realFijos, realVariables, realInversiones, realIngresos };
   }
 
   /* ---------- Render ---------- */
@@ -1472,6 +1540,7 @@
       exportedAt: new Date().toISOString(),
       transactions,
       categories,
+      categoryGroups: customCategoryGroups,
       budget,
       receivables,
     };
@@ -1498,6 +1567,11 @@
       if(data.categories) categories = data.categories;
       if(data.budget) budget = data.budget;
       if(Array.isArray(data.receivables)) receivables = data.receivables;
+      if(data.categoryGroups){
+        customCategoryGroups = data.categoryGroups;
+        Object.assign(CATEGORY_GROUPS, customCategoryGroups);
+        await saveCategoryGroups();
+      }
       await Promise.all([saveTransactions(), saveCategories(), saveBudget(), saveReceivables()]);
       setType(currentType);
       render();
@@ -1543,7 +1617,7 @@
     els.periodMonth.value = todayStr().slice(0,7);
     els.periodYear.value = todayStr().slice(0,4);
     updatePeriodInputVisibility();
-    await Promise.all([loadCategories(), loadBudget(), loadTransactions(), loadReceivables()]);
+    await Promise.all([loadCategories(), loadBudget(), loadTransactions(), loadReceivables(), loadCategoryGroups()]);
     setType('ingreso');
     render();
   })();
