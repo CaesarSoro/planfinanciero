@@ -20,7 +20,7 @@
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;padding:28px 16px 60px;min-height:100vh;}
-  .wrap{max-width:980px;margin:0 auto;}
+  .wrap{max-width:980px;margin:0 auto;position:relative;}
 
   header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:26px;padding-bottom:18px;border-bottom:2px solid var(--ink);}
   .brand-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);margin:0 0 4px;}
@@ -34,8 +34,6 @@
   .tape .tape-amount{font-size:24px;font-weight:500;font-variant-numeric:tabular-nums;}
   .tape .tape-amount.neg{color:#E0A0A0;} .tape .tape-amount.pos{color:#A9D4BC;}
 
-  .backup-bar{display:flex;align-items:center;gap:10px;margin-top:30px;padding-top:20px;border-top:1px solid var(--line);flex-wrap:wrap;}
-  .backup-btn{display:inline-block;padding:7px 14px;font-size:12px;font-weight:600;letter-spacing:.02em;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink-soft);cursor:pointer;text-decoration:none;font-family:'Inter',sans-serif;}
   .backup-btn:hover{border-color:var(--gold);color:var(--ink);}
   .backup-note{font-size:11.5px;color:var(--ink-soft);}
 
@@ -306,12 +304,19 @@
   #authForm input{padding:11px 12px;font-size:14px;border:1px solid var(--line);border-radius:8px;background:#fff;font-family:'Inter',sans-serif;text-transform:none;}
   #authForm button{padding:11px 12px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;border:none;border-radius:8px;background:var(--ink);color:#fff;cursor:pointer;margin-top:4px;}
   .auth-error{color:var(--expense);font-size:12.5px;margin-top:10px;min-height:1em;}
-  .account-bar{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--ink-soft);}
-  .account-bar button{background:none;border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--ink-soft);cursor:pointer;font-family:'Inter',sans-serif;text-transform:uppercase;letter-spacing:.03em;}
-  .account-bar button:hover{border-color:var(--expense-soft);color:var(--expense);}
   .resumen-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:none;cursor:pointer;padding:0 0 12px;margin:0 0 16px;border-bottom:1px solid var(--line);font-family:inherit;text-align:left;gap:10px;}
   .resumen-toggle .section-title-text{font-family:'Fraunces',serif;font-size:16px;font-weight:600;}
   .resumen-caret{font-size:13px;color:var(--ink-soft);flex-shrink:0;}
+
+  .account-menu-wrap{position:absolute;top:0;right:0;z-index:20;}
+  .account-menu-btn{width:34px;height:34px;border-radius:50%;background:var(--surface);border:1px solid var(--line);color:var(--ink-soft);font-size:16px;line-height:1;cursor:pointer;}
+  .account-menu-btn:hover{border-color:var(--gold);color:var(--ink);}
+  .account-menu-panel{position:absolute;top:42px;right:0;width:250px;max-width:80vw;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);padding:14px;}
+  .account-menu-email{font-size:11.5px;color:var(--ink-soft);word-break:break-all;margin:0 0 10px;}
+  .account-menu-item{display:block;width:100%;text-align:left;background:none;border:none;padding:8px 4px;font-size:13px;color:var(--ink);cursor:pointer;font-family:'Inter',sans-serif;border-radius:6px;}
+  .account-menu-item:hover{background:var(--paper);}
+  .account-menu-item.danger{color:var(--expense);}
+  .account-menu-divider{border-top:1px solid var(--line);margin:8px 0;}
 
   /* ---------- Tablet / escritorio: mejor aprovechamiento del espacio ---------- */
   @media (min-width:860px){
@@ -349,6 +354,20 @@
 </div>
 
 <div class="wrap" id="appRoot" style="display:none;">
+
+  <div class="account-menu-wrap">
+    <button type="button" id="accountMenuBtn" class="account-menu-btn" aria-label="Cuenta y respaldo">☰</button>
+    <div class="account-menu-panel" id="accountMenuPanel" style="display:none;">
+      <p class="account-menu-email" id="accountEmail"></p>
+      <button type="button" id="exportBtn" class="account-menu-item">⭳ Exportar respaldo</button>
+      <label for="importFile" class="account-menu-item" style="cursor:pointer;">⭱ Importar respaldo</label>
+      <input type="file" id="importFile" accept="application/json" style="display:none;">
+      <p class="backup-note" id="backupNote" style="padding:2px 4px;"></p>
+      <div class="account-menu-divider"></div>
+      <button type="button" id="logoutBtn" class="account-menu-item danger">Cerrar sesión</button>
+    </div>
+  </div>
+
 
   <header>
     <div>
@@ -571,17 +590,6 @@
     </div>
   </div>
 
-  <div class="backup-bar">
-    <button type="button" id="exportBtn" class="backup-btn">⭳ Exportar respaldo</button>
-    <label for="importFile" class="backup-btn">⭱ Importar respaldo</label>
-    <input type="file" id="importFile" accept="application/json" style="display:none;">
-    <span class="backup-note" id="backupNote"></span>
-  </div>
-
-  <div class="account-bar" style="margin-top:14px;">
-    <span id="accountEmail"></span>
-    <button type="button" id="logoutBtn">Cerrar sesión</button>
-  </div>
 </div>
 
 <script>
@@ -765,6 +773,8 @@
     authModeLabel: document.getElementById('authModeLabel'),
     accountEmail: document.getElementById('accountEmail'),
     logoutBtn: document.getElementById('logoutBtn'),
+    accountMenuBtn: document.getElementById('accountMenuBtn'),
+    accountMenuPanel: document.getElementById('accountMenuPanel'),
     typeToggle: document.getElementById('typeToggle'),
     ahorroSubtypeField: document.getElementById('ahorroSubtypeField'),
     ahorroSubtypeToggle: document.getElementById('ahorroSubtypeToggle'),
@@ -947,6 +957,16 @@
     els.toggleCatChips.textContent = showing
       ? 'Gestionar categorías (editar grupo / eliminar) ▾'
       : 'Ocultar categorías ▴';
+  });
+  els.accountMenuBtn.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    const showing = els.accountMenuPanel.style.display !== 'none';
+    els.accountMenuPanel.style.display = showing ? 'none' : 'block';
+  });
+  document.addEventListener('click', (e)=>{
+    if(els.accountMenuPanel.style.display === 'none') return;
+    if(e.target.closest('.account-menu-wrap')) return;
+    els.accountMenuPanel.style.display = 'none';
   });
   els.msiToggle.addEventListener('click', ()=>{
     const showing = els.msiPanel.style.display !== 'none';
@@ -2132,7 +2152,7 @@
       // Vista previa dentro de Claude.ai: sigue usando window.storage como siempre, sin pedir login.
       els.authScreen.style.display = 'none';
       els.appRoot.style.display = 'block';
-      document.querySelector('.account-bar').style.display = 'none';
+      document.querySelector('.account-menu-wrap').style.display = 'none';
       await loadAllDataAndRender();
       return;
     }
