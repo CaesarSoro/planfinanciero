@@ -309,14 +309,18 @@
   .resumen-caret{font-size:13px;color:var(--ink-soft);flex-shrink:0;}
 
   .account-menu-wrap{position:absolute;top:0;right:0;z-index:20;}
-  .account-menu-btn{width:34px;height:34px;border-radius:50%;background:var(--surface);border:1px solid var(--line);color:var(--ink-soft);font-size:16px;line-height:1;cursor:pointer;}
-  .account-menu-btn:hover{border-color:var(--gold);color:var(--ink);}
-  .account-menu-panel{position:absolute;top:42px;right:0;width:250px;max-width:80vw;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);padding:14px;}
-  .account-menu-email{font-size:11.5px;color:var(--ink-soft);word-break:break-all;margin:0 0 10px;}
-  .account-menu-item{display:block;width:100%;text-align:left;background:none;border:none;padding:8px 4px;font-size:13px;color:var(--ink);cursor:pointer;font-family:'Inter',sans-serif;border-radius:6px;}
+  .account-menu-btn{width:46px;height:46px;border-radius:50%;background:var(--gold-soft);border:1.5px solid var(--gold);color:var(--gold);font-size:20px;line-height:1;cursor:pointer;}
+  .account-menu-btn:hover{background:var(--gold);color:#fff;}
+  .drawer-backdrop{position:fixed;inset:0;background:rgba(20,18,14,.45);opacity:0;pointer-events:none;transition:opacity .25s ease;z-index:29;}
+  .drawer-backdrop.open{opacity:1;pointer-events:auto;}
+  .account-drawer{position:fixed;top:0;left:0;height:100vh;width:280px;max-width:82vw;background:var(--surface);box-shadow:4px 0 28px rgba(0,0,0,.2);z-index:30;transform:translateX(-100%);transition:transform .3s ease;padding:22px 20px;display:flex;flex-direction:column;overflow-y:auto;}
+  .account-drawer.open{transform:translateX(0);}
+  .drawer-close{align-self:flex-start;background:none;border:1px solid var(--line);border-radius:50%;width:34px;height:34px;font-size:15px;color:var(--ink-soft);cursor:pointer;margin-bottom:20px;}
+  .drawer-close:hover{border-color:var(--expense-soft);color:var(--expense);}
+  .account-menu-email{font-size:12px;color:var(--ink-soft);word-break:break-all;margin:0 0 16px;padding-bottom:14px;border-bottom:1px solid var(--line);}
+  .account-menu-item{display:block;width:100%;text-align:left;background:none;border:none;padding:12px 6px;font-size:14px;color:var(--ink);cursor:pointer;font-family:'Inter',sans-serif;border-radius:6px;}
   .account-menu-item:hover{background:var(--paper);}
-  .account-menu-item.danger{color:var(--expense);}
-  .account-menu-divider{border-top:1px solid var(--line);margin:8px 0;}
+  .account-menu-item.danger{color:var(--expense);margin-top:auto;border-top:1px solid var(--line);padding-top:16px;border-radius:0;}
 
   /* ---------- Tablet / escritorio: mejor aprovechamiento del espacio ---------- */
   @media (min-width:860px){
@@ -357,15 +361,17 @@
 
   <div class="account-menu-wrap">
     <button type="button" id="accountMenuBtn" class="account-menu-btn" aria-label="Cuenta y respaldo">☰</button>
-    <div class="account-menu-panel" id="accountMenuPanel" style="display:none;">
-      <p class="account-menu-email" id="accountEmail"></p>
-      <button type="button" id="exportBtn" class="account-menu-item">⭳ Exportar respaldo</button>
-      <label for="importFile" class="account-menu-item" style="cursor:pointer;">⭱ Importar respaldo</label>
-      <input type="file" id="importFile" accept="application/json" style="display:none;">
-      <p class="backup-note" id="backupNote" style="padding:2px 4px;"></p>
-      <div class="account-menu-divider"></div>
-      <button type="button" id="logoutBtn" class="account-menu-item danger">Cerrar sesión</button>
-    </div>
+  </div>
+
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+  <div class="account-drawer" id="accountMenuPanel">
+    <button type="button" id="drawerCloseBtn" class="drawer-close" aria-label="Cerrar menú">✕</button>
+    <p class="account-menu-email" id="accountEmail"></p>
+    <button type="button" id="exportBtn" class="account-menu-item">⭳ Exportar respaldo</button>
+    <label for="importFile" class="account-menu-item" style="cursor:pointer;">⭱ Importar respaldo</label>
+    <input type="file" id="importFile" accept="application/json" style="display:none;">
+    <p class="backup-note" id="backupNote" style="padding:2px 6px;"></p>
+    <button type="button" id="logoutBtn" class="account-menu-item danger">Cerrar sesión</button>
   </div>
 
 
@@ -775,6 +781,8 @@
     logoutBtn: document.getElementById('logoutBtn'),
     accountMenuBtn: document.getElementById('accountMenuBtn'),
     accountMenuPanel: document.getElementById('accountMenuPanel'),
+    drawerBackdrop: document.getElementById('drawerBackdrop'),
+    drawerCloseBtn: document.getElementById('drawerCloseBtn'),
     typeToggle: document.getElementById('typeToggle'),
     ahorroSubtypeField: document.getElementById('ahorroSubtypeField'),
     ahorroSubtypeToggle: document.getElementById('ahorroSubtypeToggle'),
@@ -958,16 +966,20 @@
       ? 'Gestionar categorías (editar grupo / eliminar) ▾'
       : 'Ocultar categorías ▴';
   });
+  function openDrawer(){
+    els.accountMenuPanel.classList.add('open');
+    els.drawerBackdrop.classList.add('open');
+  }
+  function closeDrawer(){
+    els.accountMenuPanel.classList.remove('open');
+    els.drawerBackdrop.classList.remove('open');
+  }
   els.accountMenuBtn.addEventListener('click', (e)=>{
     e.stopPropagation();
-    const showing = els.accountMenuPanel.style.display !== 'none';
-    els.accountMenuPanel.style.display = showing ? 'none' : 'block';
+    if(els.accountMenuPanel.classList.contains('open')) closeDrawer(); else openDrawer();
   });
-  document.addEventListener('click', (e)=>{
-    if(els.accountMenuPanel.style.display === 'none') return;
-    if(e.target.closest('.account-menu-wrap')) return;
-    els.accountMenuPanel.style.display = 'none';
-  });
+  els.drawerCloseBtn.addEventListener('click', closeDrawer);
+  els.drawerBackdrop.addEventListener('click', closeDrawer);
   els.msiToggle.addEventListener('click', ()=>{
     const showing = els.msiPanel.style.display !== 'none';
     els.msiPanel.style.display = showing ? 'none' : 'block';
