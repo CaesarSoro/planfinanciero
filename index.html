@@ -86,6 +86,8 @@
   .msi-toggle{display:block;width:100%;background:none;border:none;cursor:pointer;padding:0;text-align:left;font-family:inherit;}
   .msi-toggle h2{margin:0;}
   .msi-chevron{font-size:14px;color:var(--ink-soft);margin-left:6px;}
+  .toggle-hint{float:right;font-family:'Inter',sans-serif;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-soft);}
+  .toggle-hint .msi-chevron{margin-left:4px;}
   .msi-toggle .h2-note{display:block;float:none;margin-top:4px;font-size:12px;}
 
   .field{margin-bottom:14px;}
@@ -128,6 +130,40 @@
   .rec-add-row input[type=date]{flex:0.9 1 130px;}
   .rec-add-row button{padding:8px 16px;font-size:13px;font-weight:600;border:none;border-radius:6px;background:var(--ink);color:#fff;cursor:pointer;flex-shrink:0;}
   .rec-empty{text-align:center;padding:20px 10px;color:var(--ink-soft);font-size:13.5px;}
+
+  .travel-section{margin-top:28px;padding-top:24px;border-top:1px solid var(--line);}
+  .travel-header{font-family:'Fraunces',serif;font-size:16px;font-weight:600;margin-bottom:16px;}
+  .travel-add-row{display:flex;flex-direction:column;gap:8px;margin-bottom:22px;padding:14px;background:var(--paper);border-radius:8px;}
+  .travel-add-row input{padding:9px 11px;font-size:13px;border:1px solid var(--line);border-radius:6px;background:#fff;font-family:'Inter',sans-serif;width:100%;box-sizing:border-box;}
+  .travel-add-row select{padding:9px 11px;font-size:13px;border:1px solid var(--line);border-radius:6px;background:#fff;font-family:'Inter',sans-serif;width:100%;box-sizing:border-box;color:var(--ink);}
+  .travel-date-row{display:flex;gap:8px;}
+  .travel-date-row input{flex:1;min-width:0;}
+  .travel-add-row button{padding:9px 16px;font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;border:none;border-radius:6px;background:var(--ink);color:#fff;cursor:pointer;}
+  .travel-card{padding:16px;background:var(--paper);border-radius:8px;margin-bottom:12px;}
+  .travel-card:last-child{margin-bottom:0;}
+  .travel-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;}
+  .travel-name{font-family:'Fraunces',serif;font-weight:600;font-size:14.5px;}
+  .travel-tipo-tag{font-family:'Inter',sans-serif;font-weight:600;font-size:9.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-soft);background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:2px 8px;margin-left:6px;vertical-align:middle;}
+  .travel-dates{font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
+  .travel-del{background:none;border:1px solid var(--line);border-radius:6px;color:var(--ink-soft);cursor:pointer;width:28px;height:28px;flex-shrink:0;font-size:12px;}
+  .travel-del:hover{color:var(--expense);border-color:var(--expense-soft);background:var(--expense-soft);}
+  .travel-bar-track{height:9px;background:var(--paper-dark);border-radius:5px;overflow:hidden;margin-bottom:8px;}
+  .travel-bar-fill{height:100%;background:var(--income);border-radius:5px;}
+  .travel-bar-fill.over{background:var(--expense);}
+  .travel-bar-fill.savings{background:var(--gold);}
+  .travel-numbers{display:flex;justify-content:space-between;font-size:12.5px;font-family:'IBM Plex Mono',monospace;margin-bottom:6px;}
+  .travel-remaining{font-size:12.5px;font-weight:700;}
+  .travel-remaining.good{color:var(--income);}
+  .travel-remaining.bad{color:var(--expense);}
+  .travel-remaining.neutral{color:var(--gold);}
+  @media (min-width:560px){
+    .travel-add-row{flex-direction:row;flex-wrap:wrap;align-items:center;}
+    .travel-add-row input[type=text]{flex:1 1 160px;}
+    .travel-add-row select{flex:1 1 180px;}
+    .travel-add-row input[type=number]{flex:0.7 1 110px;}
+    .travel-date-row{flex:1 1 240px;}
+    .travel-add-row button{flex-shrink:0;}
+  }
   .rec-item{padding:14px 0;border-bottom:1px dashed var(--line);}
   .rec-item:last-child{border-bottom:none;}
   .rec-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:6px;flex-wrap:wrap;}
@@ -316,6 +352,10 @@
   #authForm{display:flex;flex-direction:column;gap:10px;}
   #authForm input{padding:11px 12px;font-size:14px;border:1px solid var(--line);border-radius:8px;background:#fff;font-family:'Inter',sans-serif;text-transform:none;}
   #authForm button{padding:11px 12px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;border:none;border-radius:8px;background:var(--ink);color:#fff;cursor:pointer;margin-top:4px;}
+  .google-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px 12px;font-size:13.5px;font-weight:600;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);cursor:pointer;font-family:'Inter',sans-serif;}
+  .google-btn:hover{border-color:var(--gold);}
+  .auth-divider{display:flex;align-items:center;gap:10px;margin:16px 0;font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.03em;}
+  .auth-divider::before,.auth-divider::after{content:'';flex:1;border-top:1px solid var(--line);}
   .auth-error{color:var(--expense);font-size:12.5px;margin-top:10px;min-height:1em;}
   .resumen-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:none;cursor:pointer;padding:0 0 12px;margin:0 0 16px;border-bottom:1px solid var(--line);font-family:inherit;text-align:left;gap:10px;}
   .resumen-toggle .section-title-text{font-family:'Fraunces',serif;font-size:16px;font-weight:600;}
@@ -333,7 +373,7 @@
   .account-menu-email{font-size:12px;color:var(--ink-soft);word-break:break-all;margin:0 0 16px;padding-bottom:14px;border-bottom:1px solid var(--line);}
   .account-menu-item{display:block;width:100%;text-align:left;background:none;border:none;padding:12px 6px;font-size:14px;color:var(--ink);cursor:pointer;font-family:'Inter',sans-serif;border-radius:6px;}
   .account-menu-item:hover{background:var(--paper);}
-  .account-menu-item.danger{color:var(--expense);margin-top:auto;border-top:1px solid var(--line);padding-top:16px;border-radius:0;}
+  .account-menu-item.danger{color:var(--expense);margin-top:6px;}
 
   /* ---------- Tablet / escritorio: mejor aprovechamiento del espacio ---------- */
   @media (min-width:860px){
@@ -359,6 +399,11 @@
   <div class="auth-card">
     <h1 style="margin:0 0 4px;">Finanzas Personales</h1>
     <p class="auth-mode-label" id="authModeLabel">Iniciar sesión</p>
+    <button type="button" id="googleSignInBtn" class="google-btn">
+      <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 01-1.8 2.72v2.26h2.9c1.7-1.57 2.7-3.88 2.7-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.26c-.8.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.98v2.33A9 9 0 009 18z"/><path fill="#FBBC05" d="M3.95 10.7A5.4 5.4 0 013.68 9c0-.59.1-1.17.27-1.7V4.97H.98A9 9 0 000 9c0 1.45.35 2.83.98 4.03l2.97-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 00.98 4.97l2.97 2.33C4.66 5.17 6.65 3.58 9 3.58z"/></svg>
+      Continuar con Google
+    </button>
+    <div class="auth-divider"><span>o con tu correo</span></div>
     <form id="authForm">
       <input type="email" id="authEmail" placeholder="Correo" autocomplete="email" required>
       <input type="password" id="authPassword" placeholder="Contraseña" autocomplete="current-password" required minlength="6">
@@ -415,7 +460,7 @@
 
   <div class="card" id="msiCard" style="display:none;">
     <button type="button" class="msi-toggle" id="msiToggle">
-      <h2>Meses sin intereses <span class="msi-chevron" id="msiChevron">▾</span></h2>
+      <h2>Meses sin intereses <span class="toggle-hint">Ver más <span class="msi-chevron" id="msiChevron">▾</span></span></h2>
       <span class="h2-note" id="msiPendingNote"></span>
     </button>
     <div id="msiPanel" style="display:none;"></div>
@@ -552,7 +597,7 @@
       <div class="resumen-section" id="savingsCard">
         <button type="button" class="resumen-toggle" data-resumen-key="ahorro">
           <span class="section-title-text">Fondo de ahorro <span class="h2-note">alcancía</span></span>
-          <span class="resumen-caret">▾</span>
+          <span class="toggle-hint">Ver más <span class="resumen-caret">▾</span></span>
         </button>
         <div class="resumen-collapsible" data-resumen-panel="ahorro" style="display:none;">
           <div id="savingsPanel"></div>
@@ -562,7 +607,7 @@
       <div class="resumen-section">
         <button type="button" class="resumen-toggle" data-resumen-key="grupo">
           <span class="section-title-text">Gastos por grupo <span class="h2-note">fijos / variables / inversión</span></span>
-          <span class="resumen-caret">▾</span>
+          <span class="toggle-hint">Ver más <span class="resumen-caret">▾</span></span>
         </button>
         <div class="resumen-collapsible" data-resumen-panel="grupo" style="display:none;">
           <div id="groupDonut"></div>
@@ -574,7 +619,7 @@
       <div class="resumen-section">
         <button type="button" class="resumen-toggle" data-resumen-key="categoria">
           <span class="section-title-text">Gastos por categoría</span>
-          <span class="resumen-caret">▾</span>
+          <span class="toggle-hint">Ver más <span class="resumen-caret">▾</span></span>
         </button>
         <div class="resumen-collapsible" data-resumen-panel="categoria" style="display:none;">
           <div id="expenseDonut"></div>
@@ -587,7 +632,7 @@
       <div class="resumen-section">
         <button type="button" class="resumen-toggle" data-resumen-key="pago">
           <span class="section-title-text">Gastos por forma de pago</span>
-          <span class="resumen-caret">▾</span>
+          <span class="toggle-hint">Ver más <span class="resumen-caret">▾</span></span>
         </button>
         <div class="resumen-collapsible" data-resumen-panel="pago" style="display:none;">
           <div id="paymentDonut"></div>
@@ -597,7 +642,7 @@
       <div class="resumen-section">
         <button type="button" class="resumen-toggle" data-resumen-key="ingresos">
           <span class="section-title-text">Ingresos por categoría</span>
-          <span class="resumen-caret">▾</span>
+          <span class="toggle-hint">Ver más <span class="resumen-caret">▾</span></span>
         </button>
         <div class="resumen-collapsible" data-resumen-panel="ingresos" style="display:none;">
           <div id="incomeDonut"></div>
@@ -706,6 +751,17 @@
     ],
     ahorro: ["Ahorro Emergencia","Inversion GBM","Inversion ARQ","Inversion CETES","Ahorro Efectivo","Ahorro Banco"]
   };
+  // Lista genérica que solo se usa la primera vez que se crea una cuenta nueva (sin datos guardados aún).
+  // Las cuentas existentes NUNCA usan esta lista; siguen su propio historial + DEFAULT_CATEGORIES de arriba.
+  const GENERIC_STARTER_CATEGORIES = {
+    ingreso: ["Salario","Freelance","Ventas","Inversiones","Cobranza","Otros ingresos"],
+    gasto: [
+      "Renta o hipoteca","Luz","Agua","Gas","Internet","Celular","Seguros",
+      "Transporte","Comidas","Entretenimiento","Suscripciones","Compras en línea","Ropa","Salud",
+      "Educación","Mascotas","Viajes","Cumpleaños","Otros gastos"
+    ],
+    ahorro: ["Ahorro Emergencia","Inversiones","Ahorro Efectivo","Ahorro Banco"]
+  };
   const CATEGORY_GROUPS = {
     "Luz - Valle":"Fijos","Luz - Campestre":"Fijos","Luz - Elena":"Fijos","Agua - Valle":"Fijos","Agua - Elena":"Fijos",
     "Wifi - Valle":"Fijos","Wifi - Elena":"Fijos","Wifi - Campestre":"Fijos","Vivienda":"Fijos","Servicios":"Fijos",
@@ -713,7 +769,9 @@
     "Transporte":"Variables","Comidas":"Variables","Entretenimiento":"Variables","Cine":"Variables","Conciertos":"Variables","Uber":"Variables","Deportes":"Variables",
     "IA":"Variables","Compras En Línea":"Variables","Mandado":"Variables","Remodelación":"Variables",
     "Ropa":"Variables","Salud":"Variables","Equipo de Trabajo":"Variables","Viajes":"Variables","Cumpleaños":"Variables",
-    "Banco":"Variables","Amigos":"Variables","Mascotas":"Variables","Facturas":"Variables","Educación":"Variables","Otros gastos":"Variables"
+    "Banco":"Variables","Amigos":"Variables","Mascotas":"Variables","Facturas":"Variables","Educación":"Variables","Otros gastos":"Variables",
+    "Renta o hipoteca":"Fijos","Luz":"Fijos","Agua":"Fijos","Gas":"Fijos","Internet":"Fijos","Celular":"Fijos","Seguros":"Fijos",
+    "Suscripciones":"Variables","Compras en línea":"Variables"
   };
   const GROUP_ORDER = ["Fijos","Variables","Inversiones y seguros","Generales","Otras"];
 
@@ -732,33 +790,13 @@
   const BUDGET_KEY = "libro-cuentas:budget";
   const RECV_KEY = "libro-cuentas:receivables";
   const CATGROUPS_KEY = "libro-cuentas:categoryGroups";
+  const TRAVEL_KEY = "libro-cuentas:travelBudgets";
 
   const DEFAULT_BUDGET = {
-    fijos: [
-      {id:1,nombre:"Luz - Valle",costo:0,frecuencia:"mensual"},
-      {id:2,nombre:"Luz - Campestre",costo:0,frecuencia:"mensual"},
-      {id:3,nombre:"Luz - Elena",costo:0,frecuencia:"mensual"},
-      {id:4,nombre:"Agua - Valle",costo:0,frecuencia:"mensual"},
-      {id:5,nombre:"Agua - Elena",costo:0,frecuencia:"mensual"},
-      {id:6,nombre:"Wifi - Valle",costo:0,frecuencia:"mensual"},
-      {id:7,nombre:"Wifi - Elena",costo:0,frecuencia:"mensual"},
-      {id:8,nombre:"Wifi - Campestre",costo:0,frecuencia:"mensual"},
-    ],
-    variables: [
-      {id:9,nombre:"Telcel - Celular",costo:629.00,frecuencia:"mensual"},
-      {id:10,nombre:"Google",costo:99.00,frecuencia:"mensual"},
-      {id:11,nombre:"Disney + Mercado Libre",costo:249.00,frecuencia:"mensual"},
-      {id:12,nombre:"Servidor Host",costo:160.00,frecuencia:"anual"},
-      {id:13,nombre:"Amazon",costo:899.00,frecuencia:"anual"},
-    ],
-    inversiones: [
-      {id:14,nombre:"GBM - Indexy",costo:2000.00,frecuencia:"mensual"},
-      {id:15,nombre:"Seguro Médico",costo:1724.59,frecuencia:"mensual"},
-      {id:16,nombre:"Seguro Casa",costo:637.29,frecuencia:"mensual"},
-    ],
-    ingresos: [
-      {id:17,nombre:"Higueral-Cliente",costo:900.00,frecuencia:"mensual"},
-    ],
+    fijos: [],
+    variables: [],
+    inversiones: [],
+    ingresos: [],
   };
   const BUDGET_GROUP_META = [
     {key:"fijos", label:"Gastos fijos"},
@@ -774,6 +812,7 @@
   let editingBudgetItem = null; // { key, id } del renglón que se está editando, o null
   let expandedBudgetItems = new Set(); // claves "key:id" de renglones de presupuesto expandidos
   let receivables = [];
+  let travelBudgets = [];
   let customCategoryGroups = {}; // categorías nuevas que el usuario clasificó como Fijo/Variable/Inversión/General
   let currentType = "ingreso";
   let currentSubtype = "aporte";
@@ -789,6 +828,7 @@
     authError: document.getElementById('authError'),
     authSubmitBtn: document.getElementById('authSubmitBtn'),
     authToggleMode: document.getElementById('authToggleMode'),
+    googleSignInBtn: document.getElementById('googleSignInBtn'),
     authModeLabel: document.getElementById('authModeLabel'),
     accountEmail: document.getElementById('accountEmail'),
     logoutBtn: document.getElementById('logoutBtn'),
@@ -868,7 +908,13 @@
   async function loadCategories(){
     try{
       const res = await storageAdapter.get(CAT_KEY);
-      const stored = (res && res.value) ? JSON.parse(res.value) : {};
+      if(!res || !res.value){
+        // Cuenta nueva sin nada guardado todavía: arranca con la lista genérica, no con la personalizada.
+        categories = JSON.parse(JSON.stringify(GENERIC_STARTER_CATEGORIES));
+        await saveCategories();
+        return;
+      }
+      const stored = JSON.parse(res.value);
       const merged = {};
       Object.keys(DEFAULT_CATEGORIES).forEach(type=>{
         const storedList = Array.isArray(stored[type]) ? stored[type] : [];
@@ -1310,9 +1356,96 @@
     ${buildBudgetCompareHtml()}`;
   }
 
+  function buildTravelBudgetsHtml(){
+    const fmtDate = d => d ? d.slice(5).split('-').reverse().join('/') : '…';
+    const cardsHtml = travelBudgets.length === 0
+      ? '<p class="ledger-empty">Aún no tienes metas o proyectos registrados.</p>'
+      : [...travelBudgets].sort((a,b)=> (b.fechaInicio||'').localeCompare(a.fechaInicio||'')).map(tb=>{
+          const tipo = tb.tipo || 'gasto';
+          const isAhorro = tipo === 'ahorro';
+          const progreso = computeGoalProgress(tb);
+          const pct = tb.presupuesto > 0 ? Math.min(100, (progreso/tb.presupuesto)*100) : 0;
+          const dates = (tb.fechaInicio || tb.fechaFin) ? `${fmtDate(tb.fechaInicio)} – ${fmtDate(tb.fechaFin)}` : 'Sin fechas definidas';
+          const diff = Math.abs(tb.presupuesto - progreso);
+
+          let diffText, diffClass, barClass;
+          if(isAhorro){
+            if(progreso >= tb.presupuesto){ diffText = `¡Meta alcanzada! +${fmt.format(diff)} de más`; diffClass = 'good'; }
+            else { diffText = `Te faltan ${fmt.format(diff)} para tu meta`; diffClass = 'neutral'; }
+            barClass = '';
+          } else {
+            const over = progreso > tb.presupuesto;
+            diffText = over ? `Te pasaste por ${fmt.format(diff)}` : `Quedan ${fmt.format(diff)} disponibles`;
+            diffClass = over ? 'bad' : 'good';
+            barClass = over ? ' over' : '';
+          }
+          const progresoLbl = isAhorro ? 'Ahorrado' : 'Gastado';
+          const presuLbl = isAhorro ? 'Meta' : 'Presupuesto';
+          const tipoTag = isAhorro ? 'Ahorro' : 'Gasto';
+
+          return `<div class="travel-card">
+            <div class="travel-card-top">
+              <div>
+                <div class="travel-name">${escapeHtml(tb.nombre)} <span class="travel-tipo-tag">${tipoTag}</span></div>
+                <div class="travel-dates">${dates} · ${escapeHtml(tb.categoria)}</div>
+              </div>
+              <button type="button" class="travel-del" data-id="${tb.id}" title="Eliminar">✕</button>
+            </div>
+            <div class="travel-bar-track"><div class="travel-bar-fill${isAhorro?' savings':barClass}" style="width:${pct}%;"></div></div>
+            <div class="travel-numbers">
+              <span>${progresoLbl}: <strong>${fmt.format(progreso)}</strong></span>
+              <span>${presuLbl}: ${fmt.format(tb.presupuesto)}</span>
+            </div>
+            <div class="travel-remaining ${diffClass}">${diffText}</div>
+          </div>`;
+        }).join('');
+
+    return `<div class="travel-section">
+      <div class="travel-header">Metas y proyectos <span class="h2-note">viaje, boda, fiesta, carro, lo que sea</span></div>
+      <div class="travel-add-row">
+        <input type="text" id="newTravelNombre" placeholder="Nombre (ej. Viaje Mazatlán, Boda, Enganche del carro)">
+        <select id="newTravelTipo">
+          <option value="gasto">Voy a gastar (viaje, boda, fiesta...)</option>
+          <option value="ahorro">Estoy ahorrando (carro, enganche...)</option>
+        </select>
+        <input type="text" id="newTravelCategoria" placeholder="Categoría (ej. Viaje Mazatlán)">
+        <input type="number" id="newTravelPresupuesto" min="0.01" step="0.01" placeholder="Presupuesto o meta">
+        <div class="travel-date-row">
+          <input type="date" id="newTravelInicio">
+          <input type="date" id="newTravelFin">
+        </div>
+        <button type="button" id="addTravelBtn">+ Agregar meta</button>
+      </div>
+      <div id="travelList">${cardsHtml}</div>
+    </div>`;
+  }
+
   function renderBudget(){
-    let html = buildBudgetSummaryHtml() + '<div class="budget-groups-wrap">' + BUDGET_GROUP_META.map(renderBudgetGroup).join('') + '</div>';
+    let html = buildBudgetSummaryHtml() + '<div class="budget-groups-wrap">' + BUDGET_GROUP_META.map(renderBudgetGroup).join('') + '</div>' + buildTravelBudgetsHtml();
     els.budgetPanel.innerHTML = html;
+
+    els.budgetPanel.querySelectorAll('.travel-del').forEach(btn=>{
+      btn.addEventListener('click', ()=> deleteTravelBudget(Number(btn.dataset.id)));
+    });
+    const addTravelBtn = els.budgetPanel.querySelector('#addTravelBtn');
+    if(addTravelBtn){
+      addTravelBtn.addEventListener('click', async ()=>{
+        const nombreEl = els.budgetPanel.querySelector('#newTravelNombre');
+        const tipoEl = els.budgetPanel.querySelector('#newTravelTipo');
+        const catEl = els.budgetPanel.querySelector('#newTravelCategoria');
+        const presuEl = els.budgetPanel.querySelector('#newTravelPresupuesto');
+        const inicioEl = els.budgetPanel.querySelector('#newTravelInicio');
+        const finEl = els.budgetPanel.querySelector('#newTravelFin');
+        const nombre = nombreEl.value.trim();
+        const categoria = catEl.value.trim();
+        const presupuesto = parseFloat(presuEl.value);
+        if(!nombre || !categoria || !presupuesto || presupuesto <= 0){
+          alert('Ponle nombre, categoría y un presupuesto/meta mayor a $0.');
+          return;
+        }
+        await addTravelBudget(nombre, presupuesto, categoria, inicioEl.value || null, finEl.value || null, tipoEl.value);
+      });
+    }
 
     const syncMsiBtn = els.budgetPanel.querySelector('#syncMsiBtn');
     if(syncMsiBtn){
@@ -1387,6 +1520,48 @@
   async function saveReceivables(){
     try{ await storageAdapter.set(RECV_KEY, JSON.stringify(receivables)); }
     catch(err){ console.error('No se pudieron guardar las cuentas por cobrar:', err); }
+  }
+  async function loadTravelBudgets(){
+    try{
+      const res = await storageAdapter.get(TRAVEL_KEY);
+      travelBudgets = res && res.value ? JSON.parse(res.value) : [];
+    }catch(err){ travelBudgets = []; }
+  }
+  async function saveTravelBudgets(){
+    try{ await storageAdapter.set(TRAVEL_KEY, JSON.stringify(travelBudgets)); }
+    catch(err){ console.error('No se pudieron guardar los viajes:', err); }
+  }
+  function computeGoalProgress(tb){
+    const tipo = tb.tipo || 'gasto';
+    if(tipo === 'ahorro'){
+      return transactions.filter(t=>
+        t.type === 'ahorro' && t.category === tb.categoria &&
+        (!tb.fechaInicio || t.date >= tb.fechaInicio) &&
+        (!tb.fechaFin || t.date <= tb.fechaFin)
+      ).reduce((sum,t)=> sum + (t.subtype === 'retiro' ? -t.amount : t.amount), 0);
+    }
+    return transactions.filter(t=>
+      t.type === 'gasto' && t.category === tb.categoria &&
+      (!tb.fechaInicio || t.date >= tb.fechaInicio) &&
+      (!tb.fechaFin || t.date <= tb.fechaFin)
+    ).reduce((sum,t)=> sum + expenseContribution(t), 0);
+  }
+  async function addTravelBudget(nombre, presupuesto, categoria, fechaInicio, fechaFin, tipo){
+    tipo = tipo === 'ahorro' ? 'ahorro' : 'gasto';
+    const catList = tipo === 'ahorro' ? categories.ahorro : categories.gasto;
+    if(!catList.includes(categoria)){
+      catList.push(categoria);
+      if(tipo === 'gasto' && !CATEGORY_GROUPS[categoria]) CATEGORY_GROUPS[categoria] = 'Variables';
+      await saveCategories();
+    }
+    travelBudgets.push({ id:newId(), nombre, presupuesto, categoria, fechaInicio, fechaFin, tipo });
+    await saveTravelBudgets();
+    render();
+  }
+  async function deleteTravelBudget(id){
+    travelBudgets = travelBudgets.filter(t=>t.id !== id);
+    await saveTravelBudgets();
+    render();
   }
   function receivableAbonado(r){
     return (r.abonos || []).reduce((s,a)=> s + a.amount, 0);
@@ -1972,6 +2147,7 @@
     transactions.push(tx);
     render();
     await saveTransactions();
+    if(tx.isMsi) await syncMsiToBudget();
 
     els.form.reset();
     els.date.value = todayStr();
@@ -1989,6 +2165,7 @@
       categoryGroups: customCategoryGroups,
       budget,
       receivables,
+      travelBudgets,
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -2013,12 +2190,13 @@
       if(data.categories) categories = data.categories;
       if(data.budget) budget = data.budget;
       if(Array.isArray(data.receivables)) receivables = data.receivables;
+      if(Array.isArray(data.travelBudgets)) travelBudgets = data.travelBudgets;
       if(data.categoryGroups){
         customCategoryGroups = data.categoryGroups;
         Object.assign(CATEGORY_GROUPS, customCategoryGroups);
         await saveCategoryGroups();
       }
-      await Promise.all([saveTransactions(), saveCategories(), saveBudget(), saveReceivables()]);
+      await Promise.all([saveTransactions(), saveCategories(), saveBudget(), saveReceivables(), saveTravelBudgets()]);
       setType(currentType);
       render();
       els.backupNote.textContent = 'Respaldo importado ✓';
@@ -2070,10 +2248,26 @@
       'auth/email-already-in-use': 'Ya existe una cuenta con ese correo. Intenta iniciar sesión.',
       'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres.',
       'auth/too-many-requests': 'Demasiados intentos. Espera un momento e intenta de nuevo.',
-      'auth/network-request-failed': 'No hay conexión a internet.'
+      'auth/network-request-failed': 'No hay conexión a internet.',
+      'auth/popup-closed-by-user': 'Cerraste la ventana de Google antes de terminar.',
+      'auth/cancelled-popup-request': 'Cerraste la ventana de Google antes de terminar.',
+      'auth/popup-blocked': 'Tu navegador bloqueó la ventana emergente. Permite pop-ups para este sitio e intenta de nuevo.',
+      'auth/account-exists-with-different-credential': 'Ya existe una cuenta con ese correo usando otro método de acceso.'
     };
     return map[err.code] || 'Ocurrió un error. Intenta de nuevo.';
   }
+
+  const googleProvider = new firebase.auth.GoogleAuthProvider();
+  els.googleSignInBtn.addEventListener('click', async ()=>{
+    els.authError.textContent = '';
+    els.googleSignInBtn.disabled = true;
+    try{
+      await fbAuth.signInWithPopup(googleProvider);
+    }catch(err){
+      els.authError.textContent = friendlyAuthError(err);
+    }
+    els.googleSignInBtn.disabled = false;
+  });
 
   els.authToggleMode.addEventListener('click', ()=>{
     authMode = authMode === 'login' ? 'signup' : 'login';
@@ -2108,7 +2302,7 @@
   // Si ya tenías datos guardados en este navegador (localStorage) antes de sincronizar
   // en la nube, los sube una sola vez a tu cuenta la primera vez que inicias sesión.
   async function migrateLocalDataIfNeeded(){
-    const keys = [TX_KEY, CAT_KEY, BUDGET_KEY, RECV_KEY, CATGROUPS_KEY];
+    const keys = [TX_KEY, CAT_KEY, BUDGET_KEY, RECV_KEY, CATGROUPS_KEY, TRAVEL_KEY];
     const cloudTx = await fbDb.collection('users').doc(currentUser.uid).collection('appData').doc(TX_KEY).get();
     if(cloudTx.exists) return; // ya hay datos en la nube, no migrar
     let migrated = false;
@@ -2131,7 +2325,7 @@
   }
 
   async function loadAllDataAndRender(){
-    await Promise.all([loadCategories(), loadBudget(), loadTransactions(), loadReceivables(), loadCategoryGroups()]);
+    await Promise.all([loadCategories(), loadBudget(), loadTransactions(), loadReceivables(), loadCategoryGroups(), loadTravelBudgets()]);
     await pruneOrphanedMsiBudgetLines();
     setType('ingreso');
     render();
@@ -2161,6 +2355,10 @@
     realtimeUnsubs.push(col.doc(RECV_KEY).onSnapshot(snap=>{
       if(!snap.exists) return;
       try{ receivables = JSON.parse(snap.data().value) || []; render(); }catch(err){}
+    }));
+    realtimeUnsubs.push(col.doc(TRAVEL_KEY).onSnapshot(snap=>{
+      if(!snap.exists) return;
+      try{ travelBudgets = JSON.parse(snap.data().value) || []; render(); }catch(err){}
     }));
     realtimeUnsubs.push(col.doc(CATGROUPS_KEY).onSnapshot(snap=>{
       if(!snap.exists) return;
