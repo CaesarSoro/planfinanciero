@@ -67,7 +67,17 @@
   .grid{display:grid;grid-template-columns:340px 1fr;gap:22px;}
   @media (max-width:760px){.grid{grid-template-columns:1fr;}}
   @media (max-width:640px){
-    .header-right{position:sticky;top:10px;z-index:15;margin-left:auto;}
+    header{flex-direction:column;align-items:stretch;gap:0;}
+    .header-right{
+      order:-1;
+      position:sticky;top:0;z-index:15;
+      display:grid;grid-template-columns:46px 1fr 46px;align-items:center;column-gap:8px;
+      width:100%;background:var(--paper);
+      padding:10px 0 14px;margin:0 0 18px;
+      border-bottom:1px solid var(--line);
+    }
+    .header-right .tape{grid-column:2;justify-self:stretch;text-align:center;min-width:0;padding:10px 14px;}
+    .header-right .account-menu-wrap{grid-column:3;justify-self:end;}
   }
 
   .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px;}
