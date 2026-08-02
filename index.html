@@ -374,6 +374,8 @@
   .account-menu-item{display:block;width:100%;text-align:left;background:none;border:none;padding:12px 6px;font-size:14px;color:var(--ink);cursor:pointer;font-family:'Inter',sans-serif;border-radius:6px;}
   .account-menu-item:hover{background:var(--paper);}
   .account-menu-item.danger{color:var(--expense);margin-top:6px;}
+  .danger-zone{margin-top:14px;padding-top:14px;border-top:1px dashed var(--line);}
+  .danger-zone-note{font-size:10.5px;color:var(--ink-soft);padding:0 6px;margin:2px 0 0;line-height:1.4;}
 
   /* ---------- Tablet / escritorio: mejor aprovechamiento del espacio ---------- */
   @media (min-width:860px){
@@ -426,6 +428,10 @@
     <input type="file" id="importFile" accept="application/json" style="display:none;">
     <p class="backup-note" id="backupNote" style="padding:2px 6px;"></p>
     <button type="button" id="logoutBtn" class="account-menu-item danger">Cerrar sesión</button>
+    <div class="danger-zone">
+      <button type="button" id="resetDataBtn" class="account-menu-item danger">🗑 Borrar todos mis datos</button>
+      <p class="danger-zone-note">Borra movimientos, presupuesto, categorías, por cobrar y metas de esta cuenta. No se puede deshacer.</p>
+    </div>
   </div>
 
   <header>
@@ -834,6 +840,7 @@
     authModeLabel: document.getElementById('authModeLabel'),
     accountEmail: document.getElementById('accountEmail'),
     logoutBtn: document.getElementById('logoutBtn'),
+    resetDataBtn: document.getElementById('resetDataBtn'),
     accountMenuBtn: document.getElementById('accountMenuBtn'),
     accountMenuPanel: document.getElementById('accountMenuPanel'),
     drawerBackdrop: document.getElementById('drawerBackdrop'),
@@ -2371,6 +2378,24 @@
 
   els.logoutBtn.addEventListener('click', async ()=>{
     await fbAuth.signOut();
+  });
+
+  els.resetDataBtn.addEventListener('click', async ()=>{
+    if(!currentUser) return;
+    const step1 = confirm(`Esto va a BORRAR TODO (movimientos, presupuesto, categorías, por cobrar y metas) de la cuenta ${currentUser.email}. Esta acción no se puede deshacer. ¿Quieres continuar?`);
+    if(!step1) return;
+    const step2 = confirm('¿Estás completamente seguro? Se va a perder toda la información de esta cuenta para siempre.');
+    if(!step2) return;
+    try{
+      const keys = [TX_KEY, CAT_KEY, BUDGET_KEY, RECV_KEY, CATGROUPS_KEY, TRAVEL_KEY];
+      const col = fbDb.collection('users').doc(currentUser.uid).collection('appData');
+      await Promise.all(keys.map(k => col.doc(k).delete()));
+      closeDrawer();
+      await loadAllDataAndRender();
+      alert('Listo. La cuenta quedó en blanco.');
+    }catch(err){
+      alert('No se pudieron borrar los datos. Intenta de nuevo.');
+    }
   });
 
   // Si ya tenías datos guardados en este navegador (localStorage) antes de sincronizar
