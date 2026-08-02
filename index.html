@@ -2376,9 +2376,14 @@
   // Si ya tenías datos guardados en este navegador (localStorage) antes de sincronizar
   // en la nube, los sube una sola vez a tu cuenta la primera vez que inicias sesión.
   async function migrateLocalDataIfNeeded(){
+    const MIGRATION_FLAG = 'libro-cuentas:migrated';
+    if(localStorage.getItem(MIGRATION_FLAG) === 'true') return; // este navegador ya migró una vez, nunca más
     const keys = [TX_KEY, CAT_KEY, BUDGET_KEY, RECV_KEY, CATGROUPS_KEY, TRAVEL_KEY];
     const cloudTx = await fbDb.collection('users').doc(currentUser.uid).collection('appData').doc(TX_KEY).get();
-    if(cloudTx.exists) return; // ya hay datos en la nube, no migrar
+    if(cloudTx.exists){
+      localStorage.setItem(MIGRATION_FLAG, 'true');
+      return; // ya hay datos en la nube, no migrar
+    }
     let migrated = false;
     for(const key of keys){
       const raw = localStorage.getItem(key);
@@ -2387,6 +2392,8 @@
         migrated = true;
       }
     }
+    localStorage.setItem(MIGRATION_FLAG, 'true');
+    keys.forEach(key => localStorage.removeItem(key)); // ya no la necesitamos ahí, evita futuras confusiones
     if(migrated) alert('Tus datos guardados en este dispositivo se subieron a tu cuenta. Ya puedes verlos también desde otros dispositivos.');
   }
 
