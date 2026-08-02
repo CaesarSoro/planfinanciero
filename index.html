@@ -133,12 +133,11 @@
 
   .travel-section{margin-top:28px;padding-top:24px;border-top:1px solid var(--line);}
   .travel-header{font-family:'Fraunces',serif;font-size:16px;font-weight:600;margin-bottom:16px;}
-  .travel-add-row{display:flex;flex-direction:column;gap:8px;margin-bottom:22px;padding:14px;background:var(--paper);border-radius:8px;}
-  .travel-add-row input{padding:9px 11px;font-size:13px;border:1px solid var(--line);border-radius:6px;background:#fff;font-family:'Inter',sans-serif;width:100%;box-sizing:border-box;}
-  .travel-add-row select{padding:9px 11px;font-size:13px;border:1px solid var(--line);border-radius:6px;background:#fff;font-family:'Inter',sans-serif;width:100%;box-sizing:border-box;color:var(--ink);}
-  .travel-date-row{display:flex;gap:8px;}
-  .travel-date-row input{flex:1;min-width:0;}
-  .travel-add-row button{padding:9px 16px;font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;border:none;border-radius:6px;background:var(--ink);color:#fff;cursor:pointer;}
+  .travel-add-row{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;margin-bottom:22px;padding:16px;background:var(--paper);border-radius:8px;}
+  .travel-add-row .span-2{grid-column:1 / -1;}
+  .travel-add-row select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:#fff;font-family:'Inter',sans-serif;font-size:14px;color:var(--ink);}
+  .travel-add-row select:focus{outline:2px solid var(--gold);outline-offset:1px;}
+  .travel-add-btn{grid-column:1 / -1;padding:10px 16px;font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;border:none;border-radius:6px;background:var(--ink);color:#fff;cursor:pointer;margin-top:2px;}
   .travel-card{padding:16px;background:var(--paper);border-radius:8px;margin-bottom:12px;}
   .travel-card:last-child{margin-bottom:0;}
   .travel-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;}
@@ -156,13 +155,9 @@
   .travel-remaining.good{color:var(--income);}
   .travel-remaining.bad{color:var(--expense);}
   .travel-remaining.neutral{color:var(--gold);}
-  @media (min-width:560px){
-    .travel-add-row{flex-direction:row;flex-wrap:wrap;align-items:center;}
-    .travel-add-row input[type=text]{flex:1 1 160px;}
-    .travel-add-row select{flex:1 1 180px;}
-    .travel-add-row input[type=number]{flex:0.7 1 110px;}
-    .travel-date-row{flex:1 1 240px;}
-    .travel-add-row button{flex-shrink:0;}
+  @media (min-width:640px){
+    .travel-add-row{grid-template-columns:repeat(4,1fr);gap:0 14px;}
+    .travel-add-row .span-2{grid-column:span 2;}
   }
   .rec-item{padding:14px 0;border-bottom:1px dashed var(--line);}
   .rec-item:last-child{border-bottom:none;}
@@ -1403,18 +1398,34 @@
     return `<div class="travel-section">
       <div class="travel-header">Metas y proyectos <span class="h2-note">viaje, boda, fiesta, carro, lo que sea</span></div>
       <div class="travel-add-row">
-        <input type="text" id="newTravelNombre" placeholder="Nombre (ej. Viaje Mazatlán, Boda, Enganche del carro)">
-        <select id="newTravelTipo">
-          <option value="gasto">Voy a gastar (viaje, boda, fiesta...)</option>
-          <option value="ahorro">Estoy ahorrando (carro, enganche...)</option>
-        </select>
-        <input type="text" id="newTravelCategoria" placeholder="Categoría (ej. Viaje Mazatlán)">
-        <input type="number" id="newTravelPresupuesto" min="0.01" step="0.01" placeholder="Presupuesto o meta">
-        <div class="travel-date-row">
+        <div class="field span-2">
+          <label for="newTravelNombre">Nombre</label>
+          <input type="text" id="newTravelNombre" placeholder="Ej. Viaje Mazatlán, Boda, Enganche del carro">
+        </div>
+        <div class="field span-2">
+          <label for="newTravelTipo">Tipo de meta</label>
+          <select id="newTravelTipo">
+            <option value="gasto">Voy a gastar (viaje, boda, fiesta...)</option>
+            <option value="ahorro">Estoy ahorrando (carro, enganche...)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="newTravelCategoria">Categoría</label>
+          <input type="text" id="newTravelCategoria" placeholder="Ej. Viaje Mazatlán">
+        </div>
+        <div class="field">
+          <label for="newTravelPresupuesto">Presupuesto o meta</label>
+          <input type="number" id="newTravelPresupuesto" min="0.01" step="0.01" placeholder="0.00">
+        </div>
+        <div class="field">
+          <label for="newTravelInicio">Fecha inicio</label>
           <input type="date" id="newTravelInicio">
+        </div>
+        <div class="field">
+          <label for="newTravelFin">Fecha fin</label>
           <input type="date" id="newTravelFin">
         </div>
-        <button type="button" id="addTravelBtn">+ Agregar meta</button>
+        <button type="button" id="addTravelBtn" class="travel-add-btn">+ Agregar meta</button>
       </div>
       <div id="travelList">${cardsHtml}</div>
     </div>`;
