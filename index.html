@@ -19,8 +19,7 @@
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
-  body{background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;padding:28px 16px 60px;min-height:100vh;text-transform:uppercase;}
-  input,select,textarea,button{text-transform:inherit;}
+  body{background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;padding:28px 16px 60px;min-height:100vh;}
   .wrap{max-width:980px;margin:0 auto;}
 
   header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:26px;padding-bottom:18px;border-bottom:2px solid var(--ink);}
@@ -310,6 +309,9 @@
   .account-bar{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--ink-soft);}
   .account-bar button{background:none;border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--ink-soft);cursor:pointer;font-family:'Inter',sans-serif;text-transform:uppercase;letter-spacing:.03em;}
   .account-bar button:hover{border-color:var(--expense-soft);color:var(--expense);}
+  .resumen-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:none;cursor:pointer;padding:0 0 12px;margin:0 0 16px;border-bottom:1px solid var(--line);font-family:inherit;text-align:left;gap:10px;}
+  .resumen-toggle .section-title-text{font-family:'Fraunces',serif;font-size:16px;font-weight:600;}
+  .resumen-caret{font-size:13px;color:var(--ink-soft);flex-shrink:0;}
 
   /* ---------- Tablet / escritorio: mejor aprovechamiento del espacio ---------- */
   @media (min-width:860px){
@@ -510,35 +512,60 @@
       </div>
 
       <div class="resumen-section" id="savingsCard">
-        <h3 class="section-title">Fondo de ahorro <span class="h2-note">alcancía</span></h3>
-        <div id="savingsPanel"></div>
-      </div>
-
-      <div class="resumen-section">
-        <h3 class="section-title">Gastos por grupo <span class="h2-note">fijos / variables / inversión</span></h3>
-        <div id="groupDonut"></div>
-        <button type="button" id="toggleGroupBreakdown" class="manage-cat-link">Ver desglose por categoría ▾</button>
-        <div id="groupBreakdownDetail" style="display:none;margin-top:12px;"></div>
-      </div>
-
-      <div class="resumen-section">
-        <h3 class="section-title">Gastos por categoría</h3>
-        <div id="expenseDonut"></div>
-        <div id="catBreakdown">
-          <p class="ledger-empty">Aún no hay gastos registrados.</p>
+        <button type="button" class="resumen-toggle" data-resumen-key="ahorro">
+          <span class="section-title-text">Fondo de ahorro <span class="h2-note">alcancía</span></span>
+          <span class="resumen-caret">▾</span>
+        </button>
+        <div class="resumen-collapsible" data-resumen-panel="ahorro" style="display:none;">
+          <div id="savingsPanel"></div>
         </div>
       </div>
 
       <div class="resumen-section">
-        <h3 class="section-title">Gastos por forma de pago</h3>
-        <div id="paymentDonut"></div>
+        <button type="button" class="resumen-toggle" data-resumen-key="grupo">
+          <span class="section-title-text">Gastos por grupo <span class="h2-note">fijos / variables / inversión</span></span>
+          <span class="resumen-caret">▾</span>
+        </button>
+        <div class="resumen-collapsible" data-resumen-panel="grupo" style="display:none;">
+          <div id="groupDonut"></div>
+          <button type="button" id="toggleGroupBreakdown" class="manage-cat-link">Ver desglose por categoría ▾</button>
+          <div id="groupBreakdownDetail" style="display:none;margin-top:12px;"></div>
+        </div>
       </div>
 
       <div class="resumen-section">
-        <h3 class="section-title">Ingresos por categoría</h3>
-        <div id="incomeDonut"></div>
-        <div id="incomeBreakdown">
-          <p class="ledger-empty">Aún no hay ingresos registrados.</p>
+        <button type="button" class="resumen-toggle" data-resumen-key="categoria">
+          <span class="section-title-text">Gastos por categoría</span>
+          <span class="resumen-caret">▾</span>
+        </button>
+        <div class="resumen-collapsible" data-resumen-panel="categoria" style="display:none;">
+          <div id="expenseDonut"></div>
+          <div id="catBreakdown">
+            <p class="ledger-empty">Aún no hay gastos registrados.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="resumen-section">
+        <button type="button" class="resumen-toggle" data-resumen-key="pago">
+          <span class="section-title-text">Gastos por forma de pago</span>
+          <span class="resumen-caret">▾</span>
+        </button>
+        <div class="resumen-collapsible" data-resumen-panel="pago" style="display:none;">
+          <div id="paymentDonut"></div>
+        </div>
+      </div>
+
+      <div class="resumen-section">
+        <button type="button" class="resumen-toggle" data-resumen-key="ingresos">
+          <span class="section-title-text">Ingresos por categoría</span>
+          <span class="resumen-caret">▾</span>
+        </button>
+        <div class="resumen-collapsible" data-resumen-panel="ingresos" style="display:none;">
+          <div id="incomeDonut"></div>
+          <div id="incomeBreakdown">
+            <p class="ledger-empty">Aún no hay ingresos registrados.</p>
+          </div>
         </div>
       </div>
     </div>
@@ -926,6 +953,15 @@
     els.msiPanel.style.display = showing ? 'none' : 'block';
     els.msiChevron.textContent = showing ? '▾' : '▴';
   });
+  document.getElementById('tabPanelResumen').addEventListener('click', (e)=>{
+    const btn = e.target.closest('.resumen-toggle');
+    if(!btn) return;
+    const panel = btn.parentElement.querySelector('.resumen-collapsible');
+    const caret = btn.querySelector('.resumen-caret');
+    const showing = panel.style.display !== 'none';
+    panel.style.display = showing ? 'none' : 'block';
+    caret.textContent = showing ? '▾' : '▴';
+  });
   els.toggleGroupBreakdown.addEventListener('click', ()=>{
     const showing = els.groupBreakdownDetail.style.display !== 'none';
     els.groupBreakdownDetail.style.display = showing ? 'none' : 'block';
@@ -1180,7 +1216,14 @@
       ${rows.map(r=>{
         const diff = r.real - r.presu;
         const good = r.lowerIsBetter ? diff <= 0 : diff >= 0;
-        const diffText = diff === 0 ? 'Igual al presupuesto' : (diff > 0 ? `+${fmt.format(diff)}` : `−${fmt.format(Math.abs(diff))}`);
+        let diffText;
+        if(diff === 0){
+          diffText = 'Igual al presupuesto';
+        } else if(r.lowerIsBetter){
+          diffText = diff < 0 ? `${fmt.format(Math.abs(diff))} por debajo` : `${fmt.format(diff)} por encima`;
+        } else {
+          diffText = diff > 0 ? `${fmt.format(diff)} por encima` : `${fmt.format(Math.abs(diff))} por debajo`;
+        }
         return `<div class="cc-group">
           <div class="cc-label" style="color:${r.color};">${escapeHtml(r.label)}</div>
           <div class="cc-row">
@@ -1844,9 +1887,17 @@
   }
 
   async function deleteTransaction(id){
+    const removed = transactions.find(t=>t.id === id);
     transactions = transactions.filter(t=>t.id !== id);
+    let budgetChanged = false;
+    if(removed && removed.isMsi && budget.variables){
+      const before = budget.variables.length;
+      budget.variables = budget.variables.filter(i => i.msiTxId !== id);
+      budgetChanged = budget.variables.length !== before;
+    }
     render();
     await saveTransactions();
+    if(budgetChanged) await saveBudget();
   }
 
   els.form.addEventListener('submit', async (e)=>{
@@ -2026,8 +2077,17 @@
     if(migrated) alert('Tus datos guardados en este dispositivo se subieron a tu cuenta. Ya puedes verlos también desde otros dispositivos.');
   }
 
+  async function pruneOrphanedMsiBudgetLines(){
+    if(!budget.variables || !budget.variables.length) return;
+    const validIds = new Set(transactions.filter(t=>t.isMsi).map(t=>t.id));
+    const before = budget.variables.length;
+    budget.variables = budget.variables.filter(i => !i.msiTxId || validIds.has(i.msiTxId));
+    if(budget.variables.length !== before) await saveBudget();
+  }
+
   async function loadAllDataAndRender(){
     await Promise.all([loadCategories(), loadBudget(), loadTransactions(), loadReceivables(), loadCategoryGroups()]);
+    await pruneOrphanedMsiBudgetLines();
     setType('ingreso');
     render();
   }
@@ -2043,7 +2103,7 @@
     const col = fbDb.collection('users').doc(currentUser.uid).collection('appData');
     realtimeUnsubs.push(col.doc(TX_KEY).onSnapshot(snap=>{
       if(!snap.exists) return;
-      try{ transactions = JSON.parse(snap.data().value) || []; render(); }catch(err){}
+      try{ transactions = JSON.parse(snap.data().value) || []; pruneOrphanedMsiBudgetLines(); render(); }catch(err){}
     }));
     realtimeUnsubs.push(col.doc(CAT_KEY).onSnapshot(snap=>{
       if(!snap.exists) return;
