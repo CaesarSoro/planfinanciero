@@ -132,7 +132,8 @@
   .rec-empty{text-align:center;padding:20px 10px;color:var(--ink-soft);font-size:13.5px;}
 
   .travel-section{margin-top:28px;padding-top:24px;border-top:1px solid var(--line);}
-  .travel-header{font-family:'Fraunces',serif;font-size:16px;font-weight:600;margin-bottom:16px;}
+  .travel-header{font-family:'Fraunces',serif;font-size:17px;font-weight:600;margin-bottom:16px;}
+  .travel-header-sub{display:block;font-family:'Inter',sans-serif;font-weight:400;font-size:11.5px;color:var(--ink-soft);margin-top:3px;}
   .travel-add-row{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;margin-bottom:22px;padding:16px;background:var(--paper);border-radius:8px;}
   .travel-add-row .span-2{grid-column:1 / -1;}
   .travel-add-row select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:#fff;font-family:'Inter',sans-serif;font-size:14px;color:var(--ink);}
@@ -198,6 +199,8 @@
   .msi-extra{border-left:3px solid var(--gold);padding-left:12px;margin-bottom:14px;}
 
   .submit-btn{width:100%;padding:11px 0;border:none;border-radius:6px;background:var(--ink);color:var(--surface);font-family:'Inter',sans-serif;font-weight:600;font-size:14px;cursor:pointer;margin-top:6px;}
+  .cancel-edit-btn{width:100%;padding:9px 0;border:1px solid var(--line);border-radius:6px;background:none;color:var(--ink-soft);font-family:'Inter',sans-serif;font-weight:600;font-size:12.5px;cursor:pointer;margin-top:8px;}
+  .cancel-edit-btn:hover{border-color:var(--expense-soft);color:var(--expense);}
   .submit-btn:hover{background:#3A4133;}
   .error-msg{font-size:12.5px;color:var(--expense);margin-top:-6px;margin-bottom:12px;display:none;}
 
@@ -321,6 +324,8 @@
   .ledger-amount{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;flex-shrink:0;margin-left:auto;}
   .ledger-amount.ingreso{color:var(--income);} .ledger-amount.gasto{color:var(--expense);} .ledger-amount.ahorro{color:var(--gold);}
   .ledger-del{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:18px;line-height:1;padding:4px 2px 4px 8px;flex-shrink:0;}
+  .ledger-edit{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:15px;line-height:1;padding:4px 2px 4px 8px;flex-shrink:0;}
+  .ledger-edit:hover{color:var(--gold);}
   .ledger-del:hover{color:var(--expense);}
   .ledger-list{max-height:440px;overflow-y:auto;padding-right:4px;}
   .msi-progress-mini{margin-top:7px;}
@@ -539,6 +544,7 @@
         </div>
 
         <button type="submit" class="submit-btn span-2" id="submitBtn">Registrar movimiento</button>
+        <button type="button" class="cancel-edit-btn span-2" id="cancelEditBtn" style="display:none;">Cancelar edición</button>
       </form>
 
       <div class="resumen-section" style="margin-top:28px;padding-top:24px;border-top:1px solid var(--line);">
@@ -811,6 +817,7 @@
   let customCategoryGroups = {}; // categorías nuevas que el usuario clasificó como Fijo/Variable/Inversión/General
   let currentType = "ingreso";
   let currentSubtype = "aporte";
+  let editingTransactionId = null;
 
   const fmt = new Intl.NumberFormat('es-MX', { style:'currency', currency:'MXN' });
 
@@ -854,6 +861,8 @@
     date: document.getElementById('date'),
     dateLabel: document.getElementById('dateLabel'),
     form: document.getElementById('txForm'),
+    submitBtn: document.getElementById('submitBtn'),
+    cancelEditBtn: document.getElementById('cancelEditBtn'),
     tapeAmount: document.getElementById('tapeAmount'),
     exportBtn: document.getElementById('exportBtn'),
     periodToggle: document.getElementById('periodToggle'),
@@ -1396,7 +1405,7 @@
         }).join('');
 
     return `<div class="travel-section">
-      <div class="travel-header">Metas y proyectos <span class="h2-note">viaje, boda, fiesta, carro, lo que sea</span></div>
+      <div class="travel-header">Metas y Proyectos<span class="travel-header-sub">Viaje, boda, fiesta, carro, lo que sea</span></div>
       <div class="travel-add-row">
         <div class="field span-2">
           <label for="newTravelNombre">Nombre</label>
@@ -2096,6 +2105,7 @@
           <div class="ledger-row-line1">
             <span class="ledger-date">${shortDate}</span>
             <span class="ledger-desc">${escapeHtml(desc)}</span>
+            <button class="ledger-edit" data-id="${t.id}" title="Editar" aria-label="Editar movimiento">✎</button>
             <button class="ledger-del" data-id="${t.id}" title="Eliminar" aria-label="Eliminar movimiento">✕</button>
           </div>
           <div class="ledger-row-line2">
@@ -2111,6 +2121,9 @@
         </div>`;
       }).join('') + `</div>`;
 
+      els.ledgerList.querySelectorAll('.ledger-edit').forEach(btn=>{
+        btn.addEventListener('click', ()=> editTransaction(Number(btn.dataset.id)));
+      });
       els.ledgerList.querySelectorAll('.ledger-del').forEach(btn=>{
         btn.addEventListener('click', ()=> deleteTransaction(Number(btn.dataset.id)));
       });
@@ -2131,6 +2144,43 @@
     if(budgetChanged) await saveBudget();
   }
 
+  function editTransaction(id){
+    const t = transactions.find(x=>x.id === id);
+    if(!t) return;
+    editingTransactionId = id;
+    setType(t.type);
+    if(t.type === 'ahorro'){
+      currentSubtype = t.subtype || 'aporte';
+      [...els.ahorroSubtypeToggle.querySelectorAll('button')].forEach(btn=>{
+        btn.classList.toggle('active', btn.dataset.subtype === currentSubtype);
+      });
+    }
+    els.amount.value = t.amount;
+    els.paymentMethod.value = t.paymentMethod || '';
+    els.category.value = t.category || '';
+    els.description.value = t.description || '';
+    els.date.value = t.date;
+    if(t.type === 'gasto'){
+      els.isMsi.checked = !!t.isMsi;
+      els.isMsi.dispatchEvent(new Event('change'));
+      if(t.isMsi) els.msiMonths.value = t.months || 3;
+    }
+    els.submitBtn.textContent = 'Guardar cambios';
+    els.cancelEditBtn.style.display = 'block';
+    const registroTabBtn = document.querySelector('.tab-btn[data-tab="form"]');
+    if(registroTabBtn) registroTabBtn.click();
+    els.form.scrollIntoView({ behavior:'smooth', block:'start' });
+  }
+
+  els.cancelEditBtn.addEventListener('click', ()=>{
+    editingTransactionId = null;
+    els.submitBtn.textContent = 'Registrar movimiento';
+    els.cancelEditBtn.style.display = 'none';
+    els.form.reset();
+    els.date.value = todayStr();
+    setType(currentType);
+  });
+
   els.form.addEventListener('submit', async (e)=>{
     e.preventDefault();
     const amountVal = parseFloat(els.amount.value);
@@ -2140,25 +2190,38 @@
     }
     els.amountError.style.display = 'none';
 
-    const tx = {
-      id: newId(),
+    const txData = {
       type: currentType,
       amount: amountVal,
       paymentMethod: els.paymentMethod.value,
       description: els.description.value.trim(),
       date: els.date.value || todayStr(),
+      category: els.category.value,
     };
-    tx.category = els.category.value;
     if(currentType === 'ahorro'){
-      tx.subtype = currentSubtype;
+      txData.subtype = currentSubtype;
     } else {
-      tx.isMsi = currentType === 'gasto' && els.isMsi.checked;
-      if(tx.isMsi) tx.months = Math.max(2, parseInt(els.msiMonths.value, 10) || 3);
+      txData.isMsi = currentType === 'gasto' && els.isMsi.checked;
+      if(txData.isMsi) txData.months = Math.max(2, parseInt(els.msiMonths.value, 10) || 3);
     }
-    transactions.push(tx);
+
+    let wasMsi = false;
+    if(editingTransactionId){
+      const idx = transactions.findIndex(x=>x.id === editingTransactionId);
+      if(idx !== -1){
+        wasMsi = !!transactions[idx].isMsi;
+        const keepId = transactions[idx].id;
+        transactions[idx] = { id: keepId, ...txData };
+      }
+      editingTransactionId = null;
+      els.submitBtn.textContent = 'Registrar movimiento';
+      els.cancelEditBtn.style.display = 'none';
+    } else {
+      transactions.push({ id: newId(), ...txData });
+    }
     render();
     await saveTransactions();
-    if(tx.isMsi) await syncMsiToBudget();
+    if(txData.isMsi || wasMsi) await syncMsiToBudget();
 
     els.form.reset();
     els.date.value = todayStr();
