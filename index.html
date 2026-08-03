@@ -490,9 +490,7 @@
     <div class="tabs" id="mainTabs">
       <button type="button" class="tab-btn active" data-tab="form">Registro</button>
       <button type="button" class="tab-btn" data-tab="budget">Presupuesto</button>
-      <button type="button" class="tab-btn" data-tab="metas">Metas</button>
       <button type="button" class="tab-btn" data-tab="resumen">Resumen</button>
-      <button type="button" class="tab-btn" data-tab="cobrar">Por cobrar</button>
     </div>
 
     <div class="tab-panel" id="tabPanelForm">
@@ -799,6 +797,7 @@
     "Renta o hipoteca":"Fijos","Luz":"Fijos","Agua":"Fijos","Gas":"Fijos","Internet":"Fijos","Celular":"Fijos","Seguros":"Fijos",
     "Suscripciones":"Variables","Compras en línea":"Variables"
   };
+  const BASE_CATEGORY_GROUPS = JSON.parse(JSON.stringify(CATEGORY_GROUPS)); // copia limpia, sin clasificaciones de ninguna cuenta
   const GROUP_ORDER = ["Fijos","Variables","Inversiones y seguros","Generales","Otras"];
 
   const PAYMENT_OPTIONS = {
@@ -967,8 +966,13 @@
     try{
       const res = await storageAdapter.get(CATGROUPS_KEY);
       customCategoryGroups = (res && res.value) ? JSON.parse(res.value) : {};
-      Object.assign(CATEGORY_GROUPS, customCategoryGroups);
-    }catch(err){ customCategoryGroups = {}; }
+      Object.keys(CATEGORY_GROUPS).forEach(k => delete CATEGORY_GROUPS[k]);
+      Object.assign(CATEGORY_GROUPS, BASE_CATEGORY_GROUPS, customCategoryGroups);
+    }catch(err){
+      customCategoryGroups = {};
+      Object.keys(CATEGORY_GROUPS).forEach(k => delete CATEGORY_GROUPS[k]);
+      Object.assign(CATEGORY_GROUPS, BASE_CATEGORY_GROUPS);
+    }
   }
   async function saveCategoryGroups(){
     try{ await storageAdapter.set(CATGROUPS_KEY, JSON.stringify(customCategoryGroups)); }
@@ -1060,10 +1064,8 @@
   function openDrawer(){
     els.accountMenuPanel.classList.add('open');
     els.drawerBackdrop.classList.add('open');
-    const activeTabBtn = document.querySelector('.tab-btn.active');
-    const activeTab = activeTabBtn ? activeTabBtn.dataset.tab : 'form';
     document.querySelectorAll('.drawer-nav-item').forEach(btn=>{
-      btn.classList.toggle('active', btn.dataset.nav === activeTab);
+      btn.classList.toggle('active', btn.dataset.nav === currentTab);
     });
   }
   function closeDrawer(){
@@ -1079,9 +1081,7 @@
   document.getElementById('drawerNav').addEventListener('click', (e)=>{
     const btn = e.target.closest('.drawer-nav-item');
     if(!btn) return;
-    const nav = btn.dataset.nav;
-    const tabBtn = document.querySelector(`.tab-btn[data-tab="${nav}"]`);
-    if(tabBtn) tabBtn.click();
+    switchTab(btn.dataset.nav);
     closeDrawer();
     setTimeout(()=>{
       document.getElementById('mainTabs').scrollIntoView({ behavior:'smooth', block:'start' });
@@ -1182,10 +1182,9 @@
   const tabPanelMetas = document.getElementById('tabPanelMetas');
   const tabPanelResumen = document.getElementById('tabPanelResumen');
   const tabPanelCobrar = document.getElementById('tabPanelCobrar');
-  mainTabs.addEventListener('click', (e)=>{
-    const btn = e.target.closest('.tab-btn');
-    if(!btn) return;
-    const tab = btn.dataset.tab;
+  let currentTab = 'form';
+  function switchTab(tab){
+    currentTab = tab;
     [...mainTabs.querySelectorAll('.tab-btn')].forEach(b=>{
       b.classList.toggle('active', b.dataset.tab === tab);
     });
@@ -1194,6 +1193,11 @@
     tabPanelMetas.style.display = tab === 'metas' ? 'block' : 'none';
     tabPanelResumen.style.display = tab === 'resumen' ? 'block' : 'none';
     tabPanelCobrar.style.display = tab === 'cobrar' ? 'block' : 'none';
+  }
+  mainTabs.addEventListener('click', (e)=>{
+    const btn = e.target.closest('.tab-btn');
+    if(!btn) return;
+    switchTab(btn.dataset.tab);
   });
 
   /* ---------- Storage: transactions ---------- */
@@ -1212,8 +1216,8 @@
   async function loadBudget(){
     try{
       const res = await storageAdapter.get(BUDGET_KEY);
-      if(res && res.value) budget = JSON.parse(res.value);
-    }catch(err){ /* keep defaults */ }
+      budget = (res && res.value) ? JSON.parse(res.value) : JSON.parse(JSON.stringify(DEFAULT_BUDGET));
+    }catch(err){ budget = JSON.parse(JSON.stringify(DEFAULT_BUDGET)); }
   }
   async function saveBudget(){
     try{ await storageAdapter.set(BUDGET_KEY, JSON.stringify(budget)); }
