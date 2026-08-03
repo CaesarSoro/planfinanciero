@@ -441,10 +441,6 @@
     <div class="drawer-divider"></div>
 
     <p class="account-menu-email" id="accountEmail"></p>
-    <button type="button" id="exportBtn" class="account-menu-item">⭳ Exportar respaldo</button>
-    <label for="importFile" class="account-menu-item" style="cursor:pointer;">⭱ Importar respaldo</label>
-    <input type="file" id="importFile" accept="application/json" style="display:none;">
-    <p class="backup-note" id="backupNote" style="padding:2px 6px;"></p>
     <button type="button" id="logoutBtn" class="account-menu-item danger">Cerrar sesión</button>
     <div class="danger-zone">
       <button type="button" id="resetDataBtn" class="account-menu-item danger">🗑 Borrar todos mis datos</button>
@@ -894,14 +890,11 @@
     submitBtn: document.getElementById('submitBtn'),
     cancelEditBtn: document.getElementById('cancelEditBtn'),
     tapeAmount: document.getElementById('tapeAmount'),
-    exportBtn: document.getElementById('exportBtn'),
     periodToggle: document.getElementById('periodToggle'),
     periodDate: document.getElementById('periodDate'),
     periodMonth: document.getElementById('periodMonth'),
     periodYear: document.getElementById('periodYear'),
     periodDisplay: document.getElementById('periodDisplay'),
-    importFile: document.getElementById('importFile'),
-    backupNote: document.getElementById('backupNote'),
     statIncome: document.getElementById('statIncome'),
     statIncomeTrend: document.getElementById('statIncomeTrend'),
     statExpense: document.getElementById('statExpense'),
@@ -2284,64 +2277,6 @@
     els.form.reset();
     els.date.value = todayStr();
     setType(currentType);
-  });
-
-  /* ---------- Respaldo: exportar / importar ---------- */
-  function exportBackup(){
-    const payload = {
-      app: 'libro-de-cuentas',
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      transactions,
-      categories,
-      categoryGroups: customCategoryGroups,
-      budget,
-      receivables,
-      travelBudgets,
-    };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `libro-de-cuentas-respaldo-${todayStr()}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    els.backupNote.textContent = 'Respaldo descargado ✓';
-  }
-
-  async function importBackupFile(file){
-    try{
-      const text = await file.text();
-      const data = JSON.parse(text);
-      if(!data || typeof data !== 'object') throw new Error('Formato inválido');
-      const ok = confirm('Esto va a reemplazar los datos actuales del libro con los del archivo de respaldo. ¿Quieres continuar?');
-      if(!ok) return;
-      if(Array.isArray(data.transactions)) transactions = data.transactions;
-      if(data.categories) categories = data.categories;
-      if(data.budget) budget = data.budget;
-      if(Array.isArray(data.receivables)) receivables = data.receivables;
-      if(Array.isArray(data.travelBudgets)) travelBudgets = data.travelBudgets;
-      if(data.categoryGroups){
-        customCategoryGroups = data.categoryGroups;
-        Object.assign(CATEGORY_GROUPS, customCategoryGroups);
-        await saveCategoryGroups();
-      }
-      await Promise.all([saveTransactions(), saveCategories(), saveBudget(), saveReceivables(), saveTravelBudgets()]);
-      setType(currentType);
-      render();
-      els.backupNote.textContent = 'Respaldo importado ✓';
-    }catch(err){
-      els.backupNote.textContent = 'No se pudo leer ese archivo. Verifica que sea un respaldo válido.';
-    }
-  }
-
-  els.exportBtn.addEventListener('click', exportBackup);
-  els.importFile.addEventListener('change', (e)=>{
-    const file = e.target.files[0];
-    if(file) importBackupFile(file);
-    e.target.value = '';
   });
 
   /* ---------- Filtro de periodo: eventos ---------- */
