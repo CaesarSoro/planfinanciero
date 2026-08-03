@@ -922,15 +922,19 @@
       if(!res || !res.value){
         // Cuenta nueva sin nada guardado todavía: arranca con la lista genérica, no con la personalizada.
         categories = JSON.parse(JSON.stringify(GENERIC_STARTER_CATEGORIES));
+        categories._seed = 'generic';
         await saveCategories();
         return;
       }
       const stored = JSON.parse(res.value);
-      const merged = {};
+      // Las cuentas sembradas con la lista genérica se siguen fusionando SOLO con la lista genérica,
+      // nunca con DEFAULT_CATEGORIES (que son las categorías personales de la cuenta original).
+      const seedList = stored._seed === 'generic' ? GENERIC_STARTER_CATEGORIES : DEFAULT_CATEGORIES;
+      const merged = { _seed: stored._seed === 'generic' ? 'generic' : 'legacy' };
       Object.keys(DEFAULT_CATEGORIES).forEach(type=>{
         const storedList = Array.isArray(stored[type]) ? stored[type] : [];
         const combined = [...storedList];
-        DEFAULT_CATEGORIES[type].forEach(c=>{ if(!combined.includes(c)) combined.push(c); });
+        seedList[type].forEach(c=>{ if(!combined.includes(c)) combined.push(c); });
         const removed = REMOVED_CATEGORIES[type] || [];
         merged[type] = combined.filter(c=> !removed.includes(c));
       });
