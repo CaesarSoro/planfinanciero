@@ -2339,7 +2339,7 @@
       'auth/popup-blocked': 'Tu navegador bloqueó la ventana emergente. Permite pop-ups para este sitio e intenta de nuevo.',
       'auth/account-exists-with-different-credential': 'Ya existe una cuenta con ese correo usando otro método de acceso.'
     };
-    return map[err.code] || 'Ocurrió un error. Intenta de nuevo.';
+    return map[err.code] || `Ocurrió un error (${err.code || err.message || 'desconocido'}). Intenta de nuevo.`;
   }
 
   const googleProvider = new firebase.auth.GoogleAuthProvider();
@@ -2349,6 +2349,7 @@
     try{
       await fbAuth.signInWithPopup(googleProvider);
     }catch(err){
+      console.error('Google sign-in error:', err);
       els.authError.textContent = friendlyAuthError(err);
     }
     els.googleSignInBtn.disabled = false;
@@ -2375,6 +2376,7 @@
         await fbAuth.createUserWithEmailAndPassword(email, password);
       }
     }catch(err){
+      console.error('Email auth error:', err);
       els.authError.textContent = friendlyAuthError(err);
     }
     els.authSubmitBtn.disabled = false;
