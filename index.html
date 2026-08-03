@@ -104,6 +104,7 @@
   .type-toggle button.active[data-subtype="retiro"]{background:var(--expense);color:#fff;}
 
   .tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;}
+  .tabs .tab-btn:last-child:nth-child(odd){grid-column:1 / -1;}
   .tab-btn{min-width:0;background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:10px 8px;font-family:'Inter',sans-serif;font-weight:700;font-size:11.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-soft);cursor:pointer;transition:background .15s, color .15s, border-color .15s;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .tab-btn.active{background:var(--ink);color:var(--surface);border-color:var(--ink);}
   .tab-btn:hover:not(.active){border-color:var(--gold);color:var(--ink);}
@@ -131,7 +132,7 @@
   .rec-add-row button{padding:8px 16px;font-size:13px;font-weight:600;border:none;border-radius:6px;background:var(--ink);color:#fff;cursor:pointer;flex-shrink:0;}
   .rec-empty{text-align:center;padding:20px 10px;color:var(--ink-soft);font-size:13.5px;}
 
-  .travel-section{margin-top:28px;padding-top:24px;border-top:1px solid var(--line);}
+  .travel-section{}
   .travel-header{font-family:'Fraunces',serif;font-size:17px;font-weight:600;margin-bottom:16px;}
   .travel-header-sub{display:block;font-family:'Inter',sans-serif;font-weight:400;font-size:11.5px;color:var(--ink-soft);margin-top:3px;}
   .travel-add-row{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;margin-bottom:22px;padding:16px;background:var(--paper);border-radius:8px;}
@@ -344,7 +345,9 @@
     background-attachment: fixed;
     background-color:#1a1712;
   }
-  .auth-credit{position:absolute;bottom:10px;right:14px;font-size:10px;color:rgba(255,255,255,.55);text-transform:none;}
+  .auth-credit{position:absolute;bottom:8px;right:12px;font-size:8.5px;color:rgba(255,255,255,.4);text-transform:none;letter-spacing:0;}
+  .auth-credit a{color:rgba(255,255,255,.4);text-decoration:none;}
+  .auth-credit a:hover{color:rgba(255,255,255,.65);}
   .auth-credit a{color:rgba(255,255,255,.75);}
   .auth-card{width:100%;max-width:360px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:28px 26px;text-align:center;box-shadow:0 24px 60px -12px rgba(0,0,0,.55);}
   .auth-card h1{font-family:'Fraunces',serif;font-size:24px;}
@@ -375,6 +378,11 @@
   .account-menu-item:hover{background:var(--paper);}
   .account-menu-item.danger{color:var(--expense);margin-top:6px;}
   .danger-zone{margin-top:14px;padding-top:14px;border-top:1px dashed var(--line);}
+  .drawer-divider{margin-top:16px;padding-top:16px;border-top:1px dashed var(--line);}
+  .drawer-nav{display:flex;flex-direction:column;gap:2px;margin-top:22px;}
+  .drawer-nav-item{display:block;width:100%;text-align:left;background:none;border:none;padding:11px 8px;font-size:14.5px;font-weight:600;color:var(--ink);cursor:pointer;font-family:'Inter',sans-serif;border-radius:6px;}
+  .drawer-nav-item:hover{background:var(--paper);}
+  .drawer-nav-item.active{background:var(--gold-soft);color:var(--gold);}
   .danger-zone-note{font-size:10.5px;color:var(--ink-soft);padding:0 6px;margin:2px 0 0;line-height:1.4;}
 
   /* ---------- Tablet / escritorio: mejor aprovechamiento del espacio ---------- */
@@ -422,6 +430,16 @@
   <div class="drawer-backdrop" id="drawerBackdrop"></div>
   <div class="account-drawer" id="accountMenuPanel">
     <button type="button" id="drawerCloseBtn" class="drawer-close" aria-label="Cerrar menú">✕</button>
+
+    <div class="drawer-nav" id="drawerNav">
+      <button type="button" class="drawer-nav-item" data-nav="form">📋 Registro</button>
+      <button type="button" class="drawer-nav-item" data-nav="budget">📊 Presupuesto</button>
+      <button type="button" class="drawer-nav-item" data-nav="metas">🎯 Metas y Proyectos</button>
+      <button type="button" class="drawer-nav-item" data-nav="resumen">📈 Resumen</button>
+      <button type="button" class="drawer-nav-item" data-nav="cobrar">💵 Por cobrar</button>
+    </div>
+    <div class="drawer-divider"></div>
+
     <p class="account-menu-email" id="accountEmail"></p>
     <button type="button" id="exportBtn" class="account-menu-item">⭳ Exportar respaldo</button>
     <label for="importFile" class="account-menu-item" style="cursor:pointer;">⭱ Importar respaldo</label>
@@ -476,6 +494,7 @@
     <div class="tabs" id="mainTabs">
       <button type="button" class="tab-btn active" data-tab="form">Registro</button>
       <button type="button" class="tab-btn" data-tab="budget">Presupuesto</button>
+      <button type="button" class="tab-btn" data-tab="metas">Metas</button>
       <button type="button" class="tab-btn" data-tab="resumen">Resumen</button>
       <button type="button" class="tab-btn" data-tab="cobrar">Por cobrar</button>
     </div>
@@ -563,6 +582,10 @@
 
     <div class="tab-panel" id="tabPanelBudget" style="display:none;">
       <div id="budgetPanel"></div>
+    </div>
+
+    <div class="tab-panel" id="tabPanelMetas" style="display:none;">
+      <div id="travelPanel"></div>
     </div>
 
     <div class="tab-panel" id="tabPanelCobrar" style="display:none;">
@@ -902,6 +925,7 @@
     msiPendingNote: document.getElementById('msiPendingNote'),
     savingsPanel: document.getElementById('savingsPanel'),
     budgetPanel: document.getElementById('budgetPanel'),
+    travelPanel: document.getElementById('travelPanel'),
     receivablesPanel: document.getElementById('receivablesPanel'),
   };
 
@@ -1043,6 +1067,11 @@
   function openDrawer(){
     els.accountMenuPanel.classList.add('open');
     els.drawerBackdrop.classList.add('open');
+    const activeTabBtn = document.querySelector('.tab-btn.active');
+    const activeTab = activeTabBtn ? activeTabBtn.dataset.tab : 'form';
+    document.querySelectorAll('.drawer-nav-item').forEach(btn=>{
+      btn.classList.toggle('active', btn.dataset.nav === activeTab);
+    });
   }
   function closeDrawer(){
     els.accountMenuPanel.classList.remove('open');
@@ -1054,6 +1083,17 @@
   });
   els.drawerCloseBtn.addEventListener('click', closeDrawer);
   els.drawerBackdrop.addEventListener('click', closeDrawer);
+  document.getElementById('drawerNav').addEventListener('click', (e)=>{
+    const btn = e.target.closest('.drawer-nav-item');
+    if(!btn) return;
+    const nav = btn.dataset.nav;
+    const tabBtn = document.querySelector(`.tab-btn[data-tab="${nav}"]`);
+    if(tabBtn) tabBtn.click();
+    closeDrawer();
+    setTimeout(()=>{
+      document.getElementById('mainTabs').scrollIntoView({ behavior:'smooth', block:'start' });
+    }, 50);
+  });
   els.msiToggle.addEventListener('click', ()=>{
     const showing = els.msiPanel.style.display !== 'none';
     els.msiPanel.style.display = showing ? 'none' : 'block';
@@ -1142,10 +1182,11 @@
     setType(btn.dataset.type);
   });
 
-  /* ---------- Tabs: Nuevo movimiento / Presupuesto / Resúmenes / Por cobrar ---------- */
+  /* ---------- Tabs: Nuevo movimiento / Presupuesto / Metas / Resúmenes / Por cobrar ---------- */
   const mainTabs = document.getElementById('mainTabs');
   const tabPanelForm = document.getElementById('tabPanelForm');
   const tabPanelBudget = document.getElementById('tabPanelBudget');
+  const tabPanelMetas = document.getElementById('tabPanelMetas');
   const tabPanelResumen = document.getElementById('tabPanelResumen');
   const tabPanelCobrar = document.getElementById('tabPanelCobrar');
   mainTabs.addEventListener('click', (e)=>{
@@ -1157,6 +1198,7 @@
     });
     tabPanelForm.style.display = tab === 'form' ? 'block' : 'none';
     tabPanelBudget.style.display = tab === 'budget' ? 'block' : 'none';
+    tabPanelMetas.style.display = tab === 'metas' ? 'block' : 'none';
     tabPanelResumen.style.display = tab === 'resumen' ? 'block' : 'none';
     tabPanelCobrar.style.display = tab === 'cobrar' ? 'block' : 'none';
   });
@@ -1451,22 +1493,21 @@
     </div>`;
   }
 
-  function renderBudget(){
-    let html = buildBudgetSummaryHtml() + '<div class="budget-groups-wrap">' + BUDGET_GROUP_META.map(renderBudgetGroup).join('') + '</div>' + buildTravelBudgetsHtml();
-    els.budgetPanel.innerHTML = html;
+  function renderTravelPanel(){
+    els.travelPanel.innerHTML = buildTravelBudgetsHtml();
 
-    els.budgetPanel.querySelectorAll('.travel-del').forEach(btn=>{
+    els.travelPanel.querySelectorAll('.travel-del').forEach(btn=>{
       btn.addEventListener('click', ()=> deleteTravelBudget(Number(btn.dataset.id)));
     });
-    const addTravelBtn = els.budgetPanel.querySelector('#addTravelBtn');
+    const addTravelBtn = els.travelPanel.querySelector('#addTravelBtn');
     if(addTravelBtn){
       addTravelBtn.addEventListener('click', async ()=>{
-        const nombreEl = els.budgetPanel.querySelector('#newTravelNombre');
-        const tipoEl = els.budgetPanel.querySelector('#newTravelTipo');
-        const catEl = els.budgetPanel.querySelector('#newTravelCategoria');
-        const presuEl = els.budgetPanel.querySelector('#newTravelPresupuesto');
-        const inicioEl = els.budgetPanel.querySelector('#newTravelInicio');
-        const finEl = els.budgetPanel.querySelector('#newTravelFin');
+        const nombreEl = els.travelPanel.querySelector('#newTravelNombre');
+        const tipoEl = els.travelPanel.querySelector('#newTravelTipo');
+        const catEl = els.travelPanel.querySelector('#newTravelCategoria');
+        const presuEl = els.travelPanel.querySelector('#newTravelPresupuesto');
+        const inicioEl = els.travelPanel.querySelector('#newTravelInicio');
+        const finEl = els.travelPanel.querySelector('#newTravelFin');
         const nombre = nombreEl.value.trim();
         const categoria = catEl.value.trim();
         const presupuesto = parseFloat(presuEl.value);
@@ -1477,6 +1518,11 @@
         await addTravelBudget(nombre, presupuesto, categoria, inicioEl.value || null, finEl.value || null, tipoEl.value);
       });
     }
+  }
+
+  function renderBudget(){
+    let html = buildBudgetSummaryHtml() + '<div class="budget-groups-wrap">' + BUDGET_GROUP_META.map(renderBudgetGroup).join('') + '</div>';
+    els.budgetPanel.innerHTML = html;
 
     const syncMsiBtn = els.budgetPanel.querySelector('#syncMsiBtn');
     if(syncMsiBtn){
@@ -1945,6 +1991,7 @@
     els.tapeAmount.classList.add(balance >= 0 ? 'pos' : 'neg');
 
     renderBudget();
+    renderTravelPanel();
     renderReceivables();
 
     const groupBreakdown = computeGroupBreakdown();
