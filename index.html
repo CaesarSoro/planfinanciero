@@ -38,6 +38,12 @@
   .backup-btn:hover{border-color:var(--gold);color:var(--ink);}
   .backup-note{font-size:11.5px;color:var(--ink-soft);}
 
+  .first-time-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--gold-soft);border:1px solid var(--gold);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:13px;color:var(--ink);}
+  .first-time-banner-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+  .first-time-banner-actions button{cursor:pointer;font-family:'Inter',sans-serif;}
+  #firstTimeBannerBtn{padding:7px 14px;border-radius:6px;border:none;background:var(--ink);color:#fff;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;}
+  #firstTimeBannerClose{background:none;border:none;color:var(--ink-soft);font-size:14px;padding:4px;}
+  #firstTimeBannerClose:hover{color:var(--expense);}
   .filter-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:20px;}
   .filter-label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);font-weight:700;}
   .period-toggle{display:flex;gap:6px;flex-wrap:wrap;}
@@ -45,6 +51,9 @@
   .period-btn.active{background:var(--gold);color:#fff;border-color:var(--gold);}
   .period-btn:hover:not(.active){border-color:var(--gold);color:var(--ink);}
   .period-input{padding:7px 10px;font-size:13px;border:1px solid var(--line);border-radius:6px;background:#fff;font-family:'Inter',sans-serif;color:var(--ink);}
+  .period-nav{display:flex;align-items:center;gap:6px;}
+  .period-nav-btn{width:32px;height:32px;flex-shrink:0;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);font-size:16px;line-height:1;cursor:pointer;}
+  .period-nav-btn:hover{border-color:var(--gold);color:var(--ink);}
   .filter-current{font-size:12px;color:var(--ink-soft);font-style:italic;}
 
   .budget-compare{margin-top:6px;margin-bottom:24px;padding:16px 16px 14px;background:var(--paper);border-radius:8px;}
@@ -70,7 +79,7 @@
     header{flex-direction:column;align-items:stretch;gap:0;padding-top:64px;}
     .header-right{
       position:fixed;top:0;left:0;right:0;z-index:15;
-      display:grid;grid-template-columns:46px 1fr 46px;align-items:center;column-gap:8px;
+      display:grid;grid-template-columns:88px 1fr 88px;align-items:center;column-gap:8px;
       background:var(--paper);
       padding:10px 16px 14px;
       border-bottom:1px solid var(--line);
@@ -363,11 +372,26 @@
   .resumen-caret{font-size:13px;color:var(--ink-soft);flex-shrink:0;}
 
   .account-menu-wrap{flex-shrink:0;}
-  .account-menu-btn{width:46px;height:46px;border-radius:50%;background:var(--gold-soft);border:1.5px solid var(--gold);color:var(--gold);font-size:20px;line-height:1;cursor:pointer;}
+  .account-menu-btn{height:40px;padding:0 14px 0 12px;border-radius:20px;background:var(--gold-soft);border:1.5px solid var(--gold);color:var(--gold);font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;gap:6px;}
+  .account-menu-btn-label{font-family:'Inter',sans-serif;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;}
   .account-menu-btn:hover{background:var(--gold);color:#fff;}
   .drawer-backdrop{position:fixed;inset:0;background:rgba(20,18,14,.45);opacity:0;pointer-events:none;transition:opacity .25s ease;z-index:29;}
   .drawer-backdrop.open{opacity:1;pointer-events:auto;}
   .account-drawer{position:fixed;top:0;left:0;height:100vh;width:280px;max-width:82vw;background:var(--surface);box-shadow:4px 0 28px rgba(0,0,0,.2);z-index:30;transform:translateX(-100%);transition:transform .3s ease;padding:22px 20px;display:flex;flex-direction:column;overflow-y:auto;}
+  .help-modal{position:fixed;top:50%;left:50%;width:520px;max-width:90vw;max-height:82vh;background:var(--surface);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.3);z-index:30;transform:translate(-50%,-50%) scale(.92);opacity:0;pointer-events:none;transition:transform .2s ease, opacity .2s ease;display:flex;flex-direction:column;}
+  .help-modal.open{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:auto;}
+  .help-modal-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line);flex-shrink:0;}
+  .help-modal-header h2{font-family:'Fraunces',serif;font-size:19px;font-weight:600;margin:0;}
+  .help-modal-body{padding:8px 22px 22px;overflow-y:auto;}
+  .help-section{padding:16px 0;border-bottom:1px dashed var(--line);}
+  .help-section:last-child{border-bottom:none;}
+  .help-section h3{font-family:'Fraunces',serif;font-size:15px;font-weight:600;margin:0 0 8px;}
+  .help-section p{font-size:13px;line-height:1.55;color:var(--ink);margin:0 0 8px;}
+  .help-section ul{margin:0 0 8px;padding-left:18px;}
+  .help-section li{font-size:13px;line-height:1.55;margin-bottom:4px;}
+  .help-icon{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;background:var(--gold-soft);color:var(--gold);border:1px solid var(--gold);font-size:10.5px;font-weight:700;cursor:pointer;vertical-align:middle;margin-left:5px;flex-shrink:0;}
+  .help-icon:hover{background:var(--gold);color:#fff;}
+  @media (max-width:480px){.help-modal{width:92vw;max-height:86vh;}}
   .account-drawer.open{transform:translateX(0);}
   .drawer-close{align-self:flex-start;background:none;border:1px solid var(--line);border-radius:50%;width:34px;height:34px;font-size:15px;color:var(--ink-soft);cursor:pointer;margin-bottom:20px;}
   .drawer-close:hover{border-color:var(--expense-soft);color:var(--expense);}
@@ -442,6 +466,8 @@
       <button type="button" class="drawer-nav-item" data-nav="cobrar">💵 Por cobrar</button>
     </div>
     <div class="drawer-divider"></div>
+    <button type="button" id="openHelpBtn" class="account-menu-item">❓ ¿Cómo funciona?</button>
+    <div class="drawer-divider"></div>
 
     <p class="account-menu-email" id="accountEmail"></p>
     <button type="button" id="logoutBtn" class="account-menu-item danger">Cerrar sesión</button>
@@ -451,7 +477,66 @@
     </div>
   </div>
 
-  <header>
+  <div class="drawer-backdrop" id="helpBackdrop"></div>
+  <div class="help-modal" id="helpModal">
+    <div class="help-modal-header">
+      <h2>¿Cómo funciona?</h2>
+      <button type="button" id="helpModalClose" class="drawer-close" aria-label="Cerrar ayuda">✕</button>
+    </div>
+    <div class="help-modal-body">
+      <div class="help-section" id="help-form">
+        <h3>📋 Registro</h3>
+        <p>Aquí anotas cada movimiento de dinero, del día que sea. Elige el tipo:</p>
+        <ul>
+          <li><strong>Ingreso</strong> — dinero que entra (tu sueldo, una venta, etc.)</li>
+          <li><strong>Gasto</strong> — dinero que sale (comida, luz, ropa, etc.)</li>
+          <li><strong>Ahorro</strong> — dinero que apartas (<em>Aporte</em>) o sacas (<em>Retiro</em>) de tus ahorros o inversiones.</li>
+        </ul>
+        <p>Nada más pon el monto, elige categoría y dale "Registrar movimiento". Con eso ya quedó guardado.</p>
+      </div>
+
+      <div class="help-section" id="help-msi">
+        <h3>💳 Meses sin intereses (MSI)</h3>
+        <p>Si compraste algo a meses, al registrar el gasto marca la casilla de "Es a meses sin intereses" y dile a cuántos meses fue. La app va contando sola cuánto llevas pagado cada mes, sin que tengas que hacer nada — no necesitas registrar ese gasto mes con mes.</p>
+      </div>
+
+      <div class="help-section" id="help-budget">
+        <h3>📊 Presupuesto</h3>
+        <p>Aquí planeas cuánto esperas gastar o ganar cada mes, agrupado en:</p>
+        <ul>
+          <li><strong>Fijos</strong> — casi no cambian mes a mes (renta, luz, seguros).</li>
+          <li><strong>Variables</strong> — cambian seguido (comida, ropa, entretenimiento).</li>
+          <li><strong>Inversiones y seguros</strong> — lo que apartas para invertir o protegerte.</li>
+          <li><strong>Ingresos fijos</strong> — lo que esperas ganar cada mes.</li>
+        </ul>
+        <p>Cuando creas una categoría nueva, tienes que decirle si es Fijo, Variable, etc. — así la app sabe dónde contarla.</p>
+      </div>
+
+      <div class="help-section" id="help-real">
+        <h3>⚖️ Presupuestado vs. Real</h3>
+        <p><strong>Presupuestado</strong> es lo que planeaste gastar o ganar. <strong>Real</strong> es lo que en verdad registraste ese mes en Registro. La app los compara para que veas de un vistazo si te pasaste o te quedaste corto.</p>
+      </div>
+
+      <div class="help-section" id="help-metas">
+        <h3>🎯 Metas y Proyectos</h3>
+        <p>Para algo puntual, no de todos los meses: un viaje, una boda, el enganche de un carro. Al crear una, eliges:</p>
+        <ul>
+          <li><strong>Voy a gastar</strong> — para viaje, boda, fiesta. Suma tus gastos en esa categoría.</li>
+          <li><strong>Estoy ahorrando</strong> — para carro, enganche. Suma tus aportes de ahorro en esa categoría.</li>
+        </ul>
+      </div>
+
+      <div class="help-section" id="help-cobrar">
+        <h3>💵 Por cobrar</h3>
+        <p>Para llevar cuenta de quién te debe dinero. Registras a la persona y cuánto te debe; según te vaya pagando, le vas agregando sus abonos, y la app calcula solo cuánto te falta por cobrar.</p>
+      </div>
+
+      <div class="help-section" id="help-resumen">
+        <h3>📈 Resumen</h3>
+        <p>Aquí ves gráficas de a dónde se va tu dinero: por categoría, por grupo (Fijo/Variable), por forma de pago, y cuánto llevas acumulado en tu fondo de ahorro.</p>
+      </div>
+    </div>
+  </div>
     <div>
       <p class="brand-eyebrow">Registro personal &middot; hoja de movimientos</p>
       <h1>Finanzas Personales</h1>
@@ -463,10 +548,18 @@
         <span class="tape-amount" id="tapeAmount">$0.00</span>
       </div>
       <div class="account-menu-wrap">
-        <button type="button" id="accountMenuBtn" class="account-menu-btn" aria-label="Cuenta y respaldo">☰</button>
+        <button type="button" id="accountMenuBtn" class="account-menu-btn" aria-label="Cuenta y respaldo">☰ <span class="account-menu-btn-label">Menú</span></button>
       </div>
     </div>
   </header>
+
+  <div class="first-time-banner" id="firstTimeBanner" style="display:none;">
+    <span>👋 ¿Primera vez aquí? Te explicamos cómo funciona en un par de minutos.</span>
+    <div class="first-time-banner-actions">
+      <button type="button" id="firstTimeBannerBtn">Ver guía</button>
+      <button type="button" id="firstTimeBannerClose" aria-label="Cerrar aviso">✕</button>
+    </div>
+  </div>
 
   <div class="filter-bar">
     <div class="period-toggle" id="periodToggle">
@@ -475,17 +568,21 @@
       <button type="button" class="period-btn" data-period="anio">Año</button>
       <button type="button" class="period-btn" data-period="todo">Todo</button>
     </div>
-    <input type="date" id="periodDate" class="period-input" style="display:none;">
-    <input type="month" id="periodMonth" class="period-input">
-    <input type="number" id="periodYear" class="period-input" style="display:none;" min="2000" max="2100">
+    <div class="period-nav" id="periodNav">
+      <button type="button" class="period-nav-btn" id="periodPrevBtn" aria-label="Periodo anterior">‹</button>
+      <input type="date" id="periodDate" class="period-input" style="display:none;">
+      <input type="month" id="periodMonth" class="period-input">
+      <input type="number" id="periodYear" class="period-input" style="display:none;" min="2000" max="2100">
+      <button type="button" class="period-nav-btn" id="periodNextBtn" aria-label="Periodo siguiente">›</button>
+    </div>
     <span class="filter-current" id="periodDisplay"></span>
   </div>
 
   <div class="card" id="msiCard" style="display:none;">
-    <button type="button" class="msi-toggle" id="msiToggle">
-      <h2>Meses sin intereses <span class="toggle-hint">Ver más <span class="msi-chevron" id="msiChevron">▾</span></span></h2>
+    <div class="msi-toggle" id="msiToggle" role="button" tabindex="0">
+      <h2>Meses sin intereses<button type="button" class="help-icon" data-help="msi">?</button> <span class="toggle-hint">Ver más <span class="msi-chevron" id="msiChevron">▾</span></span></h2>
       <span class="h2-note" id="msiPendingNote"></span>
-    </button>
+    </div>
     <div id="msiPanel" style="display:none;"></div>
   </div>
 
@@ -499,7 +596,7 @@
     <div class="tab-panel" id="tabPanelForm">
       <form id="txForm" class="form-grid">
         <div class="field span-2">
-          <label>Tipo</label>
+          <label>Tipo<button type="button" class="help-icon" data-help="form">?</button></label>
           <div class="type-toggle" id="typeToggle">
             <button type="button" data-type="ingreso" class="active">Ingreso</button>
             <button type="button" data-type="gasto">Gasto</button>
@@ -587,7 +684,7 @@
 
     <div class="tab-panel" id="tabPanelCobrar" style="display:none;">
       <div class="resumen-section">
-        <h3 class="section-title">Por cobrar <span class="h2-note">clientes y personas que te deben</span></h3>
+        <h3 class="section-title">Por cobrar<button type="button" class="help-icon" data-help="cobrar">?</button> <span class="h2-note">clientes y personas que te deben</span></h3>
         <div id="receivablesPanel"></div>
       </div>
     </div>
@@ -845,6 +942,7 @@
   let currentType = "ingreso";
   let currentSubtype = "aporte";
   let editingTransactionId = null;
+  let isFirstTimeUser = false;
 
   const fmt = new Intl.NumberFormat('es-MX', { style:'currency', currency:'MXN' });
 
@@ -863,6 +961,13 @@
     logoutBtn: document.getElementById('logoutBtn'),
     resetDataBtn: document.getElementById('resetDataBtn'),
     accountMenuBtn: document.getElementById('accountMenuBtn'),
+    openHelpBtn: document.getElementById('openHelpBtn'),
+    firstTimeBanner: document.getElementById('firstTimeBanner'),
+    firstTimeBannerBtn: document.getElementById('firstTimeBannerBtn'),
+    firstTimeBannerClose: document.getElementById('firstTimeBannerClose'),
+    helpModal: document.getElementById('helpModal'),
+    helpBackdrop: document.getElementById('helpBackdrop'),
+    helpModalClose: document.getElementById('helpModalClose'),
     accountMenuPanel: document.getElementById('accountMenuPanel'),
     drawerBackdrop: document.getElementById('drawerBackdrop'),
     drawerCloseBtn: document.getElementById('drawerCloseBtn'),
@@ -894,6 +999,9 @@
     tapeAmount: document.getElementById('tapeAmount'),
     periodToggle: document.getElementById('periodToggle'),
     periodDate: document.getElementById('periodDate'),
+    periodNav: document.getElementById('periodNav'),
+    periodPrevBtn: document.getElementById('periodPrevBtn'),
+    periodNextBtn: document.getElementById('periodNextBtn'),
     periodMonth: document.getElementById('periodMonth'),
     periodYear: document.getElementById('periodYear'),
     periodDisplay: document.getElementById('periodDisplay'),
@@ -943,6 +1051,7 @@
         categories = JSON.parse(JSON.stringify(GENERIC_STARTER_CATEGORIES));
         categories._seed = 'generic';
         await saveCategories();
+        isFirstTimeUser = true;
         return;
       }
       const stored = JSON.parse(res.value);
@@ -1090,10 +1199,52 @@
       document.getElementById('mainTabs').scrollIntoView({ behavior:'smooth', block:'start' });
     }, 50);
   });
+
+  /* ---------- Ayuda: "¿Cómo funciona?" ---------- */
+  function openHelpModal(sectionId){
+    els.helpModal.classList.add('open');
+    els.helpBackdrop.classList.add('open');
+    if(sectionId){
+      setTimeout(()=>{
+        const target = document.getElementById('help-' + sectionId);
+        if(target) target.scrollIntoView({ behavior:'smooth', block:'start' });
+      }, 80);
+    } else {
+      els.helpModal.querySelector('.help-modal-body').scrollTop = 0;
+    }
+  }
+  function closeHelpModal(){
+    els.helpModal.classList.remove('open');
+    els.helpBackdrop.classList.remove('open');
+  }
+  els.openHelpBtn.addEventListener('click', ()=>{
+    closeDrawer();
+    openHelpModal();
+  });
+  els.helpModalClose.addEventListener('click', closeHelpModal);
+  els.helpBackdrop.addEventListener('click', closeHelpModal);
+  els.firstTimeBannerBtn.addEventListener('click', ()=>{
+    els.firstTimeBanner.style.display = 'none';
+    openHelpModal();
+  });
+  els.firstTimeBannerClose.addEventListener('click', ()=>{
+    els.firstTimeBanner.style.display = 'none';
+  });
+  document.addEventListener('click', (e)=>{
+    const icon = e.target.closest('.help-icon');
+    if(!icon) return;
+    e.stopPropagation();
+    closeDrawer();
+    openHelpModal(icon.dataset.help);
+  });
+
   els.msiToggle.addEventListener('click', ()=>{
     const showing = els.msiPanel.style.display !== 'none';
     els.msiPanel.style.display = showing ? 'none' : 'block';
     els.msiChevron.textContent = showing ? '▾' : '▴';
+  });
+  els.msiToggle.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); els.msiToggle.click(); }
   });
   document.getElementById('tabPanelResumen').addEventListener('click', (e)=>{
     const btn = e.target.closest('.resumen-toggle');
@@ -1390,7 +1541,7 @@
 
   function buildBudgetCompareHtml(){
     return `<div class="budget-compare">
-      <div class="compare-title">Presupuestado vs. real — ${escapeHtml(periodLabel())}</div>
+      <div class="compare-title">Presupuestado vs. real — ${escapeHtml(periodLabel())}<button type="button" class="help-icon" data-help="real">?</button></div>
       ${buildBudgetCompareChart()}
       <p class="backup-note" style="margin-top:8px;">"Inversiones y seguros" solo compara categorías de gasto que hayas clasificado así al crearlas.</p>
       <p class="backup-note" style="margin-top:6px;">Si tienes gastos trimestrales o anuales (como seguros), Presupuestado siempre muestra su equivalente mensual, pero Real muestra el cobro completo solo en el mes que se aplica. Para comparar de forma justa, cambia el filtro de arriba a "Año".</p>
@@ -1458,7 +1609,7 @@
         }).join('');
 
     return `<div class="travel-section">
-      <div class="travel-header">Metas y Proyectos<span class="travel-header-sub">Viaje, boda, fiesta, carro, lo que sea</span></div>
+      <div class="travel-header">Metas y Proyectos<button type="button" class="help-icon" data-help="metas">?</button><span class="travel-header-sub">Viaje, boda, fiesta, carro, lo que sea</span></div>
       <div class="travel-add-row">
         <div class="field span-2">
           <label for="newTravelNombre">Nombre</label>
@@ -2291,8 +2442,31 @@
     els.periodDate.style.display = periodMode === 'dia' ? 'inline-block' : 'none';
     els.periodMonth.style.display = periodMode === 'mes' ? 'inline-block' : 'none';
     els.periodYear.style.display = periodMode === 'anio' ? 'inline-block' : 'none';
+    els.periodNav.style.display = periodMode === 'todo' ? 'none' : 'flex';
     els.periodDisplay.textContent = periodMode === 'todo' ? 'Mostrando todo el historial' : `Mostrando: ${periodLabel()}`;
   }
+  function shiftPeriod(direction){
+    if(periodMode === 'dia'){
+      const d = new Date(periodValue + 'T00:00:00');
+      d.setDate(d.getDate() + direction);
+      periodValue = d.toISOString().slice(0,10);
+      els.periodDate.value = periodValue;
+    } else if(periodMode === 'mes'){
+      const [y,m] = periodValue.split('-').map(Number);
+      const d = new Date(y, (m - 1) + direction, 1);
+      periodValue = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+      els.periodMonth.value = periodValue;
+    } else if(periodMode === 'anio'){
+      periodValue = String(Number(periodValue) + direction);
+      els.periodYear.value = periodValue;
+    } else {
+      return;
+    }
+    updatePeriodInputVisibility();
+    render();
+  }
+  els.periodPrevBtn.addEventListener('click', ()=> shiftPeriod(-1));
+  els.periodNextBtn.addEventListener('click', ()=> shiftPeriod(1));
   els.periodToggle.addEventListener('click', (e)=>{
     const btn = e.target.closest('.period-btn');
     if(!btn) return;
@@ -2430,6 +2604,9 @@
     await pruneOrphanedMsiBudgetLines();
     setType('ingreso');
     render();
+    if(isFirstTimeUser){
+      els.firstTimeBanner.style.display = 'flex';
+    }
   }
 
   /* ---------- Sincronización en tiempo real entre dispositivos ---------- */
