@@ -29,7 +29,7 @@
   h1{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(28px,4vw,40px);margin:0;letter-spacing:-0.01em;}
   .tagline{font-size:13.5px;color:var(--ink-soft);margin:6px 0 0;max-width:400px;}
 
-  .tape{background:var(--ink);color:var(--surface);font-family:'IBM Plex Mono',monospace;padding:14px 20px;border-radius:4px;position:relative;min-width:230px;text-align:right;}
+  .tape{background:var(--ink);color:var(--surface);font-family:'IBM Plex Mono',monospace;padding:14px 20px;border-radius:4px;position:relative;min-width:190px;text-align:right;flex-shrink:1;}
   .tape::before,.tape::after{content:"";position:absolute;left:0;right:0;height:6px;background:radial-gradient(circle at 6px 3px, var(--paper) 3px, transparent 3.5px) repeat-x;background-size:12px 6px;}
   .tape::before{top:-3px;} .tape::after{bottom:-3px;transform:scaleY(-1);}
   .tape .tape-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.7;display:block;margin-bottom:2px;}
@@ -76,7 +76,7 @@
 
   .grid{display:grid;grid-template-columns:340px 1fr;gap:22px;}
   @media (max-width:760px){.grid{grid-template-columns:1fr;}}
-  @media (max-width:900px){
+  @media (max-width:680px){
     header{flex-direction:column;align-items:stretch;gap:0;padding-top:86px;}
     .header-right{
       position:fixed;top:0;left:0;right:0;z-index:15;margin-top:0;
