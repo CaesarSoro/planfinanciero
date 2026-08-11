@@ -45,7 +45,14 @@
   #firstTimeBannerBtn{padding:7px 14px;border-radius:6px;border:none;background:var(--ink);color:#fff;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;}
   #firstTimeBannerClose{background:none;border:none;color:var(--ink-soft);font-size:14px;padding:4px;}
   #firstTimeBannerClose:hover{color:var(--expense);}
-  .filter-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:20px;}
+  .filter-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:20px;margin-top:10px;}
+  .filter-summary-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:1px solid var(--line);border-radius:8px;padding:12px 14px;cursor:pointer;font-family:inherit;}
+  .filter-summary-toggle:hover{border-color:var(--gold);}
+  .filter-summary-left{display:flex;align-items:center;gap:10px;}
+  .filter-summary-icon{font-size:17px;flex-shrink:0;}
+  .filter-summary-text{display:flex;flex-direction:column;align-items:flex-start;gap:1px;}
+  .filter-summary-label{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);font-weight:700;}
+  .filter-summary-value{font-family:'Fraunces',serif;font-size:17px;font-weight:600;color:var(--ink);}
   .filter-label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);font-weight:700;}
   .period-toggle{display:flex;gap:6px;flex-wrap:wrap;}
   .period-btn{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:7px 14px;font-family:'Inter',sans-serif;font-weight:700;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);cursor:pointer;}
@@ -55,7 +62,6 @@
   .period-nav{display:flex;align-items:center;gap:6px;}
   .period-nav-btn{width:32px;height:32px;flex-shrink:0;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);font-size:16px;line-height:1;cursor:pointer;}
   .period-nav-btn:hover{border-color:var(--gold);color:var(--ink);}
-  .filter-current{font-size:12px;color:var(--ink-soft);font-style:italic;}
 
   .budget-compare{margin-top:6px;margin-bottom:24px;padding:16px 16px 14px;background:var(--paper);border-radius:8px;}
   .compare-title{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:10px;font-weight:700;}
@@ -571,7 +577,17 @@
     </div>
   </div>
 
-  <div class="filter-bar">
+  <button type="button" class="filter-summary-toggle" id="filterSummaryToggle">
+    <span class="filter-summary-left">
+      <span class="filter-summary-icon">🔍</span>
+      <span class="filter-summary-text">
+        <span class="filter-summary-label">Filtro</span>
+        <span class="filter-summary-value" id="periodDisplay"></span>
+      </span>
+    </span>
+    <span class="toggle-hint">Ver más <span class="resumen-caret" id="filterCaret">▾</span></span>
+  </button>
+  <div class="filter-bar" id="filterBarDetail" style="display:none;">
     <div class="period-toggle" id="periodToggle">
       <button type="button" class="period-btn" data-period="dia">Día</button>
       <button type="button" class="period-btn active" data-period="mes">Mes</button>
@@ -585,7 +601,6 @@
       <input type="number" id="periodYear" class="period-input" style="display:none;" min="2000" max="2100">
       <button type="button" class="period-nav-btn" id="periodNextBtn" aria-label="Periodo siguiente">›</button>
     </div>
-    <span class="filter-current" id="periodDisplay"></span>
   </div>
 
   <div class="card">
@@ -1015,6 +1030,9 @@
     periodMonth: document.getElementById('periodMonth'),
     periodYear: document.getElementById('periodYear'),
     periodDisplay: document.getElementById('periodDisplay'),
+    filterSummaryToggle: document.getElementById('filterSummaryToggle'),
+    filterBarDetail: document.getElementById('filterBarDetail'),
+    filterCaret: document.getElementById('filterCaret'),
     statIncome: document.getElementById('statIncome'),
     statIncomeTrend: document.getElementById('statIncomeTrend'),
     statExpense: document.getElementById('statExpense'),
@@ -2453,7 +2471,7 @@
     els.periodMonth.style.display = periodMode === 'mes' ? 'inline-block' : 'none';
     els.periodYear.style.display = periodMode === 'anio' ? 'inline-block' : 'none';
     els.periodNav.style.display = periodMode === 'todo' ? 'none' : 'flex';
-    els.periodDisplay.textContent = periodMode === 'todo' ? 'Mostrando todo el historial' : `Mostrando: ${periodLabel()}`;
+    els.periodDisplay.textContent = periodMode === 'todo' ? 'Todo el historial' : periodLabel();
   }
   function shiftPeriod(direction){
     if(periodMode === 'dia'){
@@ -2477,6 +2495,11 @@
   }
   els.periodPrevBtn.addEventListener('click', ()=> shiftPeriod(-1));
   els.periodNextBtn.addEventListener('click', ()=> shiftPeriod(1));
+  els.filterSummaryToggle.addEventListener('click', ()=>{
+    const showing = els.filterBarDetail.style.display !== 'none';
+    els.filterBarDetail.style.display = showing ? 'none' : 'flex';
+    els.filterCaret.textContent = showing ? '▾' : '▴';
+  });
   els.periodToggle.addEventListener('click', (e)=>{
     const btn = e.target.closest('.period-btn');
     if(!btn) return;
