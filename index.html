@@ -137,6 +137,8 @@
   @media (max-width:640px){ #txForm.form-grid{grid-template-columns:1fr;} }
 
   .resumen-section{margin-bottom:28px;}
+  .msi-card-box{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;border-left:4px solid var(--expense);}
+  .msi-card-box .msi-toggle .section-title-text{font-family:'Fraunces',serif;font-size:16px;font-weight:700;}
   .resumen-section:last-child{margin-bottom:0;}
   .section-title{font-family:'Fraunces',serif;font-size:16px;font-weight:600;margin:0 0 16px;padding-bottom:10px;border-bottom:1px solid var(--line);}
   .section-title .h2-note{font-family:'Inter',sans-serif;font-weight:400;font-size:11.5px;color:var(--ink-soft);float:right;}
@@ -734,7 +736,7 @@
         </div>
       </div>
 
-      <div class="resumen-section" id="msiCard" style="display:none;">
+      <div class="resumen-section msi-card-box" id="msiCard" style="display:none;">
         <div class="msi-toggle" id="msiToggle" role="button" tabindex="0">
           <span class="section-title-text">Meses sin intereses<button type="button" class="help-icon" data-help="msi">?</button></span>
           <span class="toggle-hint">Ver más <span class="msi-chevron" id="msiChevron">▾</span></span>
