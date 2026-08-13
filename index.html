@@ -16,7 +16,19 @@
     --income:#2E6F4F; --income-soft:#E4EEE7;
     --expense:#7A2E2E; --expense-soft:#F2E4E1;
     --gold:#B8863B; --gold-soft:#F1E6D2; --radius:10px;
+    --input-bg:#fff; --tape-bg:#22271F; --tape-ink:#FBFAF5;
   }
+  html[data-theme="dark"]{
+    --paper:#1B1914; --paper-dark:#252115; --surface:#252115;
+    --ink:#EDE8DC; --ink-soft:#A79E88; --line:#3C3626;
+    --income:#5DB98A; --income-soft:#1E3327;
+    --expense:#D98785; --expense-soft:#3A2222;
+    --gold:#D9AD64; --gold-soft:#3A2E17;
+    --input-bg:#2A2619; --tape-bg:#0F0E0B; --tape-ink:#D9AD64;
+  }
+  html[data-theme="dark"] .auth-screen{background:#1B1914;}
+  html[data-theme="dark"] #authForm input, html[data-theme="dark"] .google-btn{background:var(--input-bg);color:var(--ink);}
+  html[data-theme="dark"] .account-menu-btn{background:var(--gold-soft);}
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;padding:28px 16px 60px;min-height:100vh;}
@@ -29,7 +41,7 @@
   h1{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(28px,4vw,40px);margin:0;letter-spacing:-0.01em;}
   .tagline{font-size:13.5px;color:var(--ink-soft);margin:6px 0 0;max-width:400px;}
 
-  .tape{background:var(--ink);color:var(--surface);font-family:'IBM Plex Mono',monospace;padding:14px 20px;border-radius:4px;position:relative;min-width:190px;text-align:right;flex-shrink:1;}
+  .tape{background:var(--tape-bg);color:var(--tape-ink);font-family:'IBM Plex Mono',monospace;padding:14px 20px;border-radius:4px;position:relative;min-width:190px;text-align:right;flex-shrink:1;}
   .tape::before,.tape::after{content:"";position:absolute;left:0;right:0;height:6px;background:radial-gradient(circle at 6px 3px, var(--paper) 3px, transparent 3.5px) repeat-x;background-size:12px 6px;}
   .tape::before{top:-3px;} .tape::after{bottom:-3px;transform:scaleY(-1);}
   .tape .tape-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.7;display:block;margin-bottom:2px;}
@@ -58,7 +70,7 @@
   .period-btn{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:7px 14px;font-family:'Inter',sans-serif;font-weight:700;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);cursor:pointer;}
   .period-btn.active{background:var(--gold);color:#fff;border-color:var(--gold);}
   .period-btn:hover:not(.active){border-color:var(--gold);color:var(--ink);}
-  .period-input{padding:7px 10px;font-size:13px;border:1px solid var(--line);border-radius:6px;background:#fff;font-family:'Inter',sans-serif;color:var(--ink);}
+  .period-input{padding:7px 10px;font-size:13px;border:1px solid var(--line);border-radius:6px;background:var(--input-bg);font-family:'Inter',sans-serif;color:var(--ink);}
   .period-nav{display:flex;align-items:center;gap:6px;}
   .period-nav-btn{width:32px;height:32px;flex-shrink:0;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);font-size:16px;line-height:1;cursor:pointer;}
   .period-nav-btn:hover{border-color:var(--gold);color:var(--ink);}
@@ -117,11 +129,11 @@
 
   .field{margin-bottom:14px;}
   .field label{display:block;font-size:11.5px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:5px;}
-  .field input, .field select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:#fff;font-family:'Inter',sans-serif;font-size:14px;color:var(--ink);}
+  .field input, .field select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:var(--input-bg);font-family:'Inter',sans-serif;font-size:14px;color:var(--ink);}
   .field input:focus, .field select:focus{outline:2px solid var(--gold);outline-offset:1px;}
 
   .type-toggle{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;}
-  .type-toggle button{flex:1;padding:9px 0;border:none;background:#fff;font-family:'Inter',sans-serif;font-weight:600;font-size:13px;color:var(--ink-soft);cursor:pointer;transition:background .15s, color .15s;}
+  .type-toggle button{flex:1;padding:9px 0;border:none;background:var(--input-bg);font-family:'Inter',sans-serif;font-weight:600;font-size:13px;color:var(--ink-soft);cursor:pointer;transition:background .15s, color .15s;}
   .type-toggle button.active[data-type="ingreso"]{background:var(--income);color:#fff;}
   .type-toggle button.active[data-type="gasto"]{background:var(--expense);color:#fff;}
   .type-toggle button.active[data-type="ahorro"]{background:var(--gold);color:#fff;}
@@ -149,7 +161,7 @@
   .rec-summary .lbl{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);margin-bottom:3px;}
   .rec-summary .val{font-family:'IBM Plex Mono',monospace;font-size:14.5px;}
   .rec-add-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px;}
-  .rec-add-row input{padding:8px 10px;font-size:13px;border:1px solid var(--line);border-radius:6px;background:#fff;}
+  .rec-add-row input{padding:8px 10px;font-size:13px;border:1px solid var(--line);border-radius:6px;background:var(--input-bg);}
   .rec-add-row input[type=text].rec-persona{flex:1.3 1 150px;}
   .rec-add-row input[type=text].rec-concepto{flex:1.3 1 150px;}
   .rec-add-row input[type=number]{flex:0.8 1 110px;}
@@ -162,7 +174,7 @@
   .travel-header-sub{display:block;font-family:'Inter',sans-serif;font-weight:400;font-size:11.5px;color:var(--ink-soft);margin-top:3px;}
   .travel-add-row{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;margin-bottom:22px;padding:16px;background:var(--paper);border-radius:8px;}
   .travel-add-row .span-2{grid-column:1 / -1;}
-  .travel-add-row select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:#fff;font-family:'Inter',sans-serif;font-size:14px;color:var(--ink);}
+  .travel-add-row select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:var(--input-bg);font-family:'Inter',sans-serif;font-size:14px;color:var(--ink);}
   .travel-add-row select:focus{outline:2px solid var(--gold);outline-offset:1px;}
   .travel-add-btn{grid-column:1 / -1;padding:10px 16px;font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;border:none;border-radius:6px;background:var(--ink);color:#fff;cursor:pointer;margin-top:2px;}
   .travel-card{padding:16px;background:var(--paper);border-radius:8px;margin-bottom:12px;}
@@ -197,7 +209,7 @@
   .rec-meta{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);margin-top:5px;}
   .rec-meta .rem{color:var(--expense);font-weight:600;} .rec-meta .done{color:var(--income);font-weight:600;}
   .rec-abono-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center;}
-  .rec-abono-row input, .rec-abono-row select{padding:6px 8px;font-size:12px;border:1px solid var(--line);border-radius:6px;background:#fff;}
+  .rec-abono-row input, .rec-abono-row select{padding:6px 8px;font-size:12px;border:1px solid var(--line);border-radius:6px;background:var(--input-bg);}
   .rec-abono-row input[type=number]{flex:0.8 1 90px;}
   .rec-abono-row select{flex:1 1 110px;}
   .rec-abono-row input[type=date]{flex:0.9 1 120px;}
@@ -214,7 +226,7 @@
   .cat-chip button:hover{opacity:1;}
   .cat-add-row{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
   .cat-add-row input[type=text]{flex:1.5 1 130px;}
-  .cat-add-row select{flex:1 1 110px;padding:7px 8px;font-size:12px;border:1px solid var(--line);border-radius:6px;background:#fff;}
+  .cat-add-row select{flex:1 1 110px;padding:7px 8px;font-size:12px;border:1px solid var(--line);border-radius:6px;background:var(--input-bg);}
   .cat-add-row input{flex:1;padding:7px 9px;font-size:12.5px;border:1px solid var(--line);border-radius:6px;}
   .cat-add-row button{padding:7px 12px;font-size:12px;font-weight:600;border:none;border-radius:6px;background:var(--ink);color:#fff;cursor:pointer;}
 
@@ -324,7 +336,7 @@
   .budget-edit{background:none;border:1px solid var(--line);border-radius:6px;color:var(--ink-soft);cursor:pointer;font-size:13px;width:30px;height:30px;flex-shrink:0;}
   .budget-edit:hover{color:var(--gold);border-color:var(--gold-soft);background:var(--gold-soft);}
   .budget-row-editing{display:flex;gap:6px;flex-wrap:wrap;align-items:center;background:var(--gold-soft);border-radius:6px;padding:8px;margin:2px 0;}
-  .budget-row-editing input, .budget-row-editing select{padding:6px 8px;font-size:12px;border:1px solid var(--line);border-radius:6px;background:#fff;}
+  .budget-row-editing input, .budget-row-editing select{padding:6px 8px;font-size:12px;border:1px solid var(--line);border-radius:6px;background:var(--input-bg);}
   .budget-row-editing .be-name{flex:1.6 1 110px;}
   .budget-row-editing .be-cost{flex:1 1 80px;}
   .budget-row-editing .be-freq{flex:1 1 100px;}
@@ -379,9 +391,9 @@
   .auth-dev-credit{position:absolute;bottom:10px;right:14px;z-index:2;display:flex;align-items:center;gap:7px;font-size:10px;color:rgba(255,255,255,.75);}
   .auth-dev-initials{display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--gold);color:#fff;font-family:'Fraunces',serif;font-size:10.5px;font-weight:700;letter-spacing:.02em;}
   #authForm{display:flex;flex-direction:column;gap:10px;}
-  #authForm input{padding:11px 12px;font-size:14px;border:1px solid var(--line);border-radius:8px;background:#fff;font-family:'Inter',sans-serif;text-transform:none;}
+  #authForm input{padding:11px 12px;font-size:14px;border:1px solid var(--line);border-radius:8px;background:var(--input-bg);font-family:'Inter',sans-serif;text-transform:none;}
   #authForm button{padding:11px 12px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;border:none;border-radius:8px;background:var(--ink);color:#fff;cursor:pointer;margin-top:4px;}
-  .google-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px 12px;font-size:13.5px;font-weight:600;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);cursor:pointer;font-family:'Inter',sans-serif;}
+  .google-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px 12px;font-size:13.5px;font-weight:600;border:1px solid var(--line);border-radius:8px;background:var(--input-bg);color:var(--ink);cursor:pointer;font-family:'Inter',sans-serif;}
   .google-btn:hover{border-color:var(--gold);}
   .auth-divider{display:flex;align-items:center;gap:10px;margin:16px 0;font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.03em;}
   .auth-divider::before,.auth-divider::after{content:'';flex:1;border-top:1px solid var(--line);}
@@ -420,11 +432,19 @@
   .account-menu-item.danger{color:var(--expense);margin-top:6px;}
   .danger-zone{margin-top:14px;padding-top:14px;border-top:1px dashed var(--line);}
   .drawer-divider{margin-top:16px;padding-top:16px;border-top:1px dashed var(--line);}
+  .drawer-theme-row{display:flex;align-items:center;justify-content:space-between;padding:10px 4px;font-size:14px;color:var(--ink);}
+  .theme-switch{width:42px;height:24px;border-radius:20px;background:var(--paper-dark);border:1px solid var(--line);cursor:pointer;position:relative;padding:0;flex-shrink:0;transition:background .2s;}
+  .theme-switch-knob{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--ink-soft);transition:transform .2s, background .2s;}
+  .theme-switch[aria-checked="true"]{background:var(--gold-soft);border-color:var(--gold);}
+  .theme-switch[aria-checked="true"] .theme-switch-knob{transform:translateX(18px);background:var(--gold);}
   .drawer-nav{display:flex;flex-direction:column;gap:2px;margin-top:22px;}
   .drawer-nav-item{display:block;width:100%;text-align:left;background:none;border:none;padding:11px 8px;font-size:14.5px;font-weight:600;color:var(--ink);cursor:pointer;font-family:'Inter',sans-serif;border-radius:6px;}
   .drawer-nav-item:hover{background:var(--paper);}
   .drawer-nav-item.active{background:var(--gold-soft);color:var(--gold);}
   .danger-zone-note{font-size:10.5px;color:var(--ink-soft);padding:0 6px;margin:2px 0 0;line-height:1.4;}
+  .profile-save-note{font-size:12px;margin:8px 0 0;min-height:1em;}
+  .profile-save-note.good{color:var(--income);}
+  .profile-save-note.bad{color:var(--expense);}
 
   /* ---------- Tablet / escritorio: mejor aprovechamiento del espacio ---------- */
   @media (min-width:860px){
@@ -486,6 +506,13 @@
     </div>
     <div class="drawer-divider"></div>
     <button type="button" id="openHelpBtn" class="account-menu-item">❓ ¿Cómo funciona?</button>
+    <button type="button" id="openProfileBtn" class="account-menu-item">👤 Mi perfil</button>
+    <div class="drawer-theme-row">
+      <span>🌙 Tema oscuro</span>
+      <button type="button" id="themeToggle" class="theme-switch" role="switch" aria-checked="false" aria-label="Activar tema oscuro">
+        <span class="theme-switch-knob"></span>
+      </button>
+    </div>
     <div class="drawer-divider"></div>
 
     <p class="account-menu-email" id="accountEmail"></p>
@@ -553,6 +580,54 @@
       <div class="help-section" id="help-resumen">
         <h3>📈 Resumen</h3>
         <p>Aquí ves gráficas de a dónde se va tu dinero: por categoría, por grupo (Fijo/Variable), por forma de pago, y cuánto llevas acumulado en tu fondo de ahorro.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="drawer-backdrop" id="profileBackdrop"></div>
+  <div class="help-modal" id="profileModal">
+    <div class="help-modal-header">
+      <h2>Mi perfil</h2>
+      <button type="button" id="profileModalClose" class="drawer-close" aria-label="Cerrar perfil">✕</button>
+    </div>
+    <div class="help-modal-body">
+      <div class="field">
+        <label for="profileNombre">Nombre(s)</label>
+        <input type="text" id="profileNombre" placeholder="Ej. César">
+      </div>
+      <div class="field">
+        <label for="profileApellidos">Apellido(s)</label>
+        <input type="text" id="profileApellidos" placeholder="Ej. Soto">
+      </div>
+      <div class="field">
+        <label for="profileEdad">Edad</label>
+        <input type="number" id="profileEdad" min="1" max="120" placeholder="Ej. 30">
+      </div>
+      <div class="field">
+        <label>Correo</label>
+        <input type="email" id="profileEmail" disabled>
+      </div>
+      <button type="button" id="profileSaveBtn" class="submit-btn">Guardar cambios</button>
+      <p class="profile-save-note" id="profileSaveNote"></p>
+
+      <div class="drawer-divider"></div>
+
+      <button type="button" id="togglePasswordFormBtn" class="manage-cat-link">🔒 Cambiar contraseña</button>
+      <div id="passwordFormWrap" style="display:none;margin-top:14px;">
+        <div class="field">
+          <label for="currentPassword">Contraseña actual</label>
+          <input type="password" id="currentPassword" autocomplete="current-password">
+        </div>
+        <div class="field">
+          <label for="newPassword">Contraseña nueva</label>
+          <input type="password" id="newPassword" minlength="6" autocomplete="new-password">
+        </div>
+        <div class="field">
+          <label for="confirmPassword">Confirmar contraseña nueva</label>
+          <input type="password" id="confirmPassword" minlength="6" autocomplete="new-password">
+        </div>
+        <button type="button" id="changePasswordBtn" class="submit-btn">Actualizar contraseña</button>
+        <p class="profile-save-note" id="passwordNote"></p>
       </div>
     </div>
   </div>
@@ -751,16 +826,16 @@
       <div class="resumen-section" id="savingsCard">
         <button type="button" class="resumen-toggle" data-resumen-key="ahorro">
           <span class="section-title-text">Fondo de ahorro <span class="h2-note">alcancía</span></span>
-          <span class="toggle-hint">Ver más <span class="resumen-caret">▾</span></span>
+          <span class="toggle-hint">Ocultar <span class="resumen-caret">▴</span></span>
         </button>
-        <div class="resumen-collapsible" data-resumen-panel="ahorro" style="display:none;">
+        <div class="resumen-collapsible" data-resumen-panel="ahorro" style="display:block;">
           <div id="savingsPanel"></div>
         </div>
       </div>
 
       <div class="resumen-section">
         <button type="button" class="resumen-toggle" data-resumen-key="grupo">
-          <span class="section-title-text">Gastos por grupo <span class="h2-note">fijos / variables / inversión</span></span>
+          <span class="section-title-text">Gastos por Grupos</span>
           <span class="toggle-hint">Ver más <span class="resumen-caret">▾</span></span>
         </button>
         <div class="resumen-collapsible" data-resumen-panel="grupo" style="display:none;">
@@ -773,9 +848,9 @@
       <div class="resumen-section">
         <button type="button" class="resumen-toggle" data-resumen-key="categoria">
           <span class="section-title-text">Gastos por categoría</span>
-          <span class="toggle-hint">Ver más <span class="resumen-caret">▾</span></span>
+          <span class="toggle-hint">Ocultar <span class="resumen-caret">▴</span></span>
         </button>
-        <div class="resumen-collapsible" data-resumen-panel="categoria" style="display:none;">
+        <div class="resumen-collapsible" data-resumen-panel="categoria" style="display:block;">
           <div id="expenseDonut"></div>
           <div id="catBreakdown">
             <p class="ledger-empty">Aún no hay gastos registrados.</p>
@@ -796,9 +871,9 @@
       <div class="resumen-section">
         <button type="button" class="resumen-toggle" data-resumen-key="ingresos">
           <span class="section-title-text">Ingresos por categoría</span>
-          <span class="toggle-hint">Ver más <span class="resumen-caret">▾</span></span>
+          <span class="toggle-hint">Ocultar <span class="resumen-caret">▴</span></span>
         </button>
-        <div class="resumen-collapsible" data-resumen-panel="ingresos" style="display:none;">
+        <div class="resumen-collapsible" data-resumen-panel="ingresos" style="display:block;">
           <div id="incomeDonut"></div>
           <div id="incomeBreakdown">
             <p class="ledger-empty">Aún no hay ingresos registrados.</p>
@@ -946,6 +1021,7 @@
   const RECV_KEY = "libro-cuentas:receivables";
   const CATGROUPS_KEY = "libro-cuentas:categoryGroups";
   const TRAVEL_KEY = "libro-cuentas:travelBudgets";
+  const PROFILE_KEY = "libro-cuentas:profile";
 
   const DEFAULT_BUDGET = {
     fijos: [],
@@ -992,6 +1068,24 @@
     resetDataBtn: document.getElementById('resetDataBtn'),
     accountMenuBtn: document.getElementById('accountMenuBtn'),
     openHelpBtn: document.getElementById('openHelpBtn'),
+    themeToggle: document.getElementById('themeToggle'),
+    openProfileBtn: document.getElementById('openProfileBtn'),
+    profileModal: document.getElementById('profileModal'),
+    profileBackdrop: document.getElementById('profileBackdrop'),
+    profileModalClose: document.getElementById('profileModalClose'),
+    profileNombre: document.getElementById('profileNombre'),
+    profileApellidos: document.getElementById('profileApellidos'),
+    profileEdad: document.getElementById('profileEdad'),
+    profileEmail: document.getElementById('profileEmail'),
+    profileSaveBtn: document.getElementById('profileSaveBtn'),
+    profileSaveNote: document.getElementById('profileSaveNote'),
+    togglePasswordFormBtn: document.getElementById('togglePasswordFormBtn'),
+    passwordFormWrap: document.getElementById('passwordFormWrap'),
+    currentPassword: document.getElementById('currentPassword'),
+    newPassword: document.getElementById('newPassword'),
+    confirmPassword: document.getElementById('confirmPassword'),
+    changePasswordBtn: document.getElementById('changePasswordBtn'),
+    passwordNote: document.getElementById('passwordNote'),
     firstTimeBanner: document.getElementById('firstTimeBanner'),
     firstTimeBannerBtn: document.getElementById('firstTimeBannerBtn'),
     firstTimeBannerClose: document.getElementById('firstTimeBannerClose'),
@@ -1256,6 +1350,129 @@
   });
   els.helpModalClose.addEventListener('click', closeHelpModal);
   els.helpBackdrop.addEventListener('click', closeHelpModal);
+
+  /* ---------- Tema oscuro ---------- */
+  const THEME_KEY = 'libro-cuentas:theme';
+  function applyTheme(theme){
+    if(theme === 'dark'){
+      document.documentElement.setAttribute('data-theme', 'dark');
+      els.themeToggle.setAttribute('aria-checked', 'true');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      els.themeToggle.setAttribute('aria-checked', 'false');
+    }
+  }
+  applyTheme(localStorage.getItem(THEME_KEY) === 'dark' ? 'dark' : 'light');
+  els.themeToggle.addEventListener('click', ()=>{
+    const isDark = els.themeToggle.getAttribute('aria-checked') === 'true';
+    const next = isDark ? 'light' : 'dark';
+    applyTheme(next);
+    localStorage.setItem(THEME_KEY, next);
+  });
+
+  /* ---------- Mi perfil ---------- */
+  async function loadProfileIntoForm(){
+    els.profileEmail.value = currentUser ? currentUser.email : '';
+    try{
+      const res = await storageAdapter.get(PROFILE_KEY);
+      const profile = (res && res.value) ? JSON.parse(res.value) : {};
+      els.profileNombre.value = profile.nombre || '';
+      els.profileApellidos.value = profile.apellidos || '';
+      els.profileEdad.value = profile.edad || '';
+    }catch(err){
+      els.profileNombre.value = '';
+      els.profileApellidos.value = '';
+      els.profileEdad.value = '';
+    }
+  }
+  function openProfileModal(){
+    els.profileModal.classList.add('open');
+    els.profileBackdrop.classList.add('open');
+    els.profileSaveNote.textContent = '';
+    els.passwordNote.textContent = '';
+    els.passwordFormWrap.style.display = 'none';
+    els.currentPassword.value = '';
+    els.newPassword.value = '';
+    els.confirmPassword.value = '';
+    loadProfileIntoForm();
+  }
+  function closeProfileModal(){
+    els.profileModal.classList.remove('open');
+    els.profileBackdrop.classList.remove('open');
+  }
+  els.openProfileBtn.addEventListener('click', ()=>{
+    closeDrawer();
+    openProfileModal();
+  });
+  els.profileModalClose.addEventListener('click', closeProfileModal);
+  els.profileBackdrop.addEventListener('click', closeProfileModal);
+
+  els.profileSaveBtn.addEventListener('click', async ()=>{
+    els.profileSaveNote.textContent = '';
+    els.profileSaveNote.className = 'profile-save-note';
+    const profile = {
+      nombre: els.profileNombre.value.trim(),
+      apellidos: els.profileApellidos.value.trim(),
+      edad: els.profileEdad.value ? Number(els.profileEdad.value) : null,
+    };
+    try{
+      await storageAdapter.set(PROFILE_KEY, JSON.stringify(profile));
+      els.profileSaveNote.textContent = 'Guardado ✓';
+      els.profileSaveNote.classList.add('good');
+    }catch(err){
+      els.profileSaveNote.textContent = 'No se pudo guardar. Intenta de nuevo.';
+      els.profileSaveNote.classList.add('bad');
+    }
+  });
+
+  els.togglePasswordFormBtn.addEventListener('click', ()=>{
+    const showing = els.passwordFormWrap.style.display !== 'none';
+    els.passwordFormWrap.style.display = showing ? 'none' : 'block';
+  });
+
+  els.changePasswordBtn.addEventListener('click', async ()=>{
+    els.passwordNote.textContent = '';
+    els.passwordNote.className = 'profile-save-note';
+    const current = els.currentPassword.value;
+    const next = els.newPassword.value;
+    const confirmVal = els.confirmPassword.value;
+    if(!current || !next || !confirmVal){
+      els.passwordNote.textContent = 'Llena los 3 campos.';
+      els.passwordNote.classList.add('bad');
+      return;
+    }
+    if(next.length < 6){
+      els.passwordNote.textContent = 'La contraseña nueva debe tener al menos 6 caracteres.';
+      els.passwordNote.classList.add('bad');
+      return;
+    }
+    if(next !== confirmVal){
+      els.passwordNote.textContent = 'Las contraseñas nuevas no coinciden.';
+      els.passwordNote.classList.add('bad');
+      return;
+    }
+    if(!currentUser){
+      els.passwordNote.textContent = 'No hay sesión activa.';
+      els.passwordNote.classList.add('bad');
+      return;
+    }
+    els.changePasswordBtn.disabled = true;
+    try{
+      const credential = firebase.auth.EmailAuthProvider.credential(currentUser.email, current);
+      await currentUser.reauthenticateWithCredential(credential);
+      await currentUser.updatePassword(next);
+      els.passwordNote.textContent = 'Contraseña actualizada ✓';
+      els.passwordNote.classList.add('good');
+      els.currentPassword.value = '';
+      els.newPassword.value = '';
+      els.confirmPassword.value = '';
+    }catch(err){
+      els.passwordNote.textContent = friendlyAuthError(err);
+      els.passwordNote.classList.add('bad');
+    }
+    els.changePasswordBtn.disabled = false;
+  });
+
   els.firstTimeBannerBtn.addEventListener('click', ()=>{
     els.firstTimeBanner.style.display = 'none';
     openHelpModal();
