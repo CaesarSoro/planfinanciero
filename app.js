@@ -1820,15 +1820,26 @@
       els.msiPendingNote.textContent = 'Mensualidad total: ' + fmt.format(totalMonthly) + ' · Pendiente total: ' + fmt.format(totalPending);
 
       const pendingByCard = {};
+      const monthlyByCard = {};
       msiPlans.forEach(t=>{
-        const rem = msiInfo(t).remaining;
-        if(rem <= 0) return;
-        pendingByCard[t.paymentMethod] = (pendingByCard[t.paymentMethod] || 0) + rem;
+        const info = msiInfo(t);
+        if(info.remaining > 0){
+          pendingByCard[t.paymentMethod] = (pendingByCard[t.paymentMethod] || 0) + info.remaining;
+        }
+        if(!info.finished){
+          monthlyByCard[t.paymentMethod] = (monthlyByCard[t.paymentMethod] || 0) + info.monthlyPayment;
+        }
       });
       const cardEntries = Object.entries(pendingByCard).sort((a,b)=> b[1]-a[1]);
-      els.msiCardBreakdown.innerHTML = cardEntries.length > 1
-        ? `<div class="msi-card-breakdown"><div class="msi-card-breakdown-title">Pendiente por tarjeta</div>${buildCategoryBarsHtml(cardEntries)}</div>`
-        : '';
+      const monthlyCardEntries = Object.entries(monthlyByCard).sort((a,b)=> b[1]-a[1]);
+      let breakdownHtml = '';
+      if(cardEntries.length > 1){
+        breakdownHtml += `<div class="msi-card-breakdown"><div class="msi-card-breakdown-title">Pendiente por tarjeta</div>${buildCategoryBarsHtml(cardEntries)}</div>`;
+      }
+      if(monthlyCardEntries.length > 1){
+        breakdownHtml += `<div class="msi-card-breakdown"><div class="msi-card-breakdown-title">Mensualidad por tarjeta</div>${buildCategoryBarsHtml(monthlyCardEntries)}</div>`;
+      }
+      els.msiCardBreakdown.innerHTML = breakdownHtml;
       els.msiPanel.innerHTML = [...msiPlans].sort((a,b)=> b.date.localeCompare(a.date)).map(t=>{
         const info = msiInfo(t);
         const pct = Math.round((info.monthsElapsed / t.months) * 100);
