@@ -503,10 +503,10 @@
       <button type="button" class="drawer-nav-item" data-nav="metas">🎯 Metas y Proyectos</button>
       <button type="button" class="drawer-nav-item" data-nav="resumen">📈 Resumen</button>
       <button type="button" class="drawer-nav-item" data-nav="cobrar">💵 Por cobrar</button>
+      <button type="button" class="drawer-nav-item" data-nav="perfil">👤 Mi perfil</button>
     </div>
     <div class="drawer-divider"></div>
     <button type="button" id="openHelpBtn" class="account-menu-item">❓ ¿Cómo funciona?</button>
-    <button type="button" id="openProfileBtn" class="account-menu-item">👤 Mi perfil</button>
     <div class="drawer-theme-row">
       <span>🌙 Tema oscuro</span>
       <button type="button" id="themeToggle" class="theme-switch" role="switch" aria-checked="false" aria-label="Activar tema oscuro">
@@ -580,54 +580,6 @@
       <div class="help-section" id="help-resumen">
         <h3>📈 Resumen</h3>
         <p>Aquí ves gráficas de a dónde se va tu dinero: por categoría, por grupo (Fijo/Variable), por forma de pago, y cuánto llevas acumulado en tu fondo de ahorro.</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="drawer-backdrop" id="profileBackdrop"></div>
-  <div class="help-modal" id="profileModal">
-    <div class="help-modal-header">
-      <h2>Mi perfil</h2>
-      <button type="button" id="profileModalClose" class="drawer-close" aria-label="Cerrar perfil">✕</button>
-    </div>
-    <div class="help-modal-body">
-      <div class="field">
-        <label for="profileNombre">Nombre(s)</label>
-        <input type="text" id="profileNombre" placeholder="Ej. César">
-      </div>
-      <div class="field">
-        <label for="profileApellidos">Apellido(s)</label>
-        <input type="text" id="profileApellidos" placeholder="Ej. Soto">
-      </div>
-      <div class="field">
-        <label for="profileEdad">Edad</label>
-        <input type="number" id="profileEdad" min="1" max="120" placeholder="Ej. 30">
-      </div>
-      <div class="field">
-        <label>Correo</label>
-        <input type="email" id="profileEmail" disabled>
-      </div>
-      <button type="button" id="profileSaveBtn" class="submit-btn">Guardar cambios</button>
-      <p class="profile-save-note" id="profileSaveNote"></p>
-
-      <div class="drawer-divider"></div>
-
-      <button type="button" id="togglePasswordFormBtn" class="manage-cat-link">🔒 Cambiar contraseña</button>
-      <div id="passwordFormWrap" style="display:none;margin-top:14px;">
-        <div class="field">
-          <label for="currentPassword">Contraseña actual</label>
-          <input type="password" id="currentPassword" autocomplete="current-password">
-        </div>
-        <div class="field">
-          <label for="newPassword">Contraseña nueva</label>
-          <input type="password" id="newPassword" minlength="6" autocomplete="new-password">
-        </div>
-        <div class="field">
-          <label for="confirmPassword">Confirmar contraseña nueva</label>
-          <input type="password" id="confirmPassword" minlength="6" autocomplete="new-password">
-        </div>
-        <button type="button" id="changePasswordBtn" class="submit-btn">Actualizar contraseña</button>
-        <p class="profile-save-note" id="passwordNote"></p>
       </div>
     </div>
   </div>
@@ -782,6 +734,53 @@
       <div class="resumen-section">
         <h3 class="section-title">Por cobrar<button type="button" class="help-icon" data-help="cobrar">?</button> <span class="h2-note">clientes y personas que te deben</span></h3>
         <div id="receivablesPanel"></div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tabPanelPerfil" style="display:none;">
+      <div class="resumen-section">
+        <h3 class="section-title">Mi perfil</h3>
+      </div>
+      <div class="tabs" id="profileTabs">
+        <button type="button" class="tab-btn active" data-profile-tab="datos">Datos</button>
+        <button type="button" class="tab-btn" data-profile-tab="password">Contraseña</button>
+      </div>
+      <div id="profileTabDatos">
+        <div class="field">
+          <label for="profileNombre">Nombre(s)</label>
+          <input type="text" id="profileNombre" placeholder="Ej. César">
+        </div>
+        <div class="field">
+          <label for="profileApellidos">Apellido(s)</label>
+          <input type="text" id="profileApellidos" placeholder="Ej. Soto">
+        </div>
+        <div class="field">
+          <label for="profileEdad">Edad</label>
+          <input type="number" id="profileEdad" min="1" max="120" placeholder="Ej. 30">
+        </div>
+        <div class="field">
+          <label>Correo</label>
+          <input type="email" id="profileEmail" disabled>
+        </div>
+        <button type="button" id="profileSaveBtn" class="submit-btn">Guardar cambios</button>
+        <p class="profile-save-note" id="profileSaveNote"></p>
+      </div>
+
+      <div id="profileTabPassword" style="display:none;">
+        <div class="field">
+          <label for="currentPassword">Contraseña actual</label>
+          <input type="password" id="currentPassword" autocomplete="current-password">
+        </div>
+        <div class="field">
+          <label for="newPassword">Contraseña nueva</label>
+          <input type="password" id="newPassword" minlength="6" autocomplete="new-password">
+        </div>
+        <div class="field">
+          <label for="confirmPassword">Confirmar contraseña nueva</label>
+          <input type="password" id="confirmPassword" minlength="6" autocomplete="new-password">
+        </div>
+        <button type="button" id="changePasswordBtn" class="submit-btn">Actualizar contraseña</button>
+        <p class="profile-save-note" id="passwordNote"></p>
       </div>
     </div>
 
@@ -1069,18 +1068,15 @@
     accountMenuBtn: document.getElementById('accountMenuBtn'),
     openHelpBtn: document.getElementById('openHelpBtn'),
     themeToggle: document.getElementById('themeToggle'),
-    openProfileBtn: document.getElementById('openProfileBtn'),
-    profileModal: document.getElementById('profileModal'),
-    profileBackdrop: document.getElementById('profileBackdrop'),
-    profileModalClose: document.getElementById('profileModalClose'),
     profileNombre: document.getElementById('profileNombre'),
     profileApellidos: document.getElementById('profileApellidos'),
     profileEdad: document.getElementById('profileEdad'),
     profileEmail: document.getElementById('profileEmail'),
     profileSaveBtn: document.getElementById('profileSaveBtn'),
     profileSaveNote: document.getElementById('profileSaveNote'),
-    togglePasswordFormBtn: document.getElementById('togglePasswordFormBtn'),
-    passwordFormWrap: document.getElementById('passwordFormWrap'),
+    profileTabDatos: document.getElementById('profileTabDatos'),
+    profileTabPassword: document.getElementById('profileTabPassword'),
+    profileTabs: document.getElementById('profileTabs'),
     currentPassword: document.getElementById('currentPassword'),
     newPassword: document.getElementById('newPassword'),
     confirmPassword: document.getElementById('confirmPassword'),
@@ -1385,27 +1381,19 @@
       els.profileEdad.value = '';
     }
   }
-  function openProfileModal(){
-    els.profileModal.classList.add('open');
-    els.profileBackdrop.classList.add('open');
+  function openProfileTab(){
     els.profileSaveNote.textContent = '';
     els.passwordNote.textContent = '';
-    els.passwordFormWrap.style.display = 'none';
     els.currentPassword.value = '';
     els.newPassword.value = '';
     els.confirmPassword.value = '';
+    [...els.profileTabs.querySelectorAll('.tab-btn')].forEach(b=>{
+      b.classList.toggle('active', b.dataset.profileTab === 'datos');
+    });
+    els.profileTabDatos.style.display = 'block';
+    els.profileTabPassword.style.display = 'none';
     loadProfileIntoForm();
   }
-  function closeProfileModal(){
-    els.profileModal.classList.remove('open');
-    els.profileBackdrop.classList.remove('open');
-  }
-  els.openProfileBtn.addEventListener('click', ()=>{
-    closeDrawer();
-    openProfileModal();
-  });
-  els.profileModalClose.addEventListener('click', closeProfileModal);
-  els.profileBackdrop.addEventListener('click', closeProfileModal);
 
   els.profileSaveBtn.addEventListener('click', async ()=>{
     els.profileSaveNote.textContent = '';
@@ -1425,9 +1413,15 @@
     }
   });
 
-  els.togglePasswordFormBtn.addEventListener('click', ()=>{
-    const showing = els.passwordFormWrap.style.display !== 'none';
-    els.passwordFormWrap.style.display = showing ? 'none' : 'block';
+  els.profileTabs.addEventListener('click', (e)=>{
+    const btn = e.target.closest('.tab-btn');
+    if(!btn) return;
+    const tab = btn.dataset.profileTab;
+    [...els.profileTabs.querySelectorAll('.tab-btn')].forEach(b=>{
+      b.classList.toggle('active', b.dataset.profileTab === tab);
+    });
+    els.profileTabDatos.style.display = tab === 'datos' ? 'block' : 'none';
+    els.profileTabPassword.style.display = tab === 'password' ? 'block' : 'none';
   });
 
   els.changePasswordBtn.addEventListener('click', async ()=>{
@@ -1579,13 +1573,14 @@
     setType(btn.dataset.type);
   });
 
-  /* ---------- Tabs: Nuevo movimiento / Presupuesto / Metas / Resúmenes / Por cobrar ---------- */
+  /* ---------- Tabs: Nuevo movimiento / Presupuesto / Metas / Resúmenes / Por cobrar / Perfil ---------- */
   const mainTabs = document.getElementById('mainTabs');
   const tabPanelForm = document.getElementById('tabPanelForm');
   const tabPanelBudget = document.getElementById('tabPanelBudget');
   const tabPanelMetas = document.getElementById('tabPanelMetas');
   const tabPanelResumen = document.getElementById('tabPanelResumen');
   const tabPanelCobrar = document.getElementById('tabPanelCobrar');
+  const tabPanelPerfil = document.getElementById('tabPanelPerfil');
   let currentTab = 'form';
   function switchTab(tab){
     currentTab = tab;
@@ -1597,6 +1592,8 @@
     tabPanelMetas.style.display = tab === 'metas' ? 'block' : 'none';
     tabPanelResumen.style.display = tab === 'resumen' ? 'block' : 'none';
     tabPanelCobrar.style.display = tab === 'cobrar' ? 'block' : 'none';
+    tabPanelPerfil.style.display = tab === 'perfil' ? 'block' : 'none';
+    if(tab === 'perfil') openProfileTab();
   }
   mainTabs.addEventListener('click', (e)=>{
     const btn = e.target.closest('.tab-btn');
