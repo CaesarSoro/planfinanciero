@@ -392,6 +392,10 @@
   .auth-dev-initials{display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--gold);color:#fff;font-family:'Fraunces',serif;font-size:10.5px;font-weight:700;letter-spacing:.02em;}
   #authForm{display:flex;flex-direction:column;gap:10px;}
   #authForm input{padding:11px 12px;font-size:14px;border:1px solid var(--line);border-radius:8px;background:var(--input-bg);font-family:'Inter',sans-serif;text-transform:none;}
+  .password-field-wrap{position:relative;}
+  .password-field-wrap input{width:100%;padding-right:56px !important;box-sizing:border-box;}
+  .password-toggle-btn{position:absolute;top:0;right:0;height:100%;padding:0 12px;background:none;border:none;color:var(--ink-soft);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;cursor:pointer;font-family:'Inter',sans-serif;}
+  .password-toggle-btn:hover{color:var(--gold);}
   #authForm button{padding:11px 12px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;border:none;border-radius:8px;background:var(--ink);color:#fff;cursor:pointer;margin-top:4px;}
   .google-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px 12px;font-size:13.5px;font-weight:600;border:1px solid var(--line);border-radius:8px;background:var(--input-bg);color:var(--ink);cursor:pointer;font-family:'Inter',sans-serif;}
   .google-btn:hover{border-color:var(--gold);}
@@ -477,7 +481,10 @@
     <div class="auth-divider"><span>o con tu correo</span></div>
     <form id="authForm">
       <input type="email" id="authEmail" placeholder="Correo" autocomplete="email" required>
-      <input type="password" id="authPassword" placeholder="Contraseña" autocomplete="current-password" required minlength="6">
+      <div class="password-field-wrap">
+        <input type="password" id="authPassword" placeholder="Contraseña" autocomplete="current-password" required minlength="6">
+        <button type="button" class="password-toggle-btn" data-target="authPassword">Ver</button>
+      </div>
       <button type="submit" id="authSubmitBtn">Entrar</button>
     </form>
     <p class="auth-error" id="authError"></p>
@@ -769,15 +776,24 @@
       <div id="profileTabPassword" style="display:none;">
         <div class="field">
           <label for="currentPassword">Contraseña actual</label>
-          <input type="password" id="currentPassword" autocomplete="current-password">
+          <div class="password-field-wrap">
+            <input type="password" id="currentPassword" autocomplete="current-password">
+            <button type="button" class="password-toggle-btn" data-target="currentPassword">Ver</button>
+          </div>
         </div>
         <div class="field">
           <label for="newPassword">Contraseña nueva</label>
-          <input type="password" id="newPassword" minlength="6" autocomplete="new-password">
+          <div class="password-field-wrap">
+            <input type="password" id="newPassword" minlength="6" autocomplete="new-password">
+            <button type="button" class="password-toggle-btn" data-target="newPassword">Ver</button>
+          </div>
         </div>
         <div class="field">
           <label for="confirmPassword">Confirmar contraseña nueva</label>
-          <input type="password" id="confirmPassword" minlength="6" autocomplete="new-password">
+          <div class="password-field-wrap">
+            <input type="password" id="confirmPassword" minlength="6" autocomplete="new-password">
+            <button type="button" class="password-toggle-btn" data-target="confirmPassword">Ver</button>
+          </div>
         </div>
         <button type="button" id="changePasswordBtn" class="submit-btn">Actualizar contraseña</button>
         <p class="profile-save-note" id="passwordNote"></p>
@@ -1465,6 +1481,16 @@
       els.passwordNote.classList.add('bad');
     }
     els.changePasswordBtn.disabled = false;
+  });
+
+  document.addEventListener('click', (e)=>{
+    const btn = e.target.closest('.password-toggle-btn');
+    if(!btn) return;
+    const input = document.getElementById(btn.dataset.target);
+    if(!input) return;
+    const showing = input.type === 'text';
+    input.type = showing ? 'password' : 'text';
+    btn.textContent = showing ? 'Ver' : 'Ocultar';
   });
 
   els.firstTimeBannerBtn.addEventListener('click', ()=>{
