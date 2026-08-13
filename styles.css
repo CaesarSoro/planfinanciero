@@ -221,6 +221,9 @@
   .cat-add-row select{flex:1 1 110px;padding:7px 8px;font-size:12px;border:1px solid var(--line);border-radius:6px;background:var(--input-bg);}
   .cat-add-row input{flex:1;padding:7px 9px;font-size:12.5px;border:1px solid var(--line);border-radius:6px;}
   .cat-add-row button{padding:7px 12px;font-size:12px;font-weight:600;border:none;border-radius:6px;background:var(--ink);color:#fff;cursor:pointer;}
+  .pay-add-row{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+  .pay-add-row input{flex:1;padding:7px 9px;font-size:12.5px;border:1px solid var(--line);border-radius:6px;background:var(--input-bg);}
+  .pay-add-row button{padding:7px 12px;font-size:12px;font-weight:600;border:none;border-radius:6px;background:var(--ink);color:#fff;cursor:pointer;}
 
   .checkbox-row{display:flex;align-items:center;gap:8px;background:var(--expense-soft);border:1px solid #E0C3BE;border-radius:6px;padding:10px 12px;margin-bottom:14px;}
   .checkbox-row input{width:auto;margin:0;}

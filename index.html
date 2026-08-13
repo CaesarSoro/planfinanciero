@@ -33,6 +33,7 @@
     </form>
     <p class="auth-error" id="authError"></p>
     <button type="button" id="authToggleMode" class="manage-cat-link" style="margin-top:14px;">¿No tienes cuenta? Regístrate aquí</button>
+    <p style="margin-top:16px;font-size:11px;color:var(--ink-soft);">Al continuar, aceptas nuestro <a href="aviso-privacidad.html" target="_blank" style="color:var(--gold);">Aviso de Privacidad</a>.</p>
   </div>
 
   <div class="auth-dev-credit">
@@ -72,6 +73,7 @@
       <button type="button" id="resetDataBtn" class="account-menu-item danger">🗑 Borrar todos mis datos</button>
       <p class="danger-zone-note">Borra movimientos, presupuesto, categorías, por cobrar y metas de esta cuenta. No se puede deshacer.</p>
     </div>
+    <p style="text-align:center;margin-top:16px;"><a href="aviso-privacidad.html" target="_blank" style="font-size:11px;color:var(--ink-soft);">Aviso de Privacidad</a></p>
   </div>
 
   <div class="drawer-backdrop" id="helpBackdrop"></div>
@@ -219,6 +221,11 @@
         <div class="field">
           <label for="paymentMethod">Forma de pago</label>
           <select id="paymentMethod"></select>
+          <button type="button" id="togglePayAdd" class="manage-cat-link">+ Agregar forma de pago</button>
+          <div class="pay-add-row" id="payAddRow" style="display:none;">
+            <input type="text" id="newPayInput" placeholder="Ej. Crédito - Platino">
+            <button type="button" id="addPayBtn">Agregar</button>
+          </div>
         </div>
         <p class="error-msg span-2" id="amountError">Ingresa un monto mayor a 0.</p>
 

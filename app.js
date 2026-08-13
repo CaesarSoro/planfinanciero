@@ -120,9 +120,14 @@
   const BASE_CATEGORY_GROUPS = JSON.parse(JSON.stringify(CATEGORY_GROUPS)); // copia limpia, sin clasificaciones de ninguna cuenta
   const GROUP_ORDER = ["Fijos","Variables","Inversiones y seguros","Generales","Otras"];
 
-  const PAYMENT_OPTIONS = {
+  const DEFAULT_PAYMENT_OPTIONS = {
     ingreso: ["Efectivo","Transferencia","Depósito"],
     gasto: ["Efectivo","Débito","Transferencia","Crédito - Roja","Crédito - Oro","Crédito - Invex"],
+    ahorro: ["Efectivo","Transferencia","Depósito"]
+  };
+  const GENERIC_PAYMENT_OPTIONS = {
+    ingreso: ["Efectivo","Transferencia","Depósito"],
+    gasto: ["Efectivo","Débito","Transferencia","Tarjeta de crédito"],
     ahorro: ["Efectivo","Transferencia","Depósito"]
   };
   const CAT_COLORS = ["#B8863B","#7A2E2E","#2E6F4F","#5B5A4E","#8C6D3F","#A15C4A","#4E6B5A","#96742E"];
@@ -132,6 +137,7 @@
 
   const TX_KEY = "libro-cuentas:transactions";
   const CAT_KEY = "libro-cuentas:categories";
+  const PAYMENT_KEY = "libro-cuentas:paymentMethods";
   const BUDGET_KEY = "libro-cuentas:budget";
   const RECV_KEY = "libro-cuentas:receivables";
   const CATGROUPS_KEY = "libro-cuentas:categoryGroups";
@@ -154,6 +160,7 @@
 
   let transactions = [];
   let categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+  let paymentMethods = JSON.parse(JSON.stringify(DEFAULT_PAYMENT_OPTIONS));
   let budget = JSON.parse(JSON.stringify(DEFAULT_BUDGET));
   let editingBudgetItem = null; // { key, id } del renglón que se está editando, o null
   let expandedBudgetItems = new Set(); // claves "key:id" de renglones de presupuesto expandidos
@@ -220,6 +227,10 @@
     newCatInput: document.getElementById('newCatInput'),
     newCatGroup: document.getElementById('newCatGroup'),
     addCatBtn: document.getElementById('addCatBtn'),
+    togglePayAdd: document.getElementById('togglePayAdd'),
+    payAddRow: document.getElementById('payAddRow'),
+    newPayInput: document.getElementById('newPayInput'),
+    addPayBtn: document.getElementById('addPayBtn'),
     amount: document.getElementById('amount'),
     amountLabel: document.getElementById('amountLabel'),
     amountError: document.getElementById('amountError'),
@@ -315,6 +326,33 @@
     try{ await storageAdapter.set(CAT_KEY, JSON.stringify(categories)); }
     catch(err){ console.error('No se pudieron guardar las categorías:', err); }
   }
+  async function loadPaymentMethods(){
+    try{
+      const res = await storageAdapter.get(PAYMENT_KEY);
+      if(!res || !res.value){
+        // Cuenta nueva sin nada guardado todavía: arranca con formas de pago genéricas, no las personales.
+        paymentMethods = JSON.parse(JSON.stringify(GENERIC_PAYMENT_OPTIONS));
+        paymentMethods._seed = 'generic';
+        await savePaymentMethods();
+        return;
+      }
+      const stored = JSON.parse(res.value);
+      const seedList = stored._seed === 'generic' ? GENERIC_PAYMENT_OPTIONS : DEFAULT_PAYMENT_OPTIONS;
+      const merged = { _seed: stored._seed === 'generic' ? 'generic' : 'legacy' };
+      Object.keys(DEFAULT_PAYMENT_OPTIONS).forEach(type=>{
+        const storedList = Array.isArray(stored[type]) ? stored[type] : [];
+        const combined = [...storedList];
+        seedList[type].forEach(p=>{ if(!combined.includes(p)) combined.push(p); });
+        merged[type] = combined;
+      });
+      paymentMethods = merged;
+      await savePaymentMethods();
+    }catch(err){ /* keep defaults */ }
+  }
+  async function savePaymentMethods(){
+    try{ await storageAdapter.set(PAYMENT_KEY, JSON.stringify(paymentMethods)); }
+    catch(err){ console.error('No se pudieron guardar las formas de pago:', err); }
+  }
   async function loadCategoryGroups(){
     try{
       const res = await storageAdapter.get(CATGROUPS_KEY);
@@ -403,6 +441,26 @@
       els.category.value = name;
     }
     els.newCatInput.value = '';
+  });
+  els.togglePayAdd.addEventListener('click', ()=>{
+    const showing = els.payAddRow.style.display !== 'none';
+    els.payAddRow.style.display = showing ? 'none' : 'flex';
+    if(!showing) els.newPayInput.focus();
+  });
+  els.addPayBtn.addEventListener('click', async ()=>{
+    const name = els.newPayInput.value.trim();
+    if(!name || !paymentMethods[currentType]) return;
+    if(!paymentMethods[currentType].includes(name)){
+      paymentMethods[currentType].push(name);
+      await savePaymentMethods();
+      populatePaymentMethods();
+      els.paymentMethod.value = name;
+    }
+    els.newPayInput.value = '';
+    els.payAddRow.style.display = 'none';
+  });
+  els.newPayInput.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter'){ e.preventDefault(); els.addPayBtn.click(); }
   });
   els.newCatInput.addEventListener('keydown', (e)=>{
     if(e.key === 'Enter'){ e.preventDefault(); els.addCatBtn.click(); }
@@ -650,7 +708,7 @@
 
   /* ---------- Payment method / MSI / Ahorro visibility ---------- */
   function populatePaymentMethods(){
-    els.paymentMethod.innerHTML = PAYMENT_OPTIONS[currentType]
+    els.paymentMethod.innerHTML = paymentMethods[currentType]
       .map(p => `<option value="${p}">${p}</option>`).join('');
     updateMsiVisibility();
   }
@@ -1321,7 +1379,7 @@
           <div class="rec-abono-row">
             <input type="number" class="rec-abono-amount" data-id="${r.id}" min="0.01" step="0.01" placeholder="Monto abono">
             <select class="rec-abono-pay" data-id="${r.id}">
-              ${PAYMENT_OPTIONS.ingreso.map(p=>`<option value="${p}">${p}</option>`).join('')}
+              ${paymentMethods.ingreso.map(p=>`<option value="${p}">${p}</option>`).join('')}
             </select>
             <input type="date" class="rec-abono-date" data-id="${r.id}" value="${todayStr()}">
             <button type="button" class="rec-abono-btn" data-id="${r.id}">Registrar abono</button>
@@ -2002,7 +2060,7 @@
     const step2 = confirm('¿Estás completamente seguro? Se va a perder toda la información de esta cuenta para siempre.');
     if(!step2) return;
     try{
-      const keys = [TX_KEY, CAT_KEY, BUDGET_KEY, RECV_KEY, CATGROUPS_KEY, TRAVEL_KEY];
+      const keys = [TX_KEY, CAT_KEY, BUDGET_KEY, RECV_KEY, CATGROUPS_KEY, TRAVEL_KEY, PAYMENT_KEY];
       const col = fbDb.collection('users').doc(currentUser.uid).collection('appData');
       await Promise.all(keys.map(k => col.doc(k).delete()));
       closeDrawer();
@@ -2018,7 +2076,7 @@
   async function migrateLocalDataIfNeeded(){
     const MIGRATION_FLAG = 'libro-cuentas:migrated';
     if(localStorage.getItem(MIGRATION_FLAG) === 'true') return; // este navegador ya migró una vez, nunca más
-    const keys = [TX_KEY, CAT_KEY, BUDGET_KEY, RECV_KEY, CATGROUPS_KEY, TRAVEL_KEY];
+    const keys = [TX_KEY, CAT_KEY, BUDGET_KEY, RECV_KEY, CATGROUPS_KEY, TRAVEL_KEY, PAYMENT_KEY];
     const cloudTx = await fbDb.collection('users').doc(currentUser.uid).collection('appData').doc(TX_KEY).get();
     if(cloudTx.exists){
       localStorage.setItem(MIGRATION_FLAG, 'true');
@@ -2046,7 +2104,7 @@
   }
 
   async function loadAllDataAndRender(){
-    await Promise.all([loadCategories(), loadBudget(), loadTransactions(), loadReceivables(), loadCategoryGroups(), loadTravelBudgets()]);
+    await Promise.all([loadCategories(), loadBudget(), loadTransactions(), loadReceivables(), loadCategoryGroups(), loadTravelBudgets(), loadPaymentMethods()]);
     await pruneOrphanedMsiBudgetLines();
     setType('ingreso');
     render();
@@ -2083,6 +2141,10 @@
     realtimeUnsubs.push(col.doc(TRAVEL_KEY).onSnapshot(snap=>{
       if(!snap.exists) return;
       try{ travelBudgets = JSON.parse(snap.data().value) || []; render(); }catch(err){}
+    }));
+    realtimeUnsubs.push(col.doc(PAYMENT_KEY).onSnapshot(snap=>{
+      if(!snap.exists) return;
+      try{ paymentMethods = JSON.parse(snap.data().value) || paymentMethods; populatePaymentMethods(); }catch(err){}
     }));
     realtimeUnsubs.push(col.doc(CATGROUPS_KEY).onSnapshot(snap=>{
       if(!snap.exists) return;
