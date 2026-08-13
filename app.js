@@ -228,6 +228,8 @@
     newCatGroup: document.getElementById('newCatGroup'),
     addCatBtn: document.getElementById('addCatBtn'),
     togglePayAdd: document.getElementById('togglePayAdd'),
+    togglePayManage: document.getElementById('togglePayManage'),
+    payChips: document.getElementById('payChips'),
     payAddRow: document.getElementById('payAddRow'),
     newPayInput: document.getElementById('newPayInput'),
     addPayBtn: document.getElementById('addPayBtn'),
@@ -424,6 +426,64 @@
       });
     });
   }
+
+  function renderPayChips(){
+    if(!paymentMethods[currentType]){ els.payChips.innerHTML=''; return; }
+    els.payChips.innerHTML = paymentMethods[currentType].map(p => `<span class="cat-chip" data-pay="${escapeHtml(p)}">
+      <span class="chip-label">${escapeHtml(p)}</span>
+      <button type="button" class="chip-edit" data-pay="${escapeHtml(p)}" title="Renombrar">✎</button>
+      <button type="button" class="chip-del" data-pay="${escapeHtml(p)}" title="Eliminar">✕</button>
+    </span>`).join('');
+
+    els.payChips.querySelectorAll('.chip-del').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const p = btn.dataset.pay;
+        paymentMethods[currentType] = paymentMethods[currentType].filter(x=>x!==p);
+        await savePaymentMethods();
+        populatePaymentMethods();
+      });
+    });
+    els.payChips.querySelectorAll('.chip-edit').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const chip = btn.closest('.cat-chip');
+        const oldName = btn.dataset.pay;
+        chip.innerHTML = `
+          <input type="text" class="chip-rename-input" value="${escapeHtml(oldName)}">
+          <button type="button" class="chip-save" title="Guardar">✓</button>
+          <button type="button" class="chip-cancel" title="Cancelar">✕</button>
+        `;
+        const input = chip.querySelector('.chip-rename-input');
+        input.focus();
+        input.select();
+        const save = async ()=>{
+          const newName = input.value.trim();
+          if(!newName || newName === oldName){ renderPayChips(); return; }
+          if(paymentMethods[currentType].includes(newName)){
+            alert('Ya existe una forma de pago con ese nombre.');
+            return;
+          }
+          const idx = paymentMethods[currentType].indexOf(oldName);
+          if(idx !== -1) paymentMethods[currentType][idx] = newName;
+          await savePaymentMethods();
+          populatePaymentMethods();
+        };
+        chip.querySelector('.chip-save').addEventListener('click', save);
+        chip.querySelector('.chip-cancel').addEventListener('click', renderPayChips);
+        input.addEventListener('keydown', (e)=>{
+          if(e.key === 'Enter'){ e.preventDefault(); save(); }
+          if(e.key === 'Escape'){ e.preventDefault(); renderPayChips(); }
+        });
+      });
+    });
+  }
+
+  els.togglePayManage.addEventListener('click', ()=>{
+    const showing = els.payChips.style.display !== 'none';
+    els.payChips.style.display = showing ? 'none' : 'block';
+    els.togglePayManage.textContent = showing
+      ? 'Gestionar formas de pago (editar / eliminar) ▾'
+      : 'Ocultar formas de pago ▴';
+  });
 
   els.addCatBtn.addEventListener('click', async ()=>{
     const name = els.newCatInput.value.trim();
@@ -711,6 +771,7 @@
     els.paymentMethod.innerHTML = paymentMethods[currentType]
       .map(p => `<option value="${p}">${p}</option>`).join('');
     updateMsiVisibility();
+    renderPayChips();
   }
   function updateMsiVisibility(){
     const showMsiOption = currentType === 'gasto' && els.paymentMethod.value.startsWith('Crédito');
