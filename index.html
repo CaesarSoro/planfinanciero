@@ -4,11 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Finanzas Personales</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
   :root{
     --paper:#E7E3D6; --paper-dark:#DCD7C6; --surface:#FBFAF5;
@@ -52,6 +54,7 @@
   .backup-note{font-size:11.5px;color:var(--ink-soft);}
 
   .first-time-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--gold-soft);border:1px solid var(--gold);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:13px;color:var(--ink);}
+  .offline-banner{position:fixed;bottom:0;left:0;right:0;z-index:25;background:var(--expense);color:#fff;text-align:center;padding:10px 16px;font-size:12.5px;font-weight:600;box-shadow:0 -4px 14px rgba(0,0,0,.15);}
   .first-time-banner-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;}
   .first-time-banner-actions button{cursor:pointer;font-family:'Inter',sans-serif;}
   #firstTimeBannerBtn{padding:7px 14px;border-radius:6px;border:none;background:var(--ink);color:#fff;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;}
@@ -183,6 +186,9 @@
   .travel-name{font-family:'Fraunces',serif;font-weight:600;font-size:14.5px;}
   .travel-tipo-tag{font-family:'Inter',sans-serif;font-weight:600;font-size:9.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-soft);background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:2px 8px;margin-left:6px;vertical-align:middle;}
   .travel-dates{font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
+  .travel-card-actions{display:flex;gap:6px;flex-shrink:0;}
+  .travel-edit{background:none;border:1px solid var(--line);border-radius:6px;color:var(--ink-soft);cursor:pointer;width:28px;height:28px;flex-shrink:0;font-size:12px;}
+  .travel-edit:hover{color:var(--gold);border-color:var(--gold-soft);background:var(--gold-soft);}
   .travel-del{background:none;border:1px solid var(--line);border-radius:6px;color:var(--ink-soft);cursor:pointer;width:28px;height:28px;flex-shrink:0;font-size:12px;}
   .travel-del:hover{color:var(--expense);border-color:var(--expense-soft);background:var(--expense-soft);}
   .travel-bar-track{height:9px;background:var(--paper-dark);border-radius:5px;overflow:hidden;margin-bottom:8px;}
@@ -902,6 +908,10 @@
     </div>
   </div>
 
+  <div class="offline-banner" id="offlineBanner" style="display:none;">
+    📡 Sin conexión — tus cambios se guardan y se sincronizan solos cuando vuelva el internet.
+  </div>
+
 </div>
 
 <script>
@@ -919,6 +929,9 @@
   firebase.initializeApp(FIREBASE_CONFIG);
   const fbAuth = firebase.auth();
   const fbDb = firebase.firestore();
+  fbDb.enablePersistence({ synchronizeTabs: true }).catch(err=>{
+    console.warn('No se pudo activar el modo sin conexión:', err.code);
+  });
   let currentUser = null;
 
   /* ---------- Adaptador de almacenamiento universal ----------
@@ -1067,6 +1080,7 @@
   let currentType = "ingreso";
   let currentSubtype = "aporte";
   let editingTransactionId = null;
+  let editingTravelId = null;
   let isFirstTimeUser = false;
 
   const fmt = new Intl.NumberFormat('es-MX', { style:'currency', currency:'MXN' });
@@ -1087,6 +1101,7 @@
     resetDataBtn: document.getElementById('resetDataBtn'),
     accountMenuBtn: document.getElementById('accountMenuBtn'),
     openHelpBtn: document.getElementById('openHelpBtn'),
+    offlineBanner: document.getElementById('offlineBanner'),
     themeToggle: document.getElementById('themeToggle'),
     profileNombre: document.getElementById('profileNombre'),
     profileApellidos: document.getElementById('profileApellidos'),
@@ -1385,6 +1400,14 @@
     applyTheme(next);
     localStorage.setItem(THEME_KEY, next);
   });
+
+  /* ---------- Aviso de sin conexión ---------- */
+  function updateOnlineStatus(){
+    els.offlineBanner.style.display = navigator.onLine ? 'none' : 'block';
+  }
+  window.addEventListener('online', updateOnlineStatus);
+  window.addEventListener('offline', updateOnlineStatus);
+  updateOnlineStatus();
 
   /* ---------- Mi perfil ---------- */
   async function loadProfileIntoForm(){
@@ -1879,7 +1902,10 @@
                 <div class="travel-name">${escapeHtml(tb.nombre)} <span class="travel-tipo-tag">${tipoTag}</span></div>
                 <div class="travel-dates">${dates} · ${escapeHtml(tb.categoria)}</div>
               </div>
-              <button type="button" class="travel-del" data-id="${tb.id}" title="Eliminar">✕</button>
+              <div class="travel-card-actions">
+                <button type="button" class="travel-edit" data-id="${tb.id}" title="Editar">✎</button>
+                <button type="button" class="travel-del" data-id="${tb.id}" title="Eliminar">✕</button>
+              </div>
             </div>
             <div class="travel-bar-track"><div class="travel-bar-fill${isAhorro?' savings':barClass}" style="width:${pct}%;"></div></div>
             <div class="travel-numbers">
@@ -1921,17 +1947,50 @@
           <input type="date" id="newTravelFin">
         </div>
         <button type="button" id="addTravelBtn" class="travel-add-btn">+ Agregar meta</button>
+        <button type="button" id="cancelTravelEditBtn" class="cancel-edit-btn" style="display:none;grid-column:1 / -1;">Cancelar edición</button>
       </div>
       <div id="travelList">${cardsHtml}</div>
     </div>`;
   }
 
+  function editTravelBudget(id){
+    const tb = travelBudgets.find(t=>t.id === id);
+    if(!tb) return;
+    editingTravelId = id;
+    const p = els.travelPanel;
+    p.querySelector('#newTravelNombre').value = tb.nombre;
+    p.querySelector('#newTravelTipo').value = tb.tipo || 'gasto';
+    p.querySelector('#newTravelCategoria').value = tb.categoria;
+    p.querySelector('#newTravelPresupuesto').value = tb.presupuesto;
+    p.querySelector('#newTravelInicio').value = tb.fechaInicio || '';
+    p.querySelector('#newTravelFin').value = tb.fechaFin || '';
+    p.querySelector('#addTravelBtn').textContent = 'Guardar cambios';
+    p.querySelector('#cancelTravelEditBtn').style.display = 'block';
+    p.querySelector('.travel-add-row').scrollIntoView({ behavior:'smooth', block:'start' });
+  }
+  function resetTravelForm(){
+    editingTravelId = null;
+    const p = els.travelPanel;
+    p.querySelector('#newTravelNombre').value = '';
+    p.querySelector('#newTravelTipo').value = 'gasto';
+    p.querySelector('#newTravelCategoria').value = '';
+    p.querySelector('#newTravelPresupuesto').value = '';
+    p.querySelector('#newTravelInicio').value = '';
+    p.querySelector('#newTravelFin').value = '';
+    p.querySelector('#addTravelBtn').textContent = '+ Agregar meta';
+    p.querySelector('#cancelTravelEditBtn').style.display = 'none';
+  }
   function renderTravelPanel(){
     els.travelPanel.innerHTML = buildTravelBudgetsHtml();
 
     els.travelPanel.querySelectorAll('.travel-del').forEach(btn=>{
       btn.addEventListener('click', ()=> deleteTravelBudget(Number(btn.dataset.id)));
     });
+    els.travelPanel.querySelectorAll('.travel-edit').forEach(btn=>{
+      btn.addEventListener('click', ()=> editTravelBudget(Number(btn.dataset.id)));
+    });
+    const cancelBtn = els.travelPanel.querySelector('#cancelTravelEditBtn');
+    if(cancelBtn) cancelBtn.addEventListener('click', resetTravelForm);
     const addTravelBtn = els.travelPanel.querySelector('#addTravelBtn');
     if(addTravelBtn){
       addTravelBtn.addEventListener('click', async ()=>{
@@ -1948,7 +2007,11 @@
           alert('Ponle nombre, categoría y un presupuesto/meta mayor a $0.');
           return;
         }
-        await addTravelBudget(nombre, presupuesto, categoria, inicioEl.value || null, finEl.value || null, tipoEl.value);
+        if(editingTravelId){
+          await updateTravelBudget(editingTravelId, nombre, presupuesto, categoria, inicioEl.value || null, finEl.value || null, tipoEl.value);
+        } else {
+          await addTravelBudget(nombre, presupuesto, categoria, inicioEl.value || null, finEl.value || null, tipoEl.value);
+        }
       });
     }
   }
@@ -2068,7 +2131,24 @@
     await saveTravelBudgets();
     render();
   }
+  async function updateTravelBudget(id, nombre, presupuesto, categoria, fechaInicio, fechaFin, tipo){
+    tipo = tipo === 'ahorro' ? 'ahorro' : 'gasto';
+    const catList = tipo === 'ahorro' ? categories.ahorro : categories.gasto;
+    if(!catList.includes(categoria)){
+      catList.push(categoria);
+      if(tipo === 'gasto' && !CATEGORY_GROUPS[categoria]) CATEGORY_GROUPS[categoria] = 'Variables';
+      await saveCategories();
+    }
+    const idx = travelBudgets.findIndex(t=>t.id === id);
+    if(idx !== -1){
+      travelBudgets[idx] = { ...travelBudgets[idx], nombre, presupuesto, categoria, fechaInicio, fechaFin, tipo };
+    }
+    editingTravelId = null;
+    await saveTravelBudgets();
+    render();
+  }
   async function deleteTravelBudget(id){
+    if(editingTravelId === id) editingTravelId = null;
     travelBudgets = travelBudgets.filter(t=>t.id !== id);
     await saveTravelBudgets();
     render();
@@ -2246,13 +2326,23 @@
     });
     return inAll - outAll;
   }
-  function computeCategoryBreakdown(){
-    const byCat = {};
-    transactions.filter(t=>t.type==='gasto' && isInPeriod(t.date)).forEach(t=>{
+  let _expenseCache = null;
+  function buildExpenseBreakdownCache(){
+    const byCategory = {}, byGroup = {}, byPayment = {}, byGroupCategory = {};
+    transactions.forEach(t=>{
+      if(t.type !== 'gasto' || !isInPeriod(t.date)) return;
       const amt = expenseContribution(t);
-      byCat[t.category] = (byCat[t.category]||0) + amt;
+      byCategory[t.category] = (byCategory[t.category]||0) + amt;
+      const grp = CATEGORY_GROUPS[t.category] || 'Generales';
+      byGroup[grp] = (byGroup[grp]||0) + amt;
+      byPayment[t.paymentMethod] = (byPayment[t.paymentMethod]||0) + amt;
+      if(!byGroupCategory[grp]) byGroupCategory[grp] = {};
+      byGroupCategory[grp][t.category] = (byGroupCategory[grp][t.category]||0) + amt;
     });
-    return Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+    _expenseCache = { byCategory, byGroup, byPayment, byGroupCategory };
+  }
+  function computeCategoryBreakdown(){
+    return Object.entries(_expenseCache.byCategory).sort((a,b)=>b[1]-a[1]);
   }
   function computeIncomeBreakdown(){
     const byCat = {};
@@ -2277,12 +2367,7 @@
     return { curTotal, prevTotal, prevLabel };
   }
   function computePaymentBreakdown(){
-    const byPay = {};
-    transactions.filter(t=>t.type==='gasto' && isInPeriod(t.date)).forEach(t=>{
-      const amt = expenseContribution(t);
-      byPay[t.paymentMethod] = (byPay[t.paymentMethod]||0) + amt;
-    });
-    return Object.entries(byPay).sort((a,b)=>b[1]-a[1]);
+    return Object.entries(_expenseCache.byPayment).sort((a,b)=>b[1]-a[1]);
   }
   function buildCategoryBarsHtml(entries){
     if(entries.length === 0) return '<p class="ledger-empty">Sin gastos en este grupo, en este periodo.</p>';
@@ -2298,22 +2383,12 @@
     }).join('');
   }
   function computeCategoryBreakdownByGroup(groupName){
-    const byCat = {};
-    transactions.filter(t=>t.type==='gasto' && isInPeriod(t.date) && (CATEGORY_GROUPS[t.category]||'Generales')===groupName).forEach(t=>{
-      const amt = expenseContribution(t);
-      byCat[t.category] = (byCat[t.category]||0) + amt;
-    });
-    return Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+    const map = _expenseCache.byGroupCategory[groupName] || {};
+    return Object.entries(map).sort((a,b)=>b[1]-a[1]);
   }
   function computeGroupBreakdown(){
-    const byGroup = {};
-    transactions.filter(t=>t.type==='gasto' && isInPeriod(t.date)).forEach(t=>{
-      const amt = expenseContribution(t);
-      const grp = CATEGORY_GROUPS[t.category] || 'Generales';
-      byGroup[grp] = (byGroup[grp]||0) + amt;
-    });
     const order = ['Fijos','Variables','Inversiones y seguros','Generales'];
-    return Object.entries(byGroup).sort((a,b)=> order.indexOf(a[0]) - order.indexOf(b[0]));
+    return Object.entries(_expenseCache.byGroup).sort((a,b)=> order.indexOf(a[0]) - order.indexOf(b[0]));
   }
   function buildGroupDonutHtml(entries, totalLabel, size){
     size = size || 140;
@@ -2396,6 +2471,7 @@
 
   /* ---------- Render ---------- */
   function render(){
+    buildExpenseBreakdownCache();
     const { income, expense, savingsIn, savingsOut, savingsNetPeriod, utilidad, balance } = computeTotals();
     const savingsFundTotal = computeAllTimeSavingsFund();
     els.statIncome.textContent = fmt.format(income);
