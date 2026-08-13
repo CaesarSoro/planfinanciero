@@ -395,6 +395,9 @@
   .password-field-wrap{position:relative;}
   .password-field-wrap input{width:100%;padding-right:56px !important;box-sizing:border-box;}
   .password-toggle-btn{position:absolute;top:0;right:0;height:100%;padding:0 12px;background:none;border:none;color:var(--ink-soft);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;cursor:pointer;font-family:'Inter',sans-serif;}
+  .password-toggle-btn.icon-only{width:40px;padding:0;font-size:16px;text-transform:none;letter-spacing:0;display:flex;align-items:center;justify-content:center;opacity:.55;}
+  .password-toggle-btn.icon-only:hover{opacity:1;}
+  .password-field-wrap.icon-mode input{padding-right:40px !important;}
   .password-toggle-btn:hover{color:var(--gold);}
   #authForm button{padding:11px 12px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;border:none;border-radius:8px;background:var(--ink);color:#fff;cursor:pointer;margin-top:4px;}
   .google-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px 12px;font-size:13.5px;font-weight:600;border:1px solid var(--line);border-radius:8px;background:var(--input-bg);color:var(--ink);cursor:pointer;font-family:'Inter',sans-serif;}
@@ -481,9 +484,9 @@
     <div class="auth-divider"><span>o con tu correo</span></div>
     <form id="authForm">
       <input type="email" id="authEmail" placeholder="Correo" autocomplete="email" required>
-      <div class="password-field-wrap">
+      <div class="password-field-wrap icon-mode">
         <input type="password" id="authPassword" placeholder="Contraseña" autocomplete="current-password" required minlength="6">
-        <button type="button" class="password-toggle-btn" data-target="authPassword">Ver</button>
+        <button type="button" class="password-toggle-btn icon-only" data-target="authPassword" aria-label="Mostrar contraseña">👁</button>
       </div>
       <button type="submit" id="authSubmitBtn">Entrar</button>
     </form>
@@ -1490,7 +1493,12 @@
     if(!input) return;
     const showing = input.type === 'text';
     input.type = showing ? 'password' : 'text';
-    btn.textContent = showing ? 'Ver' : 'Ocultar';
+    if(btn.classList.contains('icon-only')){
+      btn.style.opacity = showing ? '.55' : '1';
+      btn.setAttribute('aria-label', showing ? 'Mostrar contraseña' : 'Ocultar contraseña');
+    } else {
+      btn.textContent = showing ? 'Ver' : 'Ocultar';
+    }
   });
 
   els.firstTimeBannerBtn.addEventListener('click', ()=>{
