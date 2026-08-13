@@ -265,6 +265,8 @@
   .group-detail-title{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);font-weight:700;margin-bottom:8px;}
 
   .cat-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:13px;}
+  .msi-card-breakdown{margin:10px 0 4px;padding-top:10px;border-top:1px dashed var(--line);}
+  .msi-card-breakdown-title{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);font-weight:700;margin-bottom:8px;}
   .cat-name{width:110px;flex-shrink:0;color:var(--ink-soft);}
   .cat-bar-track{flex:1;height:8px;background:var(--paper-dark);border-radius:4px;overflow:hidden;}
   .cat-bar-fill{height:100%;border-radius:4px;background:var(--gold);}

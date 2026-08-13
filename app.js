@@ -280,6 +280,7 @@
     msiToggle: document.getElementById('msiToggle'),
     msiChevron: document.getElementById('msiChevron'),
     msiPendingNote: document.getElementById('msiPendingNote'),
+    msiCardBreakdown: document.getElementById('msiCardBreakdown'),
     savingsPanel: document.getElementById('savingsPanel'),
     budgetPanel: document.getElementById('budgetPanel'),
     travelPanel: document.getElementById('travelPanel'),
@@ -1817,6 +1818,17 @@
       const totalPending = msiPlans.reduce((sum,t)=> sum + msiInfo(t).remaining, 0);
       const totalMonthly = msiPlans.reduce((sum,t)=> { const info = msiInfo(t); return sum + (info.finished ? 0 : info.monthlyPayment); }, 0);
       els.msiPendingNote.textContent = 'Mensualidad total: ' + fmt.format(totalMonthly) + ' · Pendiente total: ' + fmt.format(totalPending);
+
+      const pendingByCard = {};
+      msiPlans.forEach(t=>{
+        const rem = msiInfo(t).remaining;
+        if(rem <= 0) return;
+        pendingByCard[t.paymentMethod] = (pendingByCard[t.paymentMethod] || 0) + rem;
+      });
+      const cardEntries = Object.entries(pendingByCard).sort((a,b)=> b[1]-a[1]);
+      els.msiCardBreakdown.innerHTML = cardEntries.length > 1
+        ? `<div class="msi-card-breakdown"><div class="msi-card-breakdown-title">Pendiente por tarjeta</div>${buildCategoryBarsHtml(cardEntries)}</div>`
+        : '';
       els.msiPanel.innerHTML = [...msiPlans].sort((a,b)=> b.date.localeCompare(a.date)).map(t=>{
         const info = msiInfo(t);
         const pct = Math.round((info.monthsElapsed / t.months) * 100);
