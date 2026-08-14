@@ -167,7 +167,7 @@
   let receivables = [];
   let travelBudgets = [];
   let customCategoryGroups = {}; // categorías nuevas que el usuario clasificó como Fijo/Variable/Inversión/General
-  let currentType = "ingreso";
+  let currentType = "gasto";
   let currentSubtype = "aporte";
   let editingTransactionId = null;
   let editingTravelId = null;
@@ -2190,7 +2190,7 @@
   async function loadAllDataAndRender(){
     await Promise.all([loadCategories(), loadBudget(), loadTransactions(), loadReceivables(), loadCategoryGroups(), loadTravelBudgets(), loadPaymentMethods()]);
     await pruneOrphanedMsiBudgetLines();
-    setType('ingreso');
+    setType('gasto');
     render();
     if(isFirstTimeUser){
       els.firstTimeBanner.style.display = 'flex';
