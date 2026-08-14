@@ -83,6 +83,11 @@
       <button type="button" id="helpModalClose" class="drawer-close" aria-label="Cerrar ayuda">✕</button>
     </div>
     <div class="help-modal-body">
+      <div class="help-section" id="help-disponible">
+        <h3>💰 Balance disponible</h3>
+        <p>Es tu balance real, acumulado de <strong>todo tu historial</strong> (ingresos − gastos − ahorro neto), sin importar qué filtro de periodo tengas activo arriba. No cambia si ves "Julio 2026" o "Todo el historial" — siempre es el mismo número, porque contesta siempre la misma pregunta: "¿cuánto tengo, de verdad, ahora mismo?"</p>
+      </div>
+
       <div class="help-section" id="help-form">
         <h3>📋 Registro</h3>
         <p>Aquí anotas cada movimiento de dinero, del día que sea. Elige el tipo:</p>
@@ -114,7 +119,7 @@
       <div class="help-section" id="help-real">
         <h3>⚖️ Presupuestado vs. Real</h3>
         <p><strong>Presupuestado</strong> es lo que planeaste gastar o ganar. <strong>Real</strong> es lo que en verdad registraste ese mes en Registro. La app los compara para que veas de un vistazo si te pasaste o te quedaste corto.</p>
-        <p><strong>Balance restante del mes</strong> combina ambos, categoría por categoría: usa lo Real si ya registraste movimientos ese mes, y si todavía no hay nada registrado en alguna categoría, usa lo Presupuestado como estimado. Por eso este número se va ajustando y volviendo más preciso conforme avanza el mes. Es distinto al <strong>Balance disponible</strong> de arriba, que siempre es 100% real: solo suma lo que ya entró y salió, sin estimaciones.</p>
+        <p><strong>Balance restante del mes</strong> combina ambos, categoría por categoría: usa lo Real si ya registraste movimientos ese mes, y si todavía no hay nada registrado en alguna categoría, usa lo Presupuestado como estimado. Por eso este número se va ajustando y volviendo más preciso conforme avanza el mes, y solo aplica al mes que estás viendo. Es distinto al <strong>Balance disponible</strong> de arriba, que siempre es 100% real y acumulado de todo tu historial: no depende del mes que estés filtrando.</p>
       </div>
 
       <div class="help-section" id="help-metas">
@@ -146,7 +151,7 @@
     </div>
     <div class="header-right">
       <div class="tape">
-        <span class="tape-label">Balance disponible</span>
+        <span class="tape-label">Balance disponible<button type="button" class="help-icon" data-help="disponible">?</button></span>
         <span class="tape-amount" id="tapeAmount">$0.00</span>
       </div>
       <div class="account-menu-wrap">

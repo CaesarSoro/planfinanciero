@@ -306,11 +306,15 @@
   /* budget / presupuesto */
   .budget-summary{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--line);}
   .budget-summary .b-item{min-width:0;border-left:3px solid var(--line);padding-left:9px;}
-  .budget-summary .b-item.balance{grid-column:1 / -1;border-left:none;border-top:1px dashed var(--line);padding-left:0;padding-top:12px;margin-top:2px;}
+  .budget-summary .b-item.balance{grid-column:1 / -1;order:-1;border-left:none;border-bottom:1px dashed var(--line);padding-left:0;padding-bottom:12px;margin-bottom:2px;}
   .budget-summary .lbl{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);margin-bottom:3px;}
   .budget-summary .val{font-family:'IBM Plex Mono',monospace;font-size:15.5px;font-weight:600;}
   .budget-summary .balance .val{font-size:19px;}
-  @media (min-width:560px){.budget-summary{grid-template-columns:repeat(4,1fr);}.budget-summary .b-item.balance{grid-column:1 / -1;}}
+  @media (min-width:560px){
+    .budget-summary{grid-template-columns:repeat(5,1fr);}
+    .budget-summary .b-item.balance{grid-column:auto;order:0;border-left:3px solid var(--line);border-bottom:none;padding-left:9px;padding-bottom:0;margin-bottom:0;}
+    .budget-summary .balance .val{font-size:15.5px;}
+  }
   .budget-group{margin-bottom:20px;border-left:4px solid var(--line);padding-left:14px;}
   .budget-group[data-key="fijos"]{border-left-color:var(--expense);}
   .budget-group[data-key="fijos"] .budget-group-title{color:var(--expense);border-bottom-color:var(--expense-soft);}

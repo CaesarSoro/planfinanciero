@@ -1078,7 +1078,7 @@
       <div class="b-item" style="border-left-color:#A15C4A;"><span class="lbl">Variables/mes</span><span class="val" style="color:#A15C4A;">${fmt.format(totalVariables)}</span></div>
       <div class="b-item" style="border-left-color:var(--gold);"><span class="lbl">Inversiones y seguros/mes</span><span class="val" style="color:var(--gold);">${fmt.format(totalInversiones)}</span></div>
       <div class="b-item" style="border-left-color:var(--income);"><span class="lbl">Ingresos fijos/mes</span><span class="val" style="color:var(--income);">${fmt.format(totalIngresos)}</span></div>
-      <div class="b-item balance"><span class="lbl">Balance restante del mes<button type="button" class="help-icon" data-help="real">?</button></span><span class="val" style="color:${balanceRestante>=0?'var(--income)':'var(--expense)'};">${fmt.format(balanceRestante)}</span></div>
+      <div class="b-item balance" style="border-left-color:${balanceRestante>=0?'var(--income)':'var(--expense)'};"><span class="lbl">Balance restante del mes<button type="button" class="help-icon" data-help="real">?</button></span><span class="val" style="color:${balanceRestante>=0?'var(--income)':'var(--expense)'};">${fmt.format(balanceRestante)}</span></div>
     </div>
     ${buildBudgetCompareHtml()}`;
   }
@@ -1532,6 +1532,17 @@
     const balance = utilidad - savingsNetPeriod;
     return { income, expense, savingsIn, savingsOut, savingsNetPeriod, utilidad, balance };
   }
+  function computeAllTimeBalance(){
+    let income = 0, expense = 0, savingsIn = 0, savingsOut = 0;
+    transactions.forEach(t=>{
+      if(t.type === 'ingreso') income += t.amount;
+      else if(t.type === 'gasto') expense += expenseContribution(t);
+      else if(t.type === 'ahorro'){
+        if(t.subtype === 'retiro') savingsOut += t.amount; else savingsIn += t.amount;
+      }
+    });
+    return income - expense - (savingsIn - savingsOut);
+  }
   function computeAllTimeSavingsFund(){
     let inAll = 0, outAll = 0;
     transactions.forEach(t=>{
@@ -1709,9 +1720,10 @@
     els.statUtilidad.classList.remove('pos','neg');
     els.statUtilidad.classList.add(utilidad >= 0 ? 'pos' : 'neg');
 
-    els.tapeAmount.textContent = fmt.format(balance);
+    const allTimeBalance = computeAllTimeBalance();
+    els.tapeAmount.textContent = fmt.format(allTimeBalance);
     els.tapeAmount.classList.remove('pos','neg');
-    els.tapeAmount.classList.add(balance >= 0 ? 'pos' : 'neg');
+    els.tapeAmount.classList.add(allTimeBalance >= 0 ? 'pos' : 'neg');
 
     renderBudget();
     renderTravelPanel();
