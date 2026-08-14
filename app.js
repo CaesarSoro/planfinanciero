@@ -1061,13 +1061,24 @@
     const totalVariables = groupTotal('variables');
     const totalInversiones = groupTotal('inversiones');
     const totalIngresos = groupTotal('ingresos');
-    const balancePresupuestado = totalIngresos - (totalFijos + totalVariables + totalInversiones);
+    const { realFijos, realVariables, realInversiones, realIngresos } = computeRealTotals();
+
+    // Por categoría: usa lo Real si ya hay movimientos registrados este periodo;
+    // si aún no hay nada real, cae al Presupuestado como estimado. Así el balance
+    // se va volviendo más preciso conforme avanza el mes, en vez de asumir siempre
+    // el peor caso (gastar el 100% de lo presupuestado desde el día 1).
+    const ingresosEfectivos = realIngresos > 0 ? realIngresos : totalIngresos;
+    const fijosEfectivos = realFijos > 0 ? realFijos : totalFijos;
+    const variablesEfectivos = realVariables > 0 ? realVariables : totalVariables;
+    const inversionesEfectivos = realInversiones > 0 ? realInversiones : totalInversiones;
+    const balanceRestante = ingresosEfectivos - (fijosEfectivos + variablesEfectivos + inversionesEfectivos);
+
     return `<div class="budget-summary">
       <div class="b-item" style="border-left-color:var(--expense);"><span class="lbl">Fijos/mes</span><span class="val" style="color:var(--expense);">${fmt.format(totalFijos)}</span></div>
       <div class="b-item" style="border-left-color:#A15C4A;"><span class="lbl">Variables/mes</span><span class="val" style="color:#A15C4A;">${fmt.format(totalVariables)}</span></div>
       <div class="b-item" style="border-left-color:var(--gold);"><span class="lbl">Inversiones y seguros/mes</span><span class="val" style="color:var(--gold);">${fmt.format(totalInversiones)}</span></div>
       <div class="b-item" style="border-left-color:var(--income);"><span class="lbl">Ingresos fijos/mes</span><span class="val" style="color:var(--income);">${fmt.format(totalIngresos)}</span></div>
-      <div class="b-item balance"><span class="lbl">Balance presupuestado</span><span class="val" style="color:${balancePresupuestado>=0?'var(--income)':'var(--expense)'};">${fmt.format(balancePresupuestado)}</span></div>
+      <div class="b-item balance"><span class="lbl">Balance restante del mes<button type="button" class="help-icon" data-help="real">?</button></span><span class="val" style="color:${balanceRestante>=0?'var(--income)':'var(--expense)'};">${fmt.format(balanceRestante)}</span></div>
     </div>
     ${buildBudgetCompareHtml()}`;
   }

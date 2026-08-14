@@ -10,10 +10,17 @@
 <style>
   :root{
     --paper:#E7E3D6; --surface:#FBFAF5; --ink:#22271F; --ink-soft:#5B5A4E;
-    --line:#C6BEA6; --gold:#B8863B; --radius:10px;
+    --line:#C6BEA6; --gold:#B8863B; --gold-soft:#F1E6D2; --radius:10px;
   }
   *{box-sizing:border-box;}
-  body{background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;margin:0;padding:32px 16px 60px;line-height:1.6;}
+  body{background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;margin:0;padding:20px 16px 60px;line-height:1.6;}
+  .pv-header{max-width:720px;margin:0 auto 18px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
+  .pv-brand{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--ink);}
+  .pv-brand-badge{width:34px;height:34px;border-radius:50%;background:var(--ink);color:var(--surface);font-family:'Fraunces',serif;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .pv-brand-name{font-family:'Fraunces',serif;font-weight:700;font-size:17px;}
+  .pv-menu-btn{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 14px 0 12px;border-radius:20px;background:var(--gold-soft);border:1.5px solid var(--gold);color:var(--gold);font-size:16px;text-decoration:none;white-space:nowrap;flex-shrink:0;}
+  .pv-menu-btn:hover{background:var(--gold);color:#fff;}
+  .pv-menu-btn-label{font-family:'Inter',sans-serif;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;}
   .wrap{max-width:720px;margin:0 auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:36px 32px;}
   h1{font-family:'Fraunces',serif;font-size:26px;margin:0 0 4px;}
   .updated{font-size:12.5px;color:var(--ink-soft);margin:0 0 28px;}
@@ -23,10 +30,17 @@
   li{margin-bottom:6px;}
   strong{font-weight:700;}
   a{color:var(--gold);}
-  .back-link{display:inline-block;margin-top:32px;font-size:13px;color:var(--ink-soft);text-decoration:none;border-top:1px solid var(--line);padding-top:16px;}
 </style>
 </head>
 <body>
+  <div class="pv-header">
+    <a href="index.html" class="pv-brand">
+      <span class="pv-brand-badge">CS</span>
+      <span class="pv-brand-name">Finanzas Personales</span>
+    </a>
+    <a href="index.html" class="pv-menu-btn">☰ <span class="pv-menu-btn-label">Menú</span></a>
+  </div>
+
   <div class="wrap">
     <h1>Aviso de Privacidad</h1>
     <p class="updated">Última actualización: agosto de 2026</p>
@@ -74,8 +88,6 @@
 
     <h2>7. Consentimiento</h2>
     <p>Al crear una cuenta y utilizar la aplicación, manifiestas que has leído y aceptas los términos de este aviso de privacidad.</p>
-
-    <a href="index.html" class="back-link">← Volver a Finanzas Personales</a>
   </div>
 </body>
 </html>
