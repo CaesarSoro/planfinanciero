@@ -1938,7 +1938,10 @@
         return `<div class="msi-plan">
           <div class="msi-plan-top">
             <div class="msi-plan-name">${escapeHtml(desc)}<span class="msi-cat">${escapeHtml(t.category)} · ${escapeHtml(t.paymentMethod)}</span></div>
-            <div class="msi-plan-total">${fmt.format(t.amount)}</div>
+            <div class="msi-plan-actions">
+              <div class="msi-plan-total">${fmt.format(t.amount)}</div>
+              <button type="button" class="msi-plan-edit" data-id="${t.id}" title="Editar" aria-label="Editar MSI">✎</button>
+            </div>
           </div>
           <div class="msi-track"><div class="msi-fill" style="width:${pct}%;"></div></div>
           <div class="msi-meta">
@@ -1947,6 +1950,9 @@
           </div>
         </div>`;
       }).join('');
+      els.msiPanel.querySelectorAll('.msi-plan-edit').forEach(btn=>{
+        btn.addEventListener('click', ()=> editTransaction(Number(btn.dataset.id)));
+      });
     }
 
     if(transactions.length === 0){
