@@ -85,6 +85,17 @@
     if(periodMode === 'anio') return periodValue ? `año ${periodValue}` : 'un año';
     return '';
   }
+  // Convierte el filtro de periodo activo en una fecha de referencia puntual, para ver
+  // "cómo iba" un MSI al cierre de ese periodo, en vez de siempre con la fecha real de hoy.
+  function periodReferenceDate(){
+    if(periodMode === 'dia' && periodValue) return new Date(periodValue + 'T00:00:00');
+    if(periodMode === 'mes' && periodValue){
+      const [y,m] = periodValue.split('-').map(Number);
+      return new Date(y, m, 0); // último día de ese mes
+    }
+    if(periodMode === 'anio' && periodValue) return new Date(Number(periodValue), 11, 31);
+    return new Date();
+  }
 
   const DEFAULT_CATEGORIES = {
     ingreso: ["Salario","Freelance","Ventas","Inversiones","Cobranza","Otros ingresos"],
@@ -1500,9 +1511,9 @@
   }
 
   /* ---------- MSI math ---------- */
-  function msiInfo(t){
+  function msiInfo(t, refDate){
     const start = new Date(t.date + 'T00:00:00');
-    const now = new Date();
+    const now = refDate || new Date();
     let monthsElapsed = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth()) + 1;
     monthsElapsed = Math.max(0, Math.min(monthsElapsed, t.months));
     const monthlyPayment = t.amount / t.months;
@@ -1888,19 +1899,21 @@
     }
     els.savingsPanel.innerHTML = savingsHtml;
 
-    const msiPlans = transactions.filter(t=>t.isMsi);
+    const msiRefDate = periodReferenceDate();
+    const msiPlans = transactions.filter(t=>t.isMsi && new Date(t.date + 'T00:00:00') <= msiRefDate);
     if(msiPlans.length === 0){
       els.msiCard.style.display = 'none';
     } else {
       els.msiCard.style.display = 'block';
-      const totalPending = msiPlans.reduce((sum,t)=> sum + msiInfo(t).remaining, 0);
-      const totalMonthly = msiPlans.reduce((sum,t)=> { const info = msiInfo(t); return sum + (info.finished ? 0 : info.monthlyPayment); }, 0);
-      els.msiPendingNote.textContent = 'Mensualidad total: ' + fmt.format(totalMonthly) + ' · Pendiente total: ' + fmt.format(totalPending);
+      const totalPending = msiPlans.reduce((sum,t)=> sum + msiInfo(t, msiRefDate).remaining, 0);
+      const totalMonthly = msiPlans.reduce((sum,t)=> { const info = msiInfo(t, msiRefDate); return sum + (info.finished ? 0 : info.monthlyPayment); }, 0);
+      const asOfLabel = periodMode === 'todo' ? 'hoy' : `el cierre de ${periodLabel()}`;
+      els.msiPendingNote.textContent = 'Mensualidad total: ' + fmt.format(totalMonthly) + ' · Pendiente total: ' + fmt.format(totalPending) + ' · al ' + asOfLabel;
 
       const pendingByCard = {};
       const monthlyByCard = {};
       msiPlans.forEach(t=>{
-        const info = msiInfo(t);
+        const info = msiInfo(t, msiRefDate);
         if(info.remaining > 0){
           pendingByCard[t.paymentMethod] = (pendingByCard[t.paymentMethod] || 0) + info.remaining;
         }
@@ -1919,7 +1932,7 @@
       }
       els.msiCardBreakdown.innerHTML = breakdownHtml;
       els.msiPanel.innerHTML = [...msiPlans].sort((a,b)=> b.date.localeCompare(a.date)).map(t=>{
-        const info = msiInfo(t);
+        const info = msiInfo(t, msiRefDate);
         const pct = Math.round((info.monthsElapsed / t.months) * 100);
         const desc = t.description ? t.description : t.category;
         return `<div class="msi-plan">
@@ -1961,7 +1974,7 @@
         const subtypeBadge = t.type === 'ahorro' ? `<span class="ledger-subtype-badge ${t.subtype}">${t.subtype === 'retiro' ? 'Retiro' : 'Aporte'}</span>` : '';
         let msiMini = '';
         if(t.isMsi){
-          const info = msiInfo(t);
+          const info = msiInfo(t, msiRefDate);
           const pct = Math.round((info.monthsElapsed / t.months) * 100);
           msiMini = `<div class="msi-progress-mini">
             <div class="msi-track"><div class="msi-fill" style="width:${pct}%;"></div></div>
