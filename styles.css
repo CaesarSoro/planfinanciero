@@ -262,8 +262,13 @@
   .stat-subvalue.up{color:var(--income);} .stat-subvalue.down{color:var(--expense);}
   .group-detail-block{margin-bottom:16px;}
   .group-detail-block:last-child{margin-bottom:0;}
-  .group-detail-title{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);font-weight:700;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--line);}
-  .group-detail-total{font-family:'IBM Plex Mono',monospace;text-transform:none;letter-spacing:normal;font-size:12.5px;color:var(--ink);font-weight:700;flex-shrink:0;}
+  .group-detail-title{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);font-weight:700;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--line);}
+  .group-detail-name{display:flex;align-items:center;gap:6px;}
+  .group-detail-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+  .group-detail-right{display:flex;align-items:baseline;gap:8px;flex-shrink:0;}
+  .group-detail-pct{font-family:'IBM Plex Mono',monospace;text-transform:none;letter-spacing:normal;font-size:10.5px;color:var(--ink-soft);font-weight:600;}
+  .group-detail-total{font-family:'IBM Plex Mono',monospace;text-transform:none;letter-spacing:normal;font-size:12.5px;color:var(--ink);font-weight:700;}
+  .donut-chart-solo{display:flex;justify-content:center;margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--line);}
 
   .cat-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:13px;}
   .msi-card-breakdown{margin:10px 0 4px;padding-top:10px;border-top:1px dashed var(--line);}

@@ -410,24 +410,12 @@
       </div>
 
       <div class="resumen-section">
-        <button type="button" class="resumen-toggle" data-resumen-key="grupo">
-          <span class="section-title-text">Gastos por Grupos</span>
+        <button type="button" class="resumen-toggle" data-resumen-key="ingresos">
+          <span class="section-title-text">Ingresos por categoría</span>
           <span class="toggle-hint">Ocultar <span class="resumen-caret">▴</span></span>
         </button>
-        <div class="resumen-collapsible" data-resumen-panel="grupo" style="display:block;">
-          <div id="groupDonut"></div>
-          <button type="button" id="toggleGroupBreakdown" class="manage-cat-link">Ver desglose por categoría ▾</button>
-          <div id="groupBreakdownDetail" style="display:none;margin-top:12px;"></div>
-        </div>
-      </div>
-
-      <div class="resumen-section">
-        <button type="button" class="resumen-toggle" data-resumen-key="categoria">
-          <span class="section-title-text">Gastos por categoría</span>
-          <span class="toggle-hint">Ocultar <span class="resumen-caret">▴</span></span>
-        </button>
-        <div class="resumen-collapsible" data-resumen-panel="categoria" style="display:block;">
-          <div id="expenseDonut"></div>
+        <div class="resumen-collapsible" data-resumen-panel="ingresos" style="display:block;">
+          <div id="incomeDonut"></div>
         </div>
       </div>
 
@@ -442,12 +430,23 @@
       </div>
 
       <div class="resumen-section">
-        <button type="button" class="resumen-toggle" data-resumen-key="ingresos">
-          <span class="section-title-text">Ingresos por categoría</span>
+        <button type="button" class="resumen-toggle" data-resumen-key="categoria">
+          <span class="section-title-text">Gastos por categoría</span>
           <span class="toggle-hint">Ocultar <span class="resumen-caret">▴</span></span>
         </button>
-        <div class="resumen-collapsible" data-resumen-panel="ingresos" style="display:block;">
-          <div id="incomeDonut"></div>
+        <div class="resumen-collapsible" data-resumen-panel="categoria" style="display:block;">
+          <div id="expenseDonut"></div>
+        </div>
+      </div>
+
+      <div class="resumen-section">
+        <button type="button" class="resumen-toggle" data-resumen-key="grupo">
+          <span class="section-title-text">Gastos por Grupos</span>
+          <span class="toggle-hint">Ocultar <span class="resumen-caret">▴</span></span>
+        </button>
+        <div class="resumen-collapsible" data-resumen-panel="grupo" style="display:block;">
+          <div id="groupDonut"></div>
+          <div id="groupBreakdownDetail"></div>
         </div>
       </div>
     </div>

@@ -278,7 +278,6 @@
     statTopCategory: document.getElementById('statTopCategory'),
     statTopCategoryAmount: document.getElementById('statTopCategoryAmount'),
     groupDonut: document.getElementById('groupDonut'),
-    toggleGroupBreakdown: document.getElementById('toggleGroupBreakdown'),
     groupBreakdownDetail: document.getElementById('groupBreakdownDetail'),
     paymentDonut: document.getElementById('paymentDonut'),
     expenseDonut: document.getElementById('expenseDonut'),
@@ -767,13 +766,6 @@
     const showing = panel.style.display !== 'none';
     panel.style.display = showing ? 'none' : 'block';
     caret.textContent = showing ? '▾' : '▴';
-  });
-  els.toggleGroupBreakdown.addEventListener('click', ()=>{
-    const showing = els.groupBreakdownDetail.style.display !== 'none';
-    els.groupBreakdownDetail.style.display = showing ? 'none' : 'block';
-    els.toggleGroupBreakdown.textContent = showing
-      ? 'Ver desglose por categoría ▾'
-      : 'Ocultar desglose ▴';
   });
 
   /* ---------- Payment method / MSI / Ahorro visibility ---------- */
@@ -1670,8 +1662,10 @@
     const order = ['Fijos','Variables','Inversiones y seguros','Generales'];
     return Object.entries(_expenseCache.byGroup).sort((a,b)=> order.indexOf(a[0]) - order.indexOf(b[0]));
   }
-  function buildGroupDonutHtml(entries, totalLabel, size){
-    size = size || 140;
+  // Solo el círculo, sin la leyenda de texto — para cuando el detalle de abajo ya trae
+  // color, porcentaje y monto por su cuenta, y repetir la leyenda sería duplicar información.
+  function buildDonutCircleHtml(entries, colorMap, totalLabel, size){
+    size = size || 130;
     const total = entries.reduce((s,[,v])=> s + v, 0);
     if(total <= 0 || entries.length === 0) return '';
     let acc = 0;
@@ -1679,22 +1673,12 @@
       const pct = (val/total)*100;
       const start = acc;
       acc += pct;
-      return `${GROUP_COLORS[label] || '#8a8578'} ${start}% ${acc}%`;
+      return `${colorMap[label] || '#8a8578'} ${start}% ${acc}%`;
     }).join(', ');
-    const legend = entries.map(([label,val])=>{
-      const pct = ((val/total)*100).toFixed(1);
-      return `<div class="donut-legend-row">
-        <span class="donut-dot" style="background:${GROUP_COLORS[label] || '#8a8578'};"></span>
-        <span class="donut-legend-label">${escapeHtml(label)}</span>
-        <span class="donut-legend-pct">${pct}%</span>
-        <span class="donut-legend-amt">${fmt.format(val)}</span>
-      </div>`;
-    }).join('');
-    return `<div class="donut-wrap">
+    return `<div class="donut-chart-solo">
       <div class="donut-chart" style="width:${size}px;height:${size}px;background:conic-gradient(${stops});">
         <div class="donut-hole"><span class="donut-total"><span class="donut-total-lbl">${escapeHtml(totalLabel)}</span>${fmt.format(total)}</span></div>
       </div>
-      <div class="donut-legend">${legend}</div>
     </div>`;
   }
   function buildDonutHtml(entries, totalLabel, size){
@@ -1795,11 +1779,16 @@
 
     const groupBreakdown = computeGroupBreakdown();
     els.groupDonut.innerHTML = groupBreakdown.length > 0
-      ? buildGroupDonutHtml(groupBreakdown, 'Gastos')
+      ? buildDonutCircleHtml(groupBreakdown, GROUP_COLORS, 'Gastos')
       : '<p class="ledger-empty">Sin gastos registrados en este periodo.</p>';
+    const groupGrandTotal = groupBreakdown.reduce((s,[,v])=> s + v, 0);
     els.groupBreakdownDetail.innerHTML = groupBreakdown.map(([groupName, total])=>{
+      const pct = groupGrandTotal ? ((total/groupGrandTotal)*100).toFixed(1) : '0.0';
       return `<div class="group-detail-block">
-        <div class="group-detail-title">${escapeHtml(groupName)}<span class="group-detail-total">${fmt.format(total)}</span></div>
+        <div class="group-detail-title">
+          <span class="group-detail-name"><span class="group-detail-dot" style="background:${GROUP_COLORS[groupName] || '#8a8578'};"></span>${escapeHtml(groupName)}</span>
+          <span class="group-detail-right"><span class="group-detail-pct">${pct}%</span><span class="group-detail-total">${fmt.format(total)}</span></span>
+        </div>
         ${buildCategoryBarsHtml(computeCategoryBreakdownByGroup(groupName))}
       </div>`;
     }).join('');
