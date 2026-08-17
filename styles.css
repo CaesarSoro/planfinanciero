@@ -262,7 +262,8 @@
   .stat-subvalue.up{color:var(--income);} .stat-subvalue.down{color:var(--expense);}
   .group-detail-block{margin-bottom:16px;}
   .group-detail-block:last-child{margin-bottom:0;}
-  .group-detail-title{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);font-weight:700;margin-bottom:8px;}
+  .group-detail-title{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);font-weight:700;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--line);}
+  .group-detail-total{font-family:'IBM Plex Mono',monospace;text-transform:none;letter-spacing:normal;font-size:12.5px;color:var(--ink);font-weight:700;flex-shrink:0;}
 
   .cat-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:13px;}
   .msi-card-breakdown{margin:10px 0 4px;padding-top:10px;border-top:1px dashed var(--line);}
@@ -474,8 +475,8 @@
     .budget-group{margin-bottom:20px;}
     .compare-chart{display:grid;grid-template-columns:1fr 1fr;column-gap:32px;row-gap:4px;}
     .cc-group{border-bottom:none;border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:0;}
-    #groupBreakdownDetail{display:flex;flex-wrap:wrap;gap:0 32px;}
-    .group-detail-block{flex:1 1 260px;}
+    #groupBreakdownDetail{display:grid;grid-template-columns:repeat(3,1fr);column-gap:28px;align-items:start;}
+    .group-detail-block{margin-bottom:0;}
     .stats{grid-template-columns:repeat(5,1fr);}
     #catBreakdown, #incomeBreakdown{column-count:2;column-gap:36px;}
     .cat-row{break-inside:avoid;-webkit-column-break-inside:avoid;}

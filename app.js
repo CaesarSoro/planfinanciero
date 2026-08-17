@@ -277,13 +277,11 @@
     statSavings: document.getElementById('statSavings'),
     statTopCategory: document.getElementById('statTopCategory'),
     statTopCategoryAmount: document.getElementById('statTopCategoryAmount'),
-    catBreakdown: document.getElementById('catBreakdown'),
     groupDonut: document.getElementById('groupDonut'),
     toggleGroupBreakdown: document.getElementById('toggleGroupBreakdown'),
     groupBreakdownDetail: document.getElementById('groupBreakdownDetail'),
     paymentDonut: document.getElementById('paymentDonut'),
     expenseDonut: document.getElementById('expenseDonut'),
-    incomeBreakdown: document.getElementById('incomeBreakdown'),
     incomeDonut: document.getElementById('incomeDonut'),
     ledgerList: document.getElementById('ledgerList'),
     msiCard: document.getElementById('msiCard'),
@@ -1799,9 +1797,9 @@
     els.groupDonut.innerHTML = groupBreakdown.length > 0
       ? buildGroupDonutHtml(groupBreakdown, 'Gastos')
       : '<p class="ledger-empty">Sin gastos registrados en este periodo.</p>';
-    els.groupBreakdownDetail.innerHTML = groupBreakdown.map(([groupName])=>{
+    els.groupBreakdownDetail.innerHTML = groupBreakdown.map(([groupName, total])=>{
       return `<div class="group-detail-block">
-        <div class="group-detail-title">${escapeHtml(groupName)}</div>
+        <div class="group-detail-title">${escapeHtml(groupName)}<span class="group-detail-total">${fmt.format(total)}</span></div>
         ${buildCategoryBarsHtml(computeCategoryBreakdownByGroup(groupName))}
       </div>`;
     }).join('');
@@ -1821,37 +1819,15 @@
     }
 
     if(breakdown.length === 0){
-      els.catBreakdown.innerHTML = '<p class="ledger-empty">Sin gastos registrados en este periodo.</p>';
-      els.expenseDonut.innerHTML = '';
+      els.expenseDonut.innerHTML = '<p class="ledger-empty">Sin gastos registrados en este periodo.</p>';
     } else {
-      const max = breakdown[0][1];
-      els.catBreakdown.innerHTML = breakdown.map(([cat, amt], i)=>{
-        const pct = max ? Math.max(6, (amt/max)*100) : 0;
-        const color = CAT_COLORS[i % CAT_COLORS.length];
-        return `<div class="cat-row">
-          <div class="cat-name">${escapeHtml(cat)}</div>
-          <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${pct}%;background:${color};"></div></div>
-          <div class="cat-amount">${fmt.format(amt)}</div>
-        </div>`;
-      }).join('');
       els.expenseDonut.innerHTML = buildDonutHtml(breakdown, 'Gastos');
     }
 
     const incomeBreakdown = computeIncomeBreakdown();
     if(incomeBreakdown.length === 0){
-      els.incomeBreakdown.innerHTML = '<p class="ledger-empty">Sin ingresos registrados en este periodo.</p>';
-      els.incomeDonut.innerHTML = '';
+      els.incomeDonut.innerHTML = '<p class="ledger-empty">Sin ingresos registrados en este periodo.</p>';
     } else {
-      const maxInc = incomeBreakdown[0][1];
-      els.incomeBreakdown.innerHTML = incomeBreakdown.map(([cat, amt], i)=>{
-        const pct = maxInc ? Math.max(6, (amt/maxInc)*100) : 0;
-        const color = CAT_COLORS[i % CAT_COLORS.length];
-        return `<div class="cat-row">
-          <div class="cat-name">${escapeHtml(cat)}</div>
-          <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${pct}%;background:${color};"></div></div>
-          <div class="cat-amount">${fmt.format(amt)}</div>
-        </div>`;
-      }).join('');
       els.incomeDonut.innerHTML = buildDonutHtml(incomeBreakdown, 'Ingresos');
     }
 

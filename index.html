@@ -412,9 +412,9 @@
       <div class="resumen-section">
         <button type="button" class="resumen-toggle" data-resumen-key="grupo">
           <span class="section-title-text">Gastos por Grupos</span>
-          <span class="toggle-hint">Ver más <span class="resumen-caret">▾</span></span>
+          <span class="toggle-hint">Ocultar <span class="resumen-caret">▴</span></span>
         </button>
-        <div class="resumen-collapsible" data-resumen-panel="grupo" style="display:none;">
+        <div class="resumen-collapsible" data-resumen-panel="grupo" style="display:block;">
           <div id="groupDonut"></div>
           <button type="button" id="toggleGroupBreakdown" class="manage-cat-link">Ver desglose por categoría ▾</button>
           <div id="groupBreakdownDetail" style="display:none;margin-top:12px;"></div>
@@ -428,18 +428,15 @@
         </button>
         <div class="resumen-collapsible" data-resumen-panel="categoria" style="display:block;">
           <div id="expenseDonut"></div>
-          <div id="catBreakdown">
-            <p class="ledger-empty">Aún no hay gastos registrados.</p>
-          </div>
         </div>
       </div>
 
       <div class="resumen-section">
         <button type="button" class="resumen-toggle" data-resumen-key="pago">
           <span class="section-title-text">Gastos por forma de pago</span>
-          <span class="toggle-hint">Ver más <span class="resumen-caret">▾</span></span>
+          <span class="toggle-hint">Ocultar <span class="resumen-caret">▴</span></span>
         </button>
-        <div class="resumen-collapsible" data-resumen-panel="pago" style="display:none;">
+        <div class="resumen-collapsible" data-resumen-panel="pago" style="display:block;">
           <div id="paymentDonut"></div>
         </div>
       </div>
@@ -451,9 +448,6 @@
         </button>
         <div class="resumen-collapsible" data-resumen-panel="ingresos" style="display:block;">
           <div id="incomeDonut"></div>
-          <div id="incomeBreakdown">
-            <p class="ledger-empty">Aún no hay ingresos registrados.</p>
-          </div>
         </div>
       </div>
     </div>
