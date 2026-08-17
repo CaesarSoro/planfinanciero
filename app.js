@@ -1515,14 +1515,53 @@
     if(t.isMsi) return msiInfo(t).paid;
     return t.amount;
   }
+  // Cuánto de un MSI corresponde exactamente al periodo que se está viendo (mes/año/día/todo),
+  // en vez de acumular todo lo pagado a hoy en el mes de la compra original.
+  function msiPeriodContribution(t){
+    const monthly = t.amount / t.months;
+    const start = new Date(t.date + 'T00:00:00');
+    const startIndex = start.getFullYear() * 12 + start.getMonth();
+    if(periodMode === 'todo') return msiInfo(t).paid;
+    if(periodMode === 'mes'){
+      const [py, pm] = periodValue.split('-').map(Number);
+      const offset = (py * 12 + (pm - 1)) - startIndex;
+      return (offset >= 0 && offset < t.months) ? monthly : 0;
+    }
+    if(periodMode === 'anio'){
+      const py = Number(periodValue);
+      let monthsInYear = 0;
+      for(let i = 0; i < t.months; i++){
+        if(Math.floor((startIndex + i) / 12) === py) monthsInYear++;
+      }
+      return monthly * monthsInYear;
+    }
+    if(periodMode === 'dia'){
+      const pdate = new Date(periodValue + 'T00:00:00');
+      if(pdate.getDate() !== start.getDate()) return 0;
+      const offset = (pdate.getFullYear() * 12 + pdate.getMonth()) - startIndex;
+      return (offset >= 0 && offset < t.months) ? monthly : 0;
+    }
+    return 0;
+  }
 
   /* ---------- Totals ---------- */
   function computeTotals(){
     let income = 0, expense = 0, savingsIn = 0, savingsOut = 0;
     transactions.forEach(t=>{
+      if(t.type === 'gasto'){
+        let amt;
+        if(t.isMsi){
+          amt = msiPeriodContribution(t);
+          if(amt <= 0) return;
+        } else {
+          if(!isInPeriod(t.date)) return;
+          amt = expenseContribution(t);
+        }
+        expense += amt;
+        return;
+      }
       if(!isInPeriod(t.date)) return;
       if(t.type === 'ingreso') income += t.amount;
-      else if(t.type === 'gasto') expense += expenseContribution(t);
       else if(t.type === 'ahorro'){
         if(t.subtype === 'retiro') savingsOut += t.amount; else savingsIn += t.amount;
       }
@@ -1555,8 +1594,15 @@
   function buildExpenseBreakdownCache(){
     const byCategory = {}, byGroup = {}, byPayment = {}, byGroupCategory = {};
     transactions.forEach(t=>{
-      if(t.type !== 'gasto' || !isInPeriod(t.date)) return;
-      const amt = expenseContribution(t);
+      if(t.type !== 'gasto') return;
+      let amt;
+      if(t.isMsi){
+        amt = msiPeriodContribution(t);
+        if(amt <= 0) return;
+      } else {
+        if(!isInPeriod(t.date)) return;
+        amt = expenseContribution(t);
+      }
       byCategory[t.category] = (byCategory[t.category]||0) + amt;
       const grp = CATEGORY_GROUPS[t.category] || 'Generales';
       byGroup[grp] = (byGroup[grp]||0) + amt;
@@ -1680,14 +1726,23 @@
   function computeRealTotals(){
     let realFijos = 0, realVariables = 0, realInversiones = 0, realIngresos = 0;
     transactions.forEach(t=>{
-      if(!isInPeriod(t.date)) return;
       if(t.type === 'gasto'){
         const grupo = CATEGORY_GROUPS[t.category];
-        const amt = expenseContribution(t);
+        let amt;
+        if(t.isMsi){
+          amt = msiPeriodContribution(t);
+          if(amt <= 0) return;
+        } else {
+          if(!isInPeriod(t.date)) return;
+          amt = expenseContribution(t);
+        }
         if(grupo === 'Fijos') realFijos += amt;
         else if(grupo === 'Variables') realVariables += amt;
         else if(grupo === 'Inversiones y seguros') realInversiones += amt;
-      } else if(t.type === 'ingreso'){
+        return;
+      }
+      if(!isInPeriod(t.date)) return;
+      if(t.type === 'ingreso'){
         realIngresos += t.amount;
       }
     });
