@@ -1872,8 +1872,8 @@
       els.msiCard.style.display = 'block';
       const totalPending = msiPlans.reduce((sum,t)=> sum + msiInfo(t, msiRefDate).remaining, 0);
       const totalMonthly = msiPlans.reduce((sum,t)=> { const info = msiInfo(t, msiRefDate); return sum + (info.finished ? 0 : info.monthlyPayment); }, 0);
-      const asOfLabel = periodMode === 'todo' ? 'hoy' : `el cierre de ${periodLabel()}`;
-      els.msiPendingNote.textContent = 'Mensualidad total: ' + fmt.format(totalMonthly) + ' · Pendiente total: ' + fmt.format(totalPending) + ' · al ' + asOfLabel;
+      const asOfLabel = periodMode === 'todo' ? 'hoy' : `al cierre de ${periodLabel()}`;
+      els.msiPendingNote.innerHTML = 'Mensualidad total: <strong>' + fmt.format(totalMonthly) + '</strong> · Pendiente total: <strong>' + fmt.format(totalPending) + '</strong> · ' + asOfLabel;
 
       const pendingByCard = {};
       const monthlyByCard = {};

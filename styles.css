@@ -140,6 +140,9 @@
   .resumen-section{margin-bottom:28px;}
   .msi-card-box{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;border-left:4px solid var(--expense);}
   .msi-card-box .msi-toggle .section-title-text{font-family:'Fraunces',serif;font-size:16px;font-weight:700;}
+  #msiPendingNote{font-size:13px;color:var(--ink-soft);line-height:1.5;}
+  #msiPendingNote strong{font-family:'IBM Plex Mono',monospace;color:var(--ink);font-weight:700;}
+  @media (max-width:560px){#msiPendingNote{font-size:11.5px;}}
   .resumen-section:last-child{margin-bottom:0;}
   .section-title{font-family:'Fraunces',serif;font-size:16px;font-weight:600;margin:0 0 16px;padding-bottom:10px;border-bottom:1px solid var(--line);}
   .section-title .h2-note{font-family:'Inter',sans-serif;font-weight:400;font-size:11.5px;color:var(--ink-soft);float:right;}
@@ -244,12 +247,18 @@
   .error-msg{font-size:12.5px;color:var(--expense);margin-top:-6px;margin-bottom:12px;display:none;}
 
   .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:22px;}
-  @media (max-width:900px){.stats{grid-template-columns:repeat(3,1fr);}}
+  @media (max-width:900px){
+    .stats{grid-template-columns:repeat(3,1fr);}
+    .stats .stat:nth-child(5){grid-column:span 2;}
+  }
   @media (max-width:560px){
     .stats{grid-template-columns:repeat(2,1fr);}
-    .stats .stat:last-child:nth-child(odd){grid-column:1 / -1;}
+    .stats .stat:nth-child(5){grid-column:1 / -1;}
   }
-  @media (max-width:380px){.stats{grid-template-columns:1fr;}}
+  @media (max-width:380px){
+    .stats{grid-template-columns:1fr;}
+    .stats .stat:nth-child(5){grid-column:auto;}
+  }
   @media (max-width:420px){.donut-wrap{flex-direction:column;align-items:center;}.donut-legend{width:100%;}}
   .stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;border-left:4px solid var(--ink);}
   .stat.income{border-left-color:var(--income);} .stat.expense{border-left-color:var(--expense);} .stat.savings{border-left-color:var(--gold);}
