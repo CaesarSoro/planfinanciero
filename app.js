@@ -287,6 +287,7 @@
     msiCard: document.getElementById('msiCard'),
     msiPanel: document.getElementById('msiPanel'),
     msiToggle: document.getElementById('msiToggle'),
+    msiToggleLabel: document.getElementById('msiToggleLabel'),
     msiChevron: document.getElementById('msiChevron'),
     msiPendingNote: document.getElementById('msiPendingNote'),
     msiCardBreakdown: document.getElementById('msiCardBreakdown'),
@@ -755,6 +756,7 @@
     const showing = els.msiPanel.style.display !== 'none';
     els.msiPanel.style.display = showing ? 'none' : 'block';
     els.msiChevron.textContent = showing ? '▾' : '▴';
+    els.msiToggleLabel.textContent = showing ? 'Ver compras' : 'Ocultar compras';
   });
   els.msiToggle.addEventListener('keydown', (e)=>{
     if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); els.msiToggle.click(); }
