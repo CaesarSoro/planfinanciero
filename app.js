@@ -247,6 +247,7 @@
     amount: document.getElementById('amount'),
     amountLabel: document.getElementById('amountLabel'),
     amountError: document.getElementById('amountError'),
+    paymentMethodError: document.getElementById('paymentMethodError'),
     paymentMethod: document.getElementById('paymentMethod'),
     msiRow: document.getElementById('msiRow'),
     isMsi: document.getElementById('isMsi'),
@@ -2067,6 +2068,12 @@
       return;
     }
     els.amountError.style.display = 'none';
+
+    if(!els.paymentMethod.value){
+      els.paymentMethodError.style.display = 'block';
+      return;
+    }
+    els.paymentMethodError.style.display = 'none';
 
     const txData = {
       type: currentType,
