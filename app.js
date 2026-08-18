@@ -1544,6 +1544,30 @@
     }
     return 0;
   }
+  // Si el MSI sigue "vivo" para el periodo que se está viendo: existía ya y todavía no
+  // se había liquidado. Evita que un MSI pagado hace meses siga apareciendo para siempre
+  // en cualquier mes posterior.
+  function msiIsActiveInPeriod(t){
+    if(periodMode === 'todo') return true;
+    const start = new Date(t.date + 'T00:00:00');
+    const startIndex = start.getFullYear() * 12 + start.getMonth();
+    if(periodMode === 'mes'){
+      const [py, pm] = periodValue.split('-').map(Number);
+      const offset = (py * 12 + (pm - 1)) - startIndex;
+      return offset >= 0 && offset < t.months;
+    }
+    if(periodMode === 'anio'){
+      const py = Number(periodValue);
+      const planStart = startIndex, planEnd = startIndex + t.months - 1;
+      return planStart <= (py * 12 + 11) && planEnd >= (py * 12);
+    }
+    if(periodMode === 'dia'){
+      const pdate = new Date(periodValue + 'T00:00:00');
+      const offset = (pdate.getFullYear() * 12 + pdate.getMonth()) - startIndex;
+      return offset >= 0 && offset < t.months;
+    }
+    return true;
+  }
 
   /* ---------- Totals ---------- */
   function computeTotals(){
@@ -1865,7 +1889,7 @@
     els.savingsPanel.innerHTML = savingsHtml;
 
     const msiRefDate = periodReferenceDate();
-    const msiPlans = transactions.filter(t=>t.isMsi && new Date(t.date + 'T00:00:00') <= msiRefDate);
+    const msiPlans = transactions.filter(t=>t.isMsi && msiIsActiveInPeriod(t));
     if(msiPlans.length === 0){
       els.msiCard.style.display = 'none';
     } else {
