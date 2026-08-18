@@ -1942,6 +1942,7 @@
             <div class="msi-plan-actions">
               <div class="msi-plan-total">${fmt.format(t.amount)}</div>
               <button type="button" class="msi-plan-edit" data-id="${t.id}" title="Editar" aria-label="Editar MSI">✎</button>
+              <button type="button" class="msi-plan-del" data-id="${t.id}" title="Eliminar" aria-label="Eliminar MSI">✕</button>
             </div>
           </div>
           ${fixRow}
@@ -1954,6 +1955,12 @@
       }).join('');
       els.msiPanel.querySelectorAll('.msi-plan-edit').forEach(btn=>{
         btn.addEventListener('click', ()=> editTransaction(Number(btn.dataset.id)));
+      });
+      els.msiPanel.querySelectorAll('.msi-plan-del').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          if(!confirm('¿Eliminar este MSI por completo? Se borra junto con todo su historial de pagos.')) return;
+          deleteTransaction(Number(btn.dataset.id));
+        });
       });
       els.msiPanel.querySelectorAll('.msi-fix-save').forEach(btn=>{
         btn.addEventListener('click', async ()=>{
