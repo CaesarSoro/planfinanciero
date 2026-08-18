@@ -1925,14 +1925,26 @@
         const info = msiInfo(t, msiRefDate);
         const pct = Math.round((info.monthsElapsed / t.months) * 100);
         const desc = t.description ? t.description : t.category;
+        const catTag = t.paymentMethod
+          ? `${escapeHtml(t.category)} · ${escapeHtml(t.paymentMethod)}`
+          : `${escapeHtml(t.category)} · <span class="msi-cat-missing">sin tarjeta</span>`;
+        const fixRow = t.paymentMethod ? '' : `<div class="msi-fix-payment-row">
+          <span class="msi-fix-warn">⚠ Sin forma de pago</span>
+          <select class="msi-fix-payment" data-id="${t.id}">
+            <option value="">Elegir tarjeta…</option>
+            ${(paymentMethods.gasto || []).map(p=>`<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('')}
+          </select>
+          <button type="button" class="msi-fix-save" data-id="${t.id}">Guardar</button>
+        </div>`;
         return `<div class="msi-plan">
           <div class="msi-plan-top">
-            <div class="msi-plan-name">${escapeHtml(desc)}<span class="msi-cat">${escapeHtml(t.category)} · ${escapeHtml(t.paymentMethod)}</span></div>
+            <div class="msi-plan-name">${escapeHtml(desc)}<span class="msi-cat">${catTag}</span></div>
             <div class="msi-plan-actions">
               <div class="msi-plan-total">${fmt.format(t.amount)}</div>
               <button type="button" class="msi-plan-edit" data-id="${t.id}" title="Editar" aria-label="Editar MSI">✎</button>
             </div>
           </div>
+          ${fixRow}
           <div class="msi-track"><div class="msi-fill" style="width:${pct}%;"></div></div>
           <div class="msi-meta">
             <span>Mensualidad ${fmt.format(info.monthlyPayment)} · mes ${info.monthsElapsed}/${t.months}</span>
@@ -1942,6 +1954,19 @@
       }).join('');
       els.msiPanel.querySelectorAll('.msi-plan-edit').forEach(btn=>{
         btn.addEventListener('click', ()=> editTransaction(Number(btn.dataset.id)));
+      });
+      els.msiPanel.querySelectorAll('.msi-fix-save').forEach(btn=>{
+        btn.addEventListener('click', async ()=>{
+          const id = Number(btn.dataset.id);
+          const select = els.msiPanel.querySelector(`.msi-fix-payment[data-id="${id}"]`);
+          if(!select.value) return;
+          const idx = transactions.findIndex(x=>x.id === id);
+          if(idx !== -1){
+            transactions[idx].paymentMethod = select.value;
+            render();
+            await saveTransactions();
+          }
+        });
       });
     }
 
