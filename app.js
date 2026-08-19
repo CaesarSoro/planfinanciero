@@ -97,18 +97,9 @@
     return new Date();
   }
 
+  // Lista genérica: única fuente para categorías de una cuenta nueva. Las cuentas existentes
+  // simplemente usan lo que ya tienen guardado — no se vuelve a fusionar con nada del código.
   const DEFAULT_CATEGORIES = {
-    ingreso: ["Salario","Freelance","Ventas","Inversiones","Cobranza","Otros ingresos"],
-    gasto: [
-      "Luz - Valle","Luz - Campestre","Luz - Elena","Agua - Valle","Agua - Elena","Wifi - Valle","Wifi - Elena","Wifi - Campestre","Vivienda","Servicios",
-      "Telcel - Celular","Google","Disney + Mercado Libre","Servidor Host","Amazon","Transporte","Comidas","Entretenimiento","Cine","Conciertos","Uber","Deportes","Mandado","Remodelación",
-      "Ropa","Salud","Equipo de Trabajo","Viajes","Cumpleaños","Banco","Amigos","Mascotas","Facturas","Educación","Otros gastos"
-    ],
-    ahorro: ["Ahorro Emergencia","Inversion GBM","Inversion ARQ","Inversion CETES","Ahorro Efectivo","Ahorro Banco"]
-  };
-  // Lista genérica que solo se usa la primera vez que se crea una cuenta nueva (sin datos guardados aún).
-  // Las cuentas existentes NUNCA usan esta lista; siguen su propio historial + DEFAULT_CATEGORIES de arriba.
-  const GENERIC_STARTER_CATEGORIES = {
     ingreso: ["Salario","Freelance","Ventas","Inversiones","Cobranza","Otros ingresos"],
     gasto: [
       "Renta o hipoteca","Luz","Agua","Gas","Internet","Celular","Seguros",
@@ -131,21 +122,13 @@
   const BASE_CATEGORY_GROUPS = JSON.parse(JSON.stringify(CATEGORY_GROUPS)); // copia limpia, sin clasificaciones de ninguna cuenta
   const GROUP_ORDER = ["Fijos","Variables","Inversiones y seguros","Generales","Otras"];
 
+  // Lista genérica: única fuente para formas de pago de una cuenta nueva.
   const DEFAULT_PAYMENT_OPTIONS = {
-    ingreso: ["Efectivo","Transferencia","Depósito"],
-    gasto: ["Efectivo","Débito","Transferencia","Crédito - Roja","Crédito - Oro","Crédito - Invex"],
-    ahorro: ["Efectivo","Transferencia","Depósito"]
-  };
-  const GENERIC_PAYMENT_OPTIONS = {
     ingreso: ["Efectivo","Transferencia","Depósito"],
     gasto: ["Efectivo","Débito","Transferencia","Tarjeta de crédito"],
     ahorro: ["Efectivo","Transferencia","Depósito"]
   };
   const CAT_COLORS = ["#B8863B","#7A2E2E","#2E6F4F","#5B5A4E","#8C6D3F","#A15C4A","#4E6B5A","#96742E"];
-  const REMOVED_CATEGORIES = {
-    gasto: ["GBM - Indexy","Seguro Médico","Seguro Casa"]
-  };
-
   const TX_KEY = "libro-cuentas:transactions";
   const CAT_KEY = "libro-cuentas:categories";
   const PAYMENT_KEY = "libro-cuentas:paymentMethods";
@@ -312,27 +295,13 @@
     try{
       const res = await storageAdapter.get(CAT_KEY);
       if(!res || !res.value){
-        // Cuenta nueva sin nada guardado todavía: arranca con la lista genérica, no con la personalizada.
-        categories = JSON.parse(JSON.stringify(GENERIC_STARTER_CATEGORIES));
-        categories._seed = 'generic';
+        // Cuenta nueva sin nada guardado todavía: arranca con la lista genérica.
+        categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
         await saveCategories();
         isFirstTimeUser = true;
         return;
       }
-      const stored = JSON.parse(res.value);
-      // Las cuentas sembradas con la lista genérica se siguen fusionando SOLO con la lista genérica,
-      // nunca con DEFAULT_CATEGORIES (que son las categorías personales de la cuenta original).
-      const seedList = stored._seed === 'generic' ? GENERIC_STARTER_CATEGORIES : DEFAULT_CATEGORIES;
-      const merged = { _seed: stored._seed === 'generic' ? 'generic' : 'legacy' };
-      Object.keys(DEFAULT_CATEGORIES).forEach(type=>{
-        const storedList = Array.isArray(stored[type]) ? stored[type] : [];
-        const combined = [...storedList];
-        seedList[type].forEach(c=>{ if(!combined.includes(c)) combined.push(c); });
-        const removed = REMOVED_CATEGORIES[type] || [];
-        merged[type] = combined.filter(c=> !removed.includes(c));
-      });
-      categories = merged;
-      await saveCategories();
+      categories = JSON.parse(res.value);
     }catch(err){ /* keep defaults */ }
   }
   async function saveCategories(){
@@ -343,23 +312,12 @@
     try{
       const res = await storageAdapter.get(PAYMENT_KEY);
       if(!res || !res.value){
-        // Cuenta nueva sin nada guardado todavía: arranca con formas de pago genéricas, no las personales.
-        paymentMethods = JSON.parse(JSON.stringify(GENERIC_PAYMENT_OPTIONS));
-        paymentMethods._seed = 'generic';
+        // Cuenta nueva sin nada guardado todavía: arranca con formas de pago genéricas.
+        paymentMethods = JSON.parse(JSON.stringify(DEFAULT_PAYMENT_OPTIONS));
         await savePaymentMethods();
         return;
       }
-      const stored = JSON.parse(res.value);
-      const seedList = stored._seed === 'generic' ? GENERIC_PAYMENT_OPTIONS : DEFAULT_PAYMENT_OPTIONS;
-      const merged = { _seed: stored._seed === 'generic' ? 'generic' : 'legacy' };
-      Object.keys(DEFAULT_PAYMENT_OPTIONS).forEach(type=>{
-        const storedList = Array.isArray(stored[type]) ? stored[type] : [];
-        const combined = [...storedList];
-        seedList[type].forEach(p=>{ if(!combined.includes(p)) combined.push(p); });
-        merged[type] = combined;
-      });
-      paymentMethods = merged;
-      await savePaymentMethods();
+      paymentMethods = JSON.parse(res.value);
     }catch(err){ /* keep defaults */ }
   }
   async function savePaymentMethods(){
@@ -905,6 +863,9 @@
     let added = 0, updated = 0;
     activeMsi.forEach(({t, info})=>{
       const costo = Math.round(info.monthlyPayment * 100) / 100;
+      // "nombre" lleva texto tal cual lo escribiste (sin escapar) porque se guarda como dato plano.
+      // Es seguro porque CADA lugar que lo muestra (Presupuesto, Metas) pasa por escapeHtml() al pintar.
+      // No lo escapes aquí: haría doble-escape y se vería texto raro (&amp;lt; en vez de <, etc.) al mostrarlo.
       const nombre = `MSI: ${t.description ? t.description : t.category}`;
       const existing = budget.variables.find(i => i.msiTxId === t.id);
       if(existing){
