@@ -114,17 +114,6 @@
     "Ropa":"Variables","Salud":"Variables","Educación":"Variables","Mascotas":"Variables","Viajes":"Variables",
     "Cumpleaños":"Variables","Otros gastos":"Variables"
   };
-  // Migración de una sola vez (ver loadCategoryGroups): clasificaciones que antes vivían hardcodeadas
-  // en el código público. Se copian a tu cuenta la próxima vez que abras la app; después de eso este
-  // objeto puede borrarse del código sin perder nada.
-  const LEGACY_GROUP_MIGRATION = {
-    "Luz - Valle":"Fijos","Luz - Campestre":"Fijos","Luz - Elena":"Fijos","Agua - Valle":"Fijos","Agua - Elena":"Fijos",
-    "Wifi - Valle":"Fijos","Wifi - Elena":"Fijos","Wifi - Campestre":"Fijos","Vivienda":"Fijos","Servicios":"Fijos",
-    "Telcel - Celular":"Variables","Google":"Variables","Disney + Mercado Libre":"Variables","Servidor Host":"Variables","Amazon":"Variables",
-    "Cine":"Variables","Conciertos":"Variables","Uber":"Variables","Deportes":"Variables",
-    "IA":"Variables","Compras En Línea":"Variables","Mandado":"Variables","Remodelación":"Variables",
-    "Equipo de Trabajo":"Variables","Banco":"Variables","Amigos":"Variables","Facturas":"Variables"
-  };
   const BASE_CATEGORY_GROUPS = JSON.parse(JSON.stringify(CATEGORY_GROUPS)); // copia limpia, sin clasificaciones de ninguna cuenta
   const GROUP_ORDER = ["Fijos","Variables","Inversiones y seguros","Generales","Otras"];
 
@@ -334,20 +323,8 @@
     try{
       const res = await storageAdapter.get(CATGROUPS_KEY);
       customCategoryGroups = (res && res.value) ? JSON.parse(res.value) : {};
-      // Migración de una sola vez: las clasificaciones de LEGACY_GROUP_MIGRATION solo vivían en el
-      // código público (BASE_CATEGORY_GROUPS). Las copiamos a tu cuenta (customCategoryGroups) si
-      // todavía no las tienes guardadas ahí, para poder quitarlas del código sin perder tus totales
-      // de Fijos/Variables. Una vez migradas, LEGACY_GROUP_MIGRATION puede borrarse del código.
-      let migrated = false;
-      Object.keys(LEGACY_GROUP_MIGRATION).forEach(cat=>{
-        if(!(cat in customCategoryGroups)){
-          customCategoryGroups[cat] = LEGACY_GROUP_MIGRATION[cat];
-          migrated = true;
-        }
-      });
       Object.keys(CATEGORY_GROUPS).forEach(k => delete CATEGORY_GROUPS[k]);
       Object.assign(CATEGORY_GROUPS, BASE_CATEGORY_GROUPS, customCategoryGroups);
-      if(migrated) await saveCategoryGroups();
     }catch(err){
       customCategoryGroups = {};
       Object.keys(CATEGORY_GROUPS).forEach(k => delete CATEGORY_GROUPS[k]);
