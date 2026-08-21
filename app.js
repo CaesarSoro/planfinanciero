@@ -2110,11 +2110,20 @@
     }
     render();
     els.submitBtn.disabled = true;
-    try{
+    const savePromise = (async ()=>{
       await saveTransactions();
       if(txData.isMsi || wasMsi) await syncMsiToBudget();
-    } finally {
-      els.submitBtn.disabled = false;
+    })();
+    const timedOut = await Promise.race([
+      savePromise.then(()=> false),
+      new Promise(resolve => setTimeout(()=> resolve(true), 4000))
+    ]);
+    els.submitBtn.disabled = false;
+    if(timedOut){
+      // Firestore no rechaza ni resuelve mientras estás sin conexión: solo se queda esperando
+      // hasta que regrese el internet. Tu movimiento ya está guardado localmente y se sincroniza
+      // solo — esto es únicamente para que no parezca que la app se congeló.
+      showToast('Guardado sin conexión — se sincroniza cuando regrese el internet');
     }
 
     els.form.reset();
