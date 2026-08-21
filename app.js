@@ -165,6 +165,7 @@
   const fmt = new Intl.NumberFormat('es-MX', { style:'currency', currency:'MXN' });
 
   const els = {
+    toast: document.getElementById('toast'),
     authScreen: document.getElementById('authScreen'),
     appRoot: document.getElementById('appRoot'),
     authForm: document.getElementById('authForm'),
@@ -247,6 +248,7 @@
     periodYear: document.getElementById('periodYear'),
     periodDisplay: document.getElementById('periodDisplay'),
     filterSummaryToggle: document.getElementById('filterSummaryToggle'),
+    filterToggleLabel: document.getElementById('filterToggleLabel'),
     filterBarDetail: document.getElementById('filterBarDetail'),
     filterCaret: document.getElementById('filterCaret'),
     statIncome: document.getElementById('statIncome'),
@@ -285,6 +287,18 @@
   }
   function newId(){ return Date.now() + Math.floor(Math.random()*1000); }
 
+  /* ---------- Toast: aviso de guardado ---------- */
+  let toastTimer = null;
+  function showToast(message, isError){
+    if(!els.toast) return;
+    clearTimeout(toastTimer);
+    els.toast.textContent = message;
+    els.toast.classList.remove('success','error');
+    els.toast.classList.add(isError ? 'error' : 'success');
+    els.toast.classList.add('show');
+    toastTimer = setTimeout(()=>{ els.toast.classList.remove('show'); }, isError ? 4500 : 2000);
+  }
+
   /* ---------- Categories ---------- */
   async function loadCategories(){
     try{
@@ -292,16 +306,16 @@
       if(!res || !res.value){
         // Cuenta nueva sin nada guardado todavía: arranca con la lista genérica.
         categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
-        await saveCategories();
+        await saveCategories(true);
         isFirstTimeUser = true;
         return;
       }
       categories = JSON.parse(res.value);
     }catch(err){ /* keep defaults */ }
   }
-  async function saveCategories(){
-    try{ await storageAdapter.set(CAT_KEY, JSON.stringify(categories)); }
-    catch(err){ console.error('No se pudieron guardar las categorías:', err); }
+  async function saveCategories(silent){
+    try{ await storageAdapter.set(CAT_KEY, JSON.stringify(categories)); if(!silent) showToast('Guardado'); }
+    catch(err){ console.error('No se pudieron guardar las categorías:', err); if(!silent) showToast('Error, intenta de nuevo.', true); }
   }
   async function loadPaymentMethods(){
     try{
@@ -309,15 +323,15 @@
       if(!res || !res.value){
         // Cuenta nueva sin nada guardado todavía: arranca con formas de pago genéricas.
         paymentMethods = JSON.parse(JSON.stringify(DEFAULT_PAYMENT_OPTIONS));
-        await savePaymentMethods();
+        await savePaymentMethods(true);
         return;
       }
       paymentMethods = JSON.parse(res.value);
     }catch(err){ /* keep defaults */ }
   }
-  async function savePaymentMethods(){
-    try{ await storageAdapter.set(PAYMENT_KEY, JSON.stringify(paymentMethods)); }
-    catch(err){ console.error('No se pudieron guardar las formas de pago:', err); }
+  async function savePaymentMethods(silent){
+    try{ await storageAdapter.set(PAYMENT_KEY, JSON.stringify(paymentMethods)); if(!silent) showToast('Guardado'); }
+    catch(err){ console.error('No se pudieron guardar las formas de pago:', err); if(!silent) showToast('Error, intenta de nuevo.', true); }
   }
   async function loadCategoryGroups(){
     try{
@@ -332,8 +346,8 @@
     }
   }
   async function saveCategoryGroups(){
-    try{ await storageAdapter.set(CATGROUPS_KEY, JSON.stringify(customCategoryGroups)); }
-    catch(err){ console.error('No se pudieron guardar las clasificaciones de categoría:', err); }
+    try{ await storageAdapter.set(CATGROUPS_KEY, JSON.stringify(customCategoryGroups)); showToast('Guardado'); }
+    catch(err){ console.error('No se pudieron guardar las clasificaciones de categoría:', err); showToast('Error, intenta de nuevo.', true); }
   }
 
   function populateCategories(){
@@ -827,8 +841,8 @@
     }catch(err){ transactions = []; }
   }
   async function saveTransactions(){
-    try{ await storageAdapter.set(TX_KEY, JSON.stringify(transactions)); }
-    catch(err){ console.error('No se pudo guardar el movimiento:', err); }
+    try{ await storageAdapter.set(TX_KEY, JSON.stringify(transactions)); showToast('Guardado'); }
+    catch(err){ console.error('No se pudo guardar el movimiento:', err); showToast('Error, intenta de nuevo.', true); }
   }
 
   /* ---------- Budget (presupuesto) ---------- */
@@ -838,9 +852,9 @@
       budget = (res && res.value) ? JSON.parse(res.value) : JSON.parse(JSON.stringify(DEFAULT_BUDGET));
     }catch(err){ budget = JSON.parse(JSON.stringify(DEFAULT_BUDGET)); }
   }
-  async function saveBudget(){
-    try{ await storageAdapter.set(BUDGET_KEY, JSON.stringify(budget)); }
-    catch(err){ console.error('No se pudo guardar el presupuesto:', err); }
+  async function saveBudget(silent){
+    try{ await storageAdapter.set(BUDGET_KEY, JSON.stringify(budget)); if(!silent) showToast('Guardado'); }
+    catch(err){ console.error('No se pudo guardar el presupuesto:', err); if(!silent) showToast('Error, intenta de nuevo.', true); }
   }
   function monthlyEq(item){
     if(item.frecuencia === 'anual') return item.costo/12;
@@ -1265,8 +1279,8 @@
     }catch(err){ receivables = []; }
   }
   async function saveReceivables(){
-    try{ await storageAdapter.set(RECV_KEY, JSON.stringify(receivables)); }
-    catch(err){ console.error('No se pudieron guardar las cuentas por cobrar:', err); }
+    try{ await storageAdapter.set(RECV_KEY, JSON.stringify(receivables)); showToast('Guardado'); }
+    catch(err){ console.error('No se pudieron guardar las cuentas por cobrar:', err); showToast('Error, intenta de nuevo.', true); }
   }
   async function loadTravelBudgets(){
     try{
@@ -1275,8 +1289,8 @@
     }catch(err){ travelBudgets = []; }
   }
   async function saveTravelBudgets(){
-    try{ await storageAdapter.set(TRAVEL_KEY, JSON.stringify(travelBudgets)); }
-    catch(err){ console.error('No se pudieron guardar los viajes:', err); }
+    try{ await storageAdapter.set(TRAVEL_KEY, JSON.stringify(travelBudgets)); showToast('Guardado'); }
+    catch(err){ console.error('No se pudieron guardar los viajes:', err); showToast('Error, intenta de nuevo.', true); }
   }
   function computeGoalProgress(tb){
     const tipo = tb.tipo || 'gasto';
@@ -2095,8 +2109,13 @@
       transactions.push({ id: newId(), ...txData });
     }
     render();
-    await saveTransactions();
-    if(txData.isMsi || wasMsi) await syncMsiToBudget();
+    els.submitBtn.disabled = true;
+    try{
+      await saveTransactions();
+      if(txData.isMsi || wasMsi) await syncMsiToBudget();
+    } finally {
+      els.submitBtn.disabled = false;
+    }
 
     els.form.reset();
     els.date.value = todayStr();
@@ -2137,6 +2156,7 @@
     const showing = els.filterBarDetail.style.display !== 'none';
     els.filterBarDetail.style.display = showing ? 'none' : 'flex';
     els.filterCaret.textContent = showing ? '▾' : '▴';
+    els.filterToggleLabel.textContent = showing ? 'Ver más' : 'Ocultar';
   });
   els.periodToggle.addEventListener('click', (e)=>{
     const btn = e.target.closest('.period-btn');
@@ -2267,7 +2287,7 @@
     const validIds = new Set(transactions.filter(t=>t.isMsi).map(t=>t.id));
     const before = budget.variables.length;
     budget.variables = budget.variables.filter(i => !i.msiTxId || validIds.has(i.msiTxId));
-    if(budget.variables.length !== before) await saveBudget();
+    if(budget.variables.length !== before) await saveBudget(true);
   }
 
   async function loadAllDataAndRender(){

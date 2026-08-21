@@ -176,7 +176,7 @@
         <span class="filter-summary-value" id="periodDisplay"></span>
       </span>
     </span>
-    <span class="toggle-hint">Ver más <span class="resumen-caret" id="filterCaret">▾</span></span>
+    <span class="toggle-hint"><span id="filterToggleLabel">Ver más</span> <span class="resumen-caret" id="filterCaret">▾</span></span>
   </button>
   <div class="filter-bar" id="filterBarDetail" style="display:none;">
     <div class="period-toggle" id="periodToggle">
@@ -460,5 +460,7 @@
 </div>
 
 <script src="app.js"></script>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
 </body>
 </html>
