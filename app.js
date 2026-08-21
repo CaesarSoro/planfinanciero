@@ -1477,7 +1477,9 @@
   function msiInfo(t, refDate){
     const start = new Date(t.date + 'T00:00:00');
     const now = refDate || new Date();
-    let monthsElapsed = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth()) + 1;
+    // Sin el "+1": el mes de la compra cuenta como mes 0 (nada pagado todavía).
+    // La primera mensualidad se empieza a contar hasta el mes siguiente, como cobra tu tarjeta en la vida real.
+    let monthsElapsed = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
     monthsElapsed = Math.max(0, Math.min(monthsElapsed, t.months));
     const monthlyPayment = t.amount / t.months;
     const paid = monthlyPayment * monthsElapsed;
@@ -1499,12 +1501,12 @@
     if(periodMode === 'mes'){
       const [py, pm] = periodValue.split('-').map(Number);
       const offset = (py * 12 + (pm - 1)) - startIndex;
-      return (offset >= 0 && offset < t.months) ? monthly : 0;
+      return (offset >= 1 && offset <= t.months) ? monthly : 0;
     }
     if(periodMode === 'anio'){
       const py = Number(periodValue);
       let monthsInYear = 0;
-      for(let i = 0; i < t.months; i++){
+      for(let i = 1; i <= t.months; i++){
         if(Math.floor((startIndex + i) / 12) === py) monthsInYear++;
       }
       return monthly * monthsInYear;
@@ -1513,7 +1515,7 @@
       const pdate = new Date(periodValue + 'T00:00:00');
       if(pdate.getDate() !== start.getDate()) return 0;
       const offset = (pdate.getFullYear() * 12 + pdate.getMonth()) - startIndex;
-      return (offset >= 0 && offset < t.months) ? monthly : 0;
+      return (offset >= 1 && offset <= t.months) ? monthly : 0;
     }
     return 0;
   }
@@ -1527,17 +1529,17 @@
     if(periodMode === 'mes'){
       const [py, pm] = periodValue.split('-').map(Number);
       const offset = (py * 12 + (pm - 1)) - startIndex;
-      return offset >= 0 && offset < t.months;
+      return offset >= 0 && offset <= t.months;
     }
     if(periodMode === 'anio'){
       const py = Number(periodValue);
-      const planStart = startIndex, planEnd = startIndex + t.months - 1;
+      const planStart = startIndex, planEnd = startIndex + t.months;
       return planStart <= (py * 12 + 11) && planEnd >= (py * 12);
     }
     if(periodMode === 'dia'){
       const pdate = new Date(periodValue + 'T00:00:00');
       const offset = (pdate.getFullYear() * 12 + pdate.getMonth()) - startIndex;
-      return offset >= 0 && offset < t.months;
+      return offset >= 0 && offset <= t.months;
     }
     return true;
   }
@@ -1920,7 +1922,7 @@
           ${fixRow}
           <div class="msi-track"><div class="msi-fill" style="width:${pct}%;"></div></div>
           <div class="msi-meta">
-            <span>Mensualidad ${fmt.format(info.monthlyPayment)} · mes ${info.monthsElapsed}/${t.months}</span>
+            <span>Mensualidad ${fmt.format(info.monthlyPayment)} · ${info.monthsElapsed === 0 ? 'empieza el próximo mes' : 'mes ' + info.monthsElapsed + '/' + t.months}</span>
             <span class="${info.finished ? 'done' : 'rem'}">${info.finished ? 'Liquidada' : 'Faltan ' + fmt.format(info.remaining)}</span>
           </div>
         </div>`;
@@ -1979,7 +1981,7 @@
           msiMini = `<div class="msi-progress-mini">
             <div class="msi-track"><div class="msi-fill" style="width:${pct}%;"></div></div>
             <div class="msi-meta">
-              <span>mes ${info.monthsElapsed}/${t.months} · ${fmt.format(info.monthlyPayment)}/mes</span>
+              <span>${info.monthsElapsed === 0 ? 'Empieza el próximo mes' : 'mes ' + info.monthsElapsed + '/' + t.months} · ${fmt.format(info.monthlyPayment)}/mes</span>
               <span class="${info.finished ? 'done' : 'rem'}">${info.finished ? 'Liquidada' : 'Faltan ' + fmt.format(info.remaining)}</span>
             </div>
           </div>`;
