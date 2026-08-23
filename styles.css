@@ -58,6 +58,11 @@
   .period-btn.active{background:var(--gold);color:#fff;border-color:var(--gold);}
   .period-btn:hover:not(.active){border-color:var(--gold);color:var(--ink);}
   .period-input{padding:7px 10px;font-size:13px;border:1px solid var(--line);border-radius:6px;background:var(--input-bg);font-family:'Montserrat',sans-serif;color:var(--ink);}
+  .ledger-filter-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+  .ledger-filter-input{flex:1;min-width:0;padding:9px 12px;font-size:13.5px;border:1px solid var(--line);border-radius:8px;background:var(--input-bg);font-family:'Montserrat',sans-serif;color:var(--ink);}
+  .ledger-filter-input:focus{outline:none;border-color:var(--gold);}
+  .ledger-filter-clear{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;flex-shrink:0;border:1px solid var(--line);border-radius:8px;background:none;color:var(--ink-soft);cursor:pointer;font-size:14px;}
+  .ledger-filter-clear:hover{border-color:var(--expense-soft);color:var(--expense);}
   .period-nav{display:flex;align-items:center;gap:6px;}
   .period-nav-btn{width:32px;height:32px;flex-shrink:0;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);font-size:16px;line-height:1;cursor:pointer;}
   .period-nav-btn:hover{border-color:var(--gold);color:var(--ink);}

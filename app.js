@@ -149,6 +149,7 @@
   const FREQ_MONTHS = {mensual:1, bimestral:2, trimestral:3, cuatrimestral:4, semestral:6, anual:12};
 
   let transactions = [];
+  let categoryFilterText = '';
   let categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
   let paymentMethods = JSON.parse(JSON.stringify(DEFAULT_PAYMENT_OPTIONS));
   let budget = JSON.parse(JSON.stringify(DEFAULT_BUDGET));
@@ -265,6 +266,9 @@
     expenseDonut: document.getElementById('expenseDonut'),
     incomeDonut: document.getElementById('incomeDonut'),
     ledgerList: document.getElementById('ledgerList'),
+    categoryFilterInput: document.getElementById('categoryFilterInput'),
+    categoryFilterList: document.getElementById('categoryFilterList'),
+    categoryFilterClear: document.getElementById('categoryFilterClear'),
     msiCard: document.getElementById('msiCard'),
     msiPanel: document.getElementById('msiPanel'),
     msiToggle: document.getElementById('msiToggle'),
@@ -1959,9 +1963,17 @@
     if(transactions.length === 0){
       els.ledgerList.innerHTML = '<p class="ledger-empty">Aún no registras movimientos. Agrega el primero desde el formulario.</p>';
     } else {
-      const sorted = transactions.filter(t=>isInPeriod(t.date)).sort((a,b)=> b.date.localeCompare(a.date) || b.id - a.id);
+      const catFilter = categoryFilterText.trim().toLowerCase();
+      els.categoryFilterList.innerHTML = [...new Set(transactions.map(t=>t.category))].sort()
+        .map(c=>`<option value="${escapeHtml(c)}"></option>`).join('');
+      els.categoryFilterClear.style.display = catFilter ? 'inline-flex' : 'none';
+      const sorted = transactions
+        .filter(t=> isInPeriod(t.date) && (!catFilter || t.category.toLowerCase().includes(catFilter)))
+        .sort((a,b)=> b.date.localeCompare(a.date) || b.id - a.id);
       if(sorted.length === 0){
-        els.ledgerList.innerHTML = '<p class="ledger-empty">Sin movimientos en este periodo.</p>';
+        els.ledgerList.innerHTML = catFilter
+          ? `<p class="ledger-empty">Sin movimientos de "${escapeHtml(categoryFilterText)}" en este periodo.</p>`
+          : '<p class="ledger-empty">Sin movimientos en este periodo.</p>';
         return;
       }
       els.ledgerList.innerHTML = `<div class="ledger-list">` + sorted.map(t=>{
@@ -2173,6 +2185,20 @@
     els.filterBarDetail.style.display = showing ? 'none' : 'flex';
     els.filterCaret.textContent = showing ? '▾' : '▴';
     els.filterToggleLabel.textContent = showing ? 'Ver más' : 'Ocultar';
+  });
+  let categoryFilterTimer = null;
+  els.categoryFilterInput.addEventListener('input', ()=>{
+    clearTimeout(categoryFilterTimer);
+    categoryFilterTimer = setTimeout(()=>{
+      categoryFilterText = els.categoryFilterInput.value;
+      render();
+    }, 200);
+  });
+  els.categoryFilterClear.addEventListener('click', ()=>{
+    categoryFilterText = '';
+    els.categoryFilterInput.value = '';
+    render();
+    els.categoryFilterInput.focus();
   });
   els.periodToggle.addEventListener('click', (e)=>{
     const btn = e.target.closest('.period-btn');
