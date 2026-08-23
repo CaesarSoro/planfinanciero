@@ -969,7 +969,7 @@
         <span class="subtotal">${fmt.format(total)}/mes</span>
       </div>
       ${syncBtn}
-      ${rows}
+      <div class="budget-rows-scroll">${rows}</div>
       <div class="budget-add-row">
         <input type="text" placeholder="Nombre" class="b-name" data-group="${meta.key}">
         <input type="number" placeholder="Costo" min="0" step="0.01" class="b-cost" data-group="${meta.key}">
@@ -1019,7 +1019,7 @@
         } else {
           diffText = diff > 0 ? `${fmt.format(diff)} por encima` : `${fmt.format(Math.abs(diff))} por debajo`;
         }
-        return `<div class="cc-group">
+        return `<div class="cc-group" style="border-left-color:${r.color};">
           <div class="cc-label" style="color:${r.color};">${escapeHtml(r.label)}</div>
           <div class="cc-row">
             <div class="cc-tag-full">Presupuestado</div>
