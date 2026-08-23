@@ -941,7 +941,7 @@
           <div class="budget-row-main">
             <button type="button" class="budget-row-toggle" data-toggle="${itemKey}">
               <span class="budget-name">${escapeHtml(i.nombre)}</span>
-              <span class="budget-equiv-compact">${fmt.format(monthlyEq(i))}</span>
+              <span class="budget-equiv-compact">${fmt.format(monthlyEq(i))}${i.frecuencia !== 'mensual' ? '<span class="budget-equiv-note">/mes eq.</span>' : ''}</span>
               <span class="budget-caret">${isOpen ? '▴' : '▾'}</span>
             </button>
             <div class="budget-row-actions">
@@ -952,6 +952,7 @@
           <div class="budget-row-detail" style="display:${isOpen ? 'block' : 'none'};">
             <div class="budget-detail-line"><span>Frecuencia</span><span>${FREQ_LABELS[i.frecuencia] || i.frecuencia}</span></div>
             <div class="budget-detail-line"><span>Costo (${FREQ_LABELS[i.frecuencia] || i.frecuencia})</span><span>${fmt.format(i.costo)}</span></div>
+            ${i.frecuencia !== 'mensual' ? `<div class="budget-detail-line"><span>Equivalente mensual</span><span>${fmt.format(monthlyEq(i))}</span></div>` : ''}
           </div>
         </div>`;
         }).join('')
@@ -986,10 +987,14 @@
   }
 
   function buildBudgetCompareChart(){
-    const totalFijos = groupTotal('fijos');
-    const totalVariables = groupTotal('variables');
-    const totalInversiones = groupTotal('inversiones');
-    const totalIngresos = groupTotal('ingresos');
+    // Presupuestado normalmente es el equivalente mensual. Si el filtro está en "Año",
+    // lo anualizamos (×12) para que sí se compare justo contra Real, que en ese filtro
+    // suma el año completo — antes esto se quedaba en mensual y la comparación salía mal.
+    const scale = periodMode === 'anio' ? 12 : 1;
+    const totalFijos = groupTotal('fijos') * scale;
+    const totalVariables = groupTotal('variables') * scale;
+    const totalInversiones = groupTotal('inversiones') * scale;
+    const totalIngresos = groupTotal('ingresos') * scale;
     const { realFijos, realVariables, realInversiones, realIngresos } = computeRealTotals();
     const rows = [
       { label:'Gastos fijos', presu:totalFijos, real:realFijos, color:'var(--expense)', lowerIsBetter:true },
@@ -1035,7 +1040,7 @@
       <div class="compare-title">Presupuestado vs. real — ${escapeHtml(periodLabel())}<button type="button" class="help-icon" data-help="real">?</button></div>
       ${buildBudgetCompareChart()}
       <p class="backup-note" style="margin-top:8px;">"Inversiones y seguros" solo compara categorías de gasto que hayas clasificado así al crearlas.</p>
-      <p class="backup-note" style="margin-top:6px;">Si tienes gastos trimestrales o anuales (como seguros), Presupuestado siempre muestra su equivalente mensual, pero Real muestra el cobro completo solo en el mes que se aplica. Para comparar de forma justa, cambia el filtro de arriba a "Año".</p>
+      <p class="backup-note" style="margin-top:6px;">Si tienes gastos que no son mensuales (bimestrales, trimestrales, cuatrimestrales, semestrales o anuales, como seguros), Presupuestado normalmente muestra su equivalente mensual, pero Real muestra el cobro completo solo en el mes que se aplica. Cambia el filtro de arriba a "Año" para comparar el total anual de ambos de forma justa.</p>
     </div>`;
   }
 
@@ -2351,9 +2356,9 @@
   function attachRealtimeListeners(){
     detachRealtimeListeners();
     const col = fbDb.collection('users').doc(currentUser.uid).collection('appData');
-    realtimeUnsubs.push(col.doc(TX_KEY).onSnapshot(snap=>{
+    realtimeUnsubs.push(col.doc(TX_KEY).onSnapshot(async snap=>{
       if(!snap.exists) return;
-      try{ transactions = JSON.parse(snap.data().value) || []; pruneOrphanedMsiBudgetLines(); render(); }catch(err){}
+      try{ transactions = JSON.parse(snap.data().value) || []; await pruneOrphanedMsiBudgetLines(); render(); }catch(err){}
     }));
     realtimeUnsubs.push(col.doc(CAT_KEY).onSnapshot(snap=>{
       if(!snap.exists) return;
