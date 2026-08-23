@@ -145,7 +145,8 @@
     {key:"inversiones", label:"Inversiones y seguros"},
     {key:"ingresos", label:"Ingresos fijos"},
   ];
-  const FREQ_LABELS = {mensual:"Mensual", trimestral:"Trimestral", anual:"Anual"};
+  const FREQ_LABELS = {mensual:"Mensual", bimestral:"Bimestral", trimestral:"Trimestral", cuatrimestral:"Cuatrimestral", semestral:"Semestral", anual:"Anual"};
+  const FREQ_MONTHS = {mensual:1, bimestral:2, trimestral:3, cuatrimestral:4, semestral:6, anual:12};
 
   let transactions = [];
   let categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
@@ -857,9 +858,7 @@
     catch(err){ console.error('No se pudo guardar el presupuesto:', err); if(!silent) showToast('Error, intenta de nuevo.', true); }
   }
   function monthlyEq(item){
-    if(item.frecuencia === 'anual') return item.costo/12;
-    if(item.frecuencia === 'trimestral') return item.costo/3;
-    return item.costo;
+    return item.costo / (FREQ_MONTHS[item.frecuencia] || 1);
   }
   function groupTotal(key){
     return (budget[key]||[]).reduce((s,i)=> s + monthlyEq(i), 0);
@@ -922,7 +921,10 @@
               <input type="number" class="be-cost" data-group="${meta.key}" data-id="${i.id}" min="0" step="0.01" value="${i.costo}">
               <select class="be-freq" data-group="${meta.key}" data-id="${i.id}">
                 <option value="mensual" ${i.frecuencia==='mensual'?'selected':''}>Mensual</option>
+                <option value="bimestral" ${i.frecuencia==='bimestral'?'selected':''}>Bimestral</option>
                 <option value="trimestral" ${i.frecuencia==='trimestral'?'selected':''}>Trimestral</option>
+                <option value="cuatrimestral" ${i.frecuencia==='cuatrimestral'?'selected':''}>Cuatrimestral</option>
+                <option value="semestral" ${i.frecuencia==='semestral'?'selected':''}>Semestral</option>
                 <option value="anual" ${i.frecuencia==='anual'?'selected':''}>Anual</option>
               </select>
               <button type="button" class="budget-save" data-group="${meta.key}" data-id="${i.id}" title="Guardar">✓</button>
@@ -968,7 +970,10 @@
         <input type="number" placeholder="Costo" min="0" step="0.01" class="b-cost" data-group="${meta.key}">
         <select class="b-freq" data-group="${meta.key}">
           <option value="mensual">Mensual</option>
+          <option value="bimestral">Bimestral</option>
           <option value="trimestral">Trimestral</option>
+          <option value="cuatrimestral">Cuatrimestral</option>
+          <option value="semestral">Semestral</option>
           <option value="anual">Anual</option>
         </select>
         <button type="button" class="b-add" data-group="${meta.key}">Agregar</button>
