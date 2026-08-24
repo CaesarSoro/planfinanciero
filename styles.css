@@ -131,6 +131,8 @@
   .type-toggle button.active[data-type="ahorro"]{background:var(--gold);color:#fff;}
   .type-toggle button.active[data-subtype="aporte"]{background:var(--income);color:#fff;}
   .type-toggle button.active[data-subtype="retiro"]{background:var(--expense);color:#fff;}
+  .type-toggle button.active[data-moneda="MXN"]{background:var(--ink);color:var(--surface);}
+  .type-toggle button.active[data-moneda="USD"]{background:var(--gold);color:#fff;}
 
   .tabs{display:flex;border-bottom:1px solid var(--line);margin-bottom:20px;gap:0;}
   .tab-btn{flex:1;min-width:0;background:none;border:none;border-bottom:3px solid transparent;border-radius:0;padding:12px 8px;font-family:'Montserrat',sans-serif;font-weight:600;font-size:12px;letter-spacing:.02em;text-transform:uppercase;color:var(--ink-soft);cursor:pointer;transition:color .15s, border-color .15s;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
