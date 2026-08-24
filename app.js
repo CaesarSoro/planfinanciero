@@ -1604,6 +1604,17 @@
     });
     return inAll - outAll;
   }
+  // Igual que computeAllTimeSavingsFund pero desglosado por categoría (Ahorro Emergencia,
+  // Inversiones, etc.) — para ver cómo está repartido tu fondo de ahorro, no solo el total.
+  function computeSavingsFundByCategory(){
+    const byCat = {};
+    transactions.forEach(t=>{
+      if(t.type !== 'ahorro') return;
+      const amt = t.subtype === 'retiro' ? -t.amount : t.amount;
+      byCat[t.category] = (byCat[t.category] || 0) + amt;
+    });
+    return Object.entries(byCat).filter(([,v])=> v > 0).sort((a,b)=> b[1]-a[1]);
+  }
   let _expenseCache = null;
   function buildExpenseBreakdownCache(){
     const byCategory = {}, byGroup = {}, byPayment = {}, byGroupCategory = {};
@@ -1835,8 +1846,15 @@
 
     const savingsMoves = transactions.filter(t=>t.type==='ahorro' && isInPeriod(t.date)).sort((a,b)=> b.date.localeCompare(a.date) || b.id - a.id);
     const savingsByFund = computeSavingsByFund();
+    const savingsFundByCategory = computeSavingsFundByCategory();
     let savingsHtml = `<div class="savings-total">${fmt.format(savingsFundTotal)}</div>
       <p class="backup-note" style="margin-top:-10px;margin-bottom:14px;">Saldo acumulado histórico (no cambia con el filtro de periodo)</p>`;
+    if(savingsFundByCategory.length > 0){
+      savingsHtml += `<div class="savings-diversification">
+        <div class="savings-diversification-title">Cómo está repartido tu fondo</div>
+        ${buildDonutHtml(savingsFundByCategory, 'Ahorro', 130)}
+      </div>`;
+    }
     savingsHtml += `<div class="savings-mini-stats">
       <div><span class="lbl">Aportado (${escapeHtml(periodLabel())})</span><span class="val" style="color:var(--income);">${fmt.format(savingsIn)}</span></div>
       <div><span class="lbl">Retirado (${escapeHtml(periodLabel())})</span><span class="val" style="color:var(--expense);">${fmt.format(savingsOut)}</span></div>
