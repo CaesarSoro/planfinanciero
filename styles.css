@@ -331,7 +331,7 @@
 
   .savings-total{font-family:'IBM Plex Mono',monospace;font-size:30px;color:var(--gold);margin-bottom:14px;font-variant-numeric:tabular-nums;}
   .savings-total-usd{font-family:'IBM Plex Mono',monospace;font-size:18px;color:var(--ink-soft);margin-bottom:14px;font-variant-numeric:tabular-nums;}
-  .savings-diversification{padding:16px 0 8px;margin-bottom:6px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+  .savings-diversification{padding:10px 0 2px;}
   .savings-diversification-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);margin-bottom:12px;}
   .savings-mini-stats{display:flex;gap:28px;margin-bottom:16px;}
   .savings-mini-stats .lbl{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:3px;}
