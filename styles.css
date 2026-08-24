@@ -370,7 +370,7 @@
   .budget-row-compact{border-bottom:1px dashed var(--line);}
   .budget-row-compact:last-child{border-bottom:none;}
   .budget-row-main{display:flex;align-items:center;gap:4px;padding:8px 0;}
-  .budget-row-toggle{display:flex;align-items:center;gap:8px;flex:1;min-width:0;background:none;border:none;cursor:pointer;padding:2px 0;font-family:inherit;text-align:left;}
+  .budget-row-toggle{display:flex;align-items:center;gap:8px;flex:1;min-width:0;background:none;border:none;cursor:pointer;padding:2px 0;font-family:inherit;color:var(--ink);text-align:left;}
   .budget-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12.5px;}
   .budget-equiv-compact{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;flex-shrink:0;}
   .budget-equiv-note{font-family:'Montserrat',sans-serif;font-size:9.5px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.02em;margin-left:4px;}
@@ -393,6 +393,8 @@
   .budget-add-row{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
   .budget-add-row input[type=text]{flex:1.6 1 120px;}
   .budget-add-row input[type=number]{flex:1 1 80px;}
+  .b-add,.rec-abono-btn{padding:8px 16px;border:none;border-radius:6px;background:var(--ink);color:var(--surface);font-family:'Montserrat',sans-serif;font-weight:600;font-size:13px;cursor:pointer;}
+  .b-add:hover,.rec-abono-btn:hover{background:#3A4133;}
   .budget-add-row select{flex:1 1 100px;}
   .budget-add-row input,.budget-add-row select{padding:6px 8px;font-size:12px;border:1px solid var(--line);border-radius:6px;}
   .budget-add-row button{padding:6px 12px;font-size:12px;font-weight:600;border:none;border-radius:6px;background:var(--ink);color:#fff;cursor:pointer;flex-shrink:0;}
