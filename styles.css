@@ -328,6 +328,7 @@
   .msi-meta .rem{color:var(--expense);font-weight:600;} .msi-meta .done{color:var(--income);font-weight:600;}
 
   .savings-total{font-family:'IBM Plex Mono',monospace;font-size:30px;color:var(--gold);margin-bottom:14px;font-variant-numeric:tabular-nums;}
+  .savings-total-usd{font-family:'IBM Plex Mono',monospace;font-size:18px;color:var(--ink-soft);margin-bottom:14px;font-variant-numeric:tabular-nums;}
   .savings-diversification{padding:16px 0 8px;margin-bottom:6px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
   .savings-diversification-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);margin-bottom:12px;}
   .savings-mini-stats{display:flex;gap:28px;margin-bottom:16px;}
@@ -407,6 +408,7 @@
   .ledger-msi-badge{font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;color:#fff;background:var(--gold);padding:2px 6px;border-radius:20px;flex-shrink:0;}
   .ledger-subtype-badge{font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;padding:2px 6px;border-radius:20px;flex-shrink:0;}
   .ledger-subtype-badge.aporte{background:var(--income-soft);color:var(--income);} .ledger-subtype-badge.retiro{background:var(--expense-soft);color:var(--expense);}
+  .ledger-moneda-badge{font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;padding:2px 6px;border-radius:20px;flex-shrink:0;background:var(--gold-soft);color:var(--gold);}
   .ledger-amount{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;flex-shrink:0;margin-left:auto;}
   .ledger-amount.ingreso{color:var(--income);} .ledger-amount.gasto{color:var(--expense);} .ledger-amount.ahorro{color:var(--gold);}
   .ledger-del{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:18px;line-height:1;padding:4px 2px 4px 8px;flex-shrink:0;}

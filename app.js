@@ -160,6 +160,7 @@
   let customCategoryGroups = {}; // categorías nuevas que el usuario clasificó como Fijo/Variable/Inversión/General
   let currentType = "gasto";
   let currentSubtype = "aporte";
+  let currentMoneda = "MXN";
   let editingTransactionId = null;
   let editingTravelId = null;
   let isFirstTimeUser = false;
@@ -211,6 +212,8 @@
     typeToggle: document.getElementById('typeToggle'),
     ahorroSubtypeField: document.getElementById('ahorroSubtypeField'),
     ahorroSubtypeToggle: document.getElementById('ahorroSubtypeToggle'),
+    ahorroMonedaField: document.getElementById('ahorroMonedaField'),
+    ahorroMonedaToggle: document.getElementById('ahorroMonedaToggle'),
     categoryFieldWrap: document.getElementById('categoryFieldWrap'),
     categoryLabel: document.getElementById('categoryLabel'),
     category: document.getElementById('category'),
@@ -785,6 +788,14 @@
     });
     updateFieldLabels();
   });
+  els.ahorroMonedaToggle.addEventListener('click', (e)=>{
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    currentMoneda = btn.dataset.moneda;
+    [...els.ahorroMonedaToggle.querySelectorAll('button')].forEach(b=>{
+      b.classList.toggle('active', b.dataset.moneda === currentMoneda);
+    });
+  });
 
   function setType(type){
     currentType = type;
@@ -800,6 +811,13 @@
     els.catChips.style.display = 'none';
     els.toggleCatChips.textContent = 'Gestionar categorías (editar grupo / eliminar) ▾';
     els.ahorroSubtypeField.style.display = isAhorro ? 'block' : 'none';
+    els.ahorroMonedaField.style.display = isAhorro ? 'block' : 'none';
+    if(!isAhorro){
+      currentMoneda = 'MXN';
+      [...els.ahorroMonedaToggle.querySelectorAll('button')].forEach(b=>{
+        b.classList.toggle('active', b.dataset.moneda === 'MXN');
+      });
+    }
     populateCategories();
     populatePaymentMethods();
     updateFieldLabels();
@@ -1576,7 +1594,9 @@
       }
       if(!isInPeriod(t.date)) return;
       if(t.type === 'ingreso') income += t.amount;
-      else if(t.type === 'ahorro'){
+      // Solo ahorro en pesos afecta el balance en pesos — un aporte en dólares no debe
+      // restarse como si fuera pesos.
+      else if(t.type === 'ahorro' && (t.moneda || 'MXN') === 'MXN'){
         if(t.subtype === 'retiro') savingsOut += t.amount; else savingsIn += t.amount;
       }
     });
@@ -1590,26 +1610,28 @@
     transactions.forEach(t=>{
       if(t.type === 'ingreso') income += t.amount;
       else if(t.type === 'gasto') expense += expenseContribution(t);
-      else if(t.type === 'ahorro'){
+      else if(t.type === 'ahorro' && (t.moneda || 'MXN') === 'MXN'){
         if(t.subtype === 'retiro') savingsOut += t.amount; else savingsIn += t.amount;
       }
     });
     return income - expense - (savingsIn - savingsOut);
   }
-  function computeAllTimeSavingsFund(){
+  function computeAllTimeSavingsFund(moneda){
+    moneda = moneda || 'MXN';
     let inAll = 0, outAll = 0;
     transactions.forEach(t=>{
-      if(t.type !== 'ahorro') return;
+      if(t.type !== 'ahorro' || (t.moneda || 'MXN') !== moneda) return;
       if(t.subtype === 'retiro') outAll += t.amount; else inAll += t.amount;
     });
     return inAll - outAll;
   }
   // Igual que computeAllTimeSavingsFund pero desglosado por categoría (Ahorro Emergencia,
   // Inversiones, etc.) — para ver cómo está repartido tu fondo de ahorro, no solo el total.
-  function computeSavingsFundByCategory(){
+  function computeSavingsFundByCategory(moneda){
+    moneda = moneda || 'MXN';
     const byCat = {};
     transactions.forEach(t=>{
-      if(t.type !== 'ahorro') return;
+      if(t.type !== 'ahorro' || (t.moneda || 'MXN') !== moneda) return;
       const amt = t.subtype === 'retiro' ? -t.amount : t.amount;
       byCat[t.category] = (byCat[t.category] || 0) + amt;
     });
@@ -1732,9 +1754,10 @@
       <div class="donut-legend">${legend}</div>
     </div>`;
   }
-  function computeSavingsByFund(){
+  function computeSavingsByFund(moneda){
+    moneda = moneda || 'MXN';
     const byFund = {};
-    transactions.filter(t=>t.type==='ahorro' && isInPeriod(t.date)).forEach(t=>{
+    transactions.filter(t=>t.type==='ahorro' && isInPeriod(t.date) && (t.moneda||'MXN')===moneda).forEach(t=>{
       const net = t.subtype === 'retiro' ? -t.amount : t.amount;
       byFund[t.category] = (byFund[t.category]||0) + net;
     });
@@ -1845,20 +1868,45 @@
     }
 
     const savingsMoves = transactions.filter(t=>t.type==='ahorro' && isInPeriod(t.date)).sort((a,b)=> b.date.localeCompare(a.date) || b.id - a.id);
-    const savingsByFund = computeSavingsByFund();
-    const savingsFundByCategory = computeSavingsFundByCategory();
-    let savingsHtml = `<div class="savings-total">${fmt.format(savingsFundTotal)}</div>
-      <p class="backup-note" style="margin-top:-10px;margin-bottom:14px;">Saldo acumulado histórico (no cambia con el filtro de periodo)</p>`;
+    const hasUsdActivity = transactions.some(t=>t.type==='ahorro' && t.moneda==='USD');
+    const savingsByFund = computeSavingsByFund('MXN');
+    const savingsFundByCategory = computeSavingsFundByCategory('MXN');
+    let savingsIn_USD = 0, savingsOut_USD = 0;
+    transactions.forEach(t=>{
+      if(t.type==='ahorro' && isInPeriod(t.date) && t.moneda==='USD'){
+        if(t.subtype==='retiro') savingsOut_USD += t.amount; else savingsIn_USD += t.amount;
+      }
+    });
+    let savingsHtml = `<div class="savings-total">${fmt.format(savingsFundTotal)}</div>`;
+    if(hasUsdActivity){
+      savingsHtml += `<div class="savings-total-usd">${fmt.format(computeAllTimeSavingsFund('USD'))} USD</div>`;
+    }
+    savingsHtml += `<p class="backup-note" style="margin-top:${hasUsdActivity ? '2px' : '-10px'};margin-bottom:14px;">Saldo acumulado histórico (no cambia con el filtro de periodo)${hasUsdActivity ? ' · pesos y dólares se muestran por separado, sin convertir' : ''}</p>`;
     if(savingsFundByCategory.length > 0){
       savingsHtml += `<div class="savings-diversification">
-        <div class="savings-diversification-title">Cómo está repartido tu fondo</div>
+        <div class="savings-diversification-title">Cómo está repartido tu fondo${hasUsdActivity ? ' (MXN)' : ''}</div>
         ${buildDonutHtml(savingsFundByCategory, 'Ahorro', 130)}
       </div>`;
+    }
+    if(hasUsdActivity){
+      const savingsFundByCategoryUSD = computeSavingsFundByCategory('USD');
+      if(savingsFundByCategoryUSD.length > 0){
+        savingsHtml += `<div class="savings-diversification">
+          <div class="savings-diversification-title">Cómo está repartido tu fondo (USD)</div>
+          ${buildDonutHtml(savingsFundByCategoryUSD, 'Ahorro USD', 130)}
+        </div>`;
+      }
     }
     savingsHtml += `<div class="savings-mini-stats">
       <div><span class="lbl">Aportado (${escapeHtml(periodLabel())})</span><span class="val" style="color:var(--income);">${fmt.format(savingsIn)}</span></div>
       <div><span class="lbl">Retirado (${escapeHtml(periodLabel())})</span><span class="val" style="color:var(--expense);">${fmt.format(savingsOut)}</span></div>
     </div>`;
+    if(hasUsdActivity && (savingsIn_USD > 0 || savingsOut_USD > 0)){
+      savingsHtml += `<div class="savings-mini-stats">
+        <div><span class="lbl">Aportado USD (${escapeHtml(periodLabel())})</span><span class="val" style="color:var(--income);">${fmt.format(savingsIn_USD)} USD</span></div>
+        <div><span class="lbl">Retirado USD (${escapeHtml(periodLabel())})</span><span class="val" style="color:var(--expense);">${fmt.format(savingsOut_USD)} USD</span></div>
+      </div>`;
+    }
     if(savingsByFund.length > 0){
       const maxFund = Math.max(...savingsByFund.map(([,amt])=>Math.abs(amt)));
       savingsHtml += savingsByFund.map(([fund, amt], i)=>{
@@ -1878,6 +1926,7 @@
         const shortDate = t.date.slice(5).split('-').reverse().join('/');
         const desc = t.description ? t.description : t.category;
         const sign = t.subtype === 'retiro' ? '−' : '+';
+        const monedaBadge = t.moneda === 'USD' ? '<span class="ledger-moneda-badge">USD</span>' : '';
         return `<div class="ledger-row">
           <div class="ledger-row-line1">
             <span class="ledger-date">${shortDate}</span>
@@ -1887,8 +1936,9 @@
             <div class="ledger-badges">
               <span class="ledger-cat">${escapeHtml(t.category)}</span>
               <span class="ledger-subtype-badge ${t.subtype}">${t.subtype === 'retiro' ? 'Retiro' : 'Aporte'}</span>
+              ${monedaBadge}
             </div>
-            <span class="ledger-amount ${t.subtype}">${sign} ${fmt.format(t.amount)}</span>
+            <span class="ledger-amount ${t.subtype}">${sign} ${fmt.format(t.amount)}${t.moneda === 'USD' ? ' USD' : ''}</span>
           </div>
         </div>`;
       }).join('');
@@ -2014,6 +2064,7 @@
         const payBadge = `<span class="ledger-pay">${escapeHtml(t.paymentMethod || 'Efectivo')}</span>`;
         const msiBadge = t.isMsi ? `<span class="ledger-msi-badge">MSI</span>` : '';
         const subtypeBadge = t.type === 'ahorro' ? `<span class="ledger-subtype-badge ${t.subtype}">${t.subtype === 'retiro' ? 'Retiro' : 'Aporte'}</span>` : '';
+        const monedaBadge = (t.type === 'ahorro' && t.moneda === 'USD') ? `<span class="ledger-moneda-badge">USD</span>` : '';
         let msiMini = '';
         if(t.isMsi){
           const info = msiInfo(t, msiRefDate);
@@ -2039,8 +2090,9 @@
               ${payBadge}
               ${msiBadge}
               ${subtypeBadge}
+              ${monedaBadge}
             </div>
-            <span class="ledger-amount ${t.type}">${sign} ${fmt.format(t.amount)}</span>
+            <span class="ledger-amount ${t.type}">${sign} ${fmt.format(t.amount)}${t.moneda === 'USD' ? ' USD' : ''}</span>
           </div>
           ${msiMini}
         </div>`;
@@ -2078,6 +2130,10 @@
       currentSubtype = t.subtype || 'aporte';
       [...els.ahorroSubtypeToggle.querySelectorAll('button')].forEach(btn=>{
         btn.classList.toggle('active', btn.dataset.subtype === currentSubtype);
+      });
+      currentMoneda = t.moneda || 'MXN';
+      [...els.ahorroMonedaToggle.querySelectorAll('button')].forEach(btn=>{
+        btn.classList.toggle('active', btn.dataset.moneda === currentMoneda);
       });
     }
     els.amount.value = t.amount;
@@ -2131,6 +2187,7 @@
     };
     if(currentType === 'ahorro'){
       txData.subtype = currentSubtype;
+      txData.moneda = currentMoneda;
     } else {
       txData.isMsi = currentType === 'gasto' && els.isMsi.checked;
       if(txData.isMsi) txData.months = Math.max(2, parseInt(els.msiMonths.value, 10) || 3);
