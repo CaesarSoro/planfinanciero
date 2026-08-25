@@ -273,8 +273,6 @@
     incomeDonut: document.getElementById('incomeDonut'),
     ledgerList: document.getElementById('ledgerList'),
     categoryFilterInput: document.getElementById('categoryFilterInput'),
-    categoryFilterList: document.getElementById('categoryFilterList'),
-    categoryFilterClear: document.getElementById('categoryFilterClear'),
     msiCard: document.getElementById('msiCard'),
     msiPanel: document.getElementById('msiPanel'),
     msiToggle: document.getElementById('msiToggle'),
@@ -1737,13 +1735,12 @@
       return `${colorMap[label] || '#8a8578'} ${start}% ${acc}%`;
     }).join(', ');
     return `<div class="donut-chart-solo">
-      <div class="donut-chart" style="width:${size}px;height:${size}px;background:conic-gradient(${stops});">
-        <div class="donut-hole"><span class="donut-total"><span class="donut-total-lbl">${escapeHtml(totalLabel)}</span>${fmt.format(total)}</span></div>
-      </div>
+      <div class="donut-caption"><span class="donut-caption-lbl">${escapeHtml(totalLabel)}</span>${fmt.format(total)}</div>
+      <div class="donut-chart" style="width:${size}px;height:${size}px;background:conic-gradient(${stops});"></div>
     </div>`;
   }
   function buildDonutHtml(entries, totalLabel, size){
-    size = size || 140;
+    size = size || 160;
     const total = entries.reduce((s,[,v])=> s + v, 0);
     if(total <= 0 || entries.length === 0) return '';
     let acc = 0;
@@ -1755,16 +1752,17 @@
     }).join(', ');
     const legend = entries.map(([label,val], i)=>{
       const pct = ((val/total)*100).toFixed(1);
+      const color = CAT_COLORS[i % CAT_COLORS.length];
       return `<div class="donut-legend-row">
-        <span class="donut-dot" style="background:${CAT_COLORS[i % CAT_COLORS.length]};"></span>
+        <span class="donut-pct-pill" style="background:${color};">${pct}%</span>
         <span class="donut-legend-label">${escapeHtml(label)}</span>
-        <span class="donut-legend-pct">${pct}%</span>
         <span class="donut-legend-amt">${fmt.format(val)}</span>
       </div>`;
     }).join('');
     return `<div class="donut-wrap">
-      <div class="donut-chart" style="width:${size}px;height:${size}px;background:conic-gradient(${stops});">
-        <div class="donut-hole"><span class="donut-total"><span class="donut-total-lbl">${escapeHtml(totalLabel)}</span>${fmt.format(total)}</span></div>
+      <div class="donut-chart-col">
+        <div class="donut-caption"><span class="donut-caption-lbl">${escapeHtml(totalLabel)}</span>${fmt.format(total)}</div>
+        <div class="donut-chart" style="width:${size}px;height:${size}px;background:conic-gradient(${stops});"></div>
       </div>
       <div class="donut-legend">${legend}</div>
     </div>`;
@@ -2051,12 +2049,12 @@
     if(transactions.length === 0){
       els.ledgerList.innerHTML = '<p class="ledger-empty">Aún no registras movimientos. Agrega el primero desde el formulario.</p>';
     } else {
-      const catFilter = categoryFilterText.trim().toLowerCase();
-      els.categoryFilterList.innerHTML = [...new Set(transactions.map(t=>t.category))].sort()
-        .map(c=>`<option value="${escapeHtml(c)}"></option>`).join('');
-      els.categoryFilterClear.style.display = catFilter ? 'inline-flex' : 'none';
+      const catFilter = categoryFilterText;
+      const catOptions = [...new Set(transactions.map(t=>t.category))].sort();
+      els.categoryFilterInput.innerHTML = '<option value="">🔍 Todas las categorías</option>' +
+        catOptions.map(c=>`<option value="${escapeHtml(c)}" ${c===catFilter?'selected':''}>${escapeHtml(c)}</option>`).join('');
       const sorted = transactions
-        .filter(t=> isInPeriod(t.date) && (!catFilter || t.category.toLowerCase().includes(catFilter)))
+        .filter(t=> isInPeriod(t.date) && (!catFilter || t.category === catFilter))
         .sort((a,b)=> b.date.localeCompare(a.date) || b.id - a.id);
       if(sorted.length === 0){
         els.ledgerList.innerHTML = catFilter
@@ -2349,19 +2347,9 @@
     els.filterCaret.textContent = showing ? '▾' : '▴';
     els.filterToggleLabel.textContent = showing ? 'Ver más' : 'Ocultar';
   });
-  let categoryFilterTimer = null;
-  els.categoryFilterInput.addEventListener('input', ()=>{
-    clearTimeout(categoryFilterTimer);
-    categoryFilterTimer = setTimeout(()=>{
-      categoryFilterText = els.categoryFilterInput.value;
-      render();
-    }, 200);
-  });
-  els.categoryFilterClear.addEventListener('click', ()=>{
-    categoryFilterText = '';
-    els.categoryFilterInput.value = '';
+  els.categoryFilterInput.addEventListener('change', ()=>{
+    categoryFilterText = els.categoryFilterInput.value;
     render();
-    els.categoryFilterInput.focus();
   });
   els.periodToggle.addEventListener('click', (e)=>{
     const btn = e.target.closest('.period-btn');
