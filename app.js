@@ -369,11 +369,11 @@
         const g = CATEGORY_GROUPS[c] || 'Otras';
         (groups[g] = groups[g] || []).push(c);
       });
-      els.category.innerHTML = GROUP_ORDER.filter(g=>groups[g] && groups[g].length).map(g=>
+      els.category.innerHTML = '<option value="">Elige una categoría…</option>' + GROUP_ORDER.filter(g=>groups[g] && groups[g].length).map(g=>
         `<optgroup label="${g}">${groups[g].map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('')}</optgroup>`
       ).join('');
     } else {
-      els.category.innerHTML = categories[currentType].map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+      els.category.innerHTML = '<option value="">Elige una categoría…</option>' + categories[currentType].map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
     }
     renderCatChips();
   }
@@ -751,7 +751,7 @@
 
   /* ---------- Payment method / MSI / Ahorro visibility ---------- */
   function populatePaymentMethods(){
-    els.paymentMethod.innerHTML = paymentMethods[currentType]
+    els.paymentMethod.innerHTML = '<option value="">Elige una forma de pago…</option>' + paymentMethods[currentType]
       .map(p => `<option value="${p}">${p}</option>`).join('');
     updateMsiVisibility();
     renderPayChips();
