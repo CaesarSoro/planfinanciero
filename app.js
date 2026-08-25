@@ -800,6 +800,12 @@
     });
   });
 
+  function updateAmountGate(){
+    const valid = parseFloat(els.amount.value) > 0;
+    [els.paymentMethod, els.category, els.description, els.date].forEach(el=>{
+      el.disabled = !valid;
+    });
+  }
   function setType(type){
     currentType = type;
     [...els.typeToggle.querySelectorAll('button')].forEach(btn=>{
@@ -824,6 +830,7 @@
     populateCategories();
     populatePaymentMethods();
     updateFieldLabels();
+    updateAmountGate();
   }
   els.typeToggle.addEventListener('click', (e)=>{
     const btn = e.target.closest('button');
@@ -2053,12 +2060,14 @@
         return;
       }
       // Neto del día (solo pesos) para mostrar en cada encabezado de fecha.
+      // Los MSI se excluyen aquí a propósito: su impacto real es mensual, no de un día
+      // puntual, así que sumarlos aquí infla el neto con el acumulado pagado a la fecha.
       const dayNet = {};
       sorted.forEach(t=>{
-        if((t.moneda || 'MXN') !== 'MXN') return;
+        if((t.moneda || 'MXN') !== 'MXN' || t.isMsi) return;
         let delta = 0;
         if(t.type === 'ingreso') delta = t.amount;
-        else if(t.type === 'gasto') delta = -expenseContribution(t);
+        else if(t.type === 'gasto') delta = -t.amount;
         else if(t.type === 'ahorro') delta = (t.subtype === 'retiro' ? t.amount : -t.amount);
         dayNet[t.date] = (dayNet[t.date] || 0) + delta;
       });
@@ -2161,6 +2170,7 @@
       });
     }
     els.amount.value = t.amount;
+    updateAmountGate();
     els.paymentMethod.value = t.paymentMethod || '';
     els.category.value = t.category || '';
     els.description.value = t.description || '';
@@ -2189,6 +2199,7 @@
   els.amount.addEventListener('input', ()=>{
     els.amount.classList.remove('field-error');
     els.amountError.style.display = 'none';
+    updateAmountGate();
   });
   els.paymentMethod.addEventListener('change', ()=>{
     els.paymentMethod.classList.remove('field-error');
