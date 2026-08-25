@@ -50,7 +50,7 @@
     <button type="button" id="drawerCloseBtn" class="drawer-close" aria-label="Cerrar menú">✕</button>
 
     <div class="drawer-nav" id="drawerNav">
-      <button type="button" class="drawer-nav-item" data-nav="form">📋 Registro</button>
+      <button type="button" class="drawer-nav-item" data-nav="form">📋 Movimientos</button>
       <button type="button" class="drawer-nav-item" data-nav="resumen">📈 Resumen</button>
       <button type="button" class="drawer-nav-item" data-nav="metas">🎯 Metas y Proyectos</button>
       <button type="button" class="drawer-nav-item" data-nav="cobrar">💵 Por cobrar</button>
@@ -88,7 +88,7 @@
       </div>
 
       <div class="help-section" id="help-form">
-        <h3>📋 Registro</h3>
+        <h3>📋 Movimientos</h3>
         <p>Aquí anotas cada movimiento de dinero, del día que sea. Elige el tipo:</p>
         <ul>
           <li><strong>Ingreso</strong> — dinero que entra (tu sueldo, una venta, etc.)</li>
@@ -119,7 +119,7 @@
 
       <div class="help-section" id="help-real">
         <h3>⚖️ Presupuestado vs. Real</h3>
-        <p><strong>Presupuestado</strong> es lo que planeaste gastar o ganar. <strong>Real</strong> es lo que en verdad registraste ese mes en Registro. La app los compara para que veas de un vistazo si te pasaste o te quedaste corto.</p>
+        <p><strong>Presupuestado</strong> es lo que planeaste gastar o ganar. <strong>Real</strong> es lo que en verdad registraste ese mes en Movimientos. La app los compara para que veas de un vistazo si te pasaste o te quedaste corto.</p>
         <p><strong>Balance restante del mes</strong> combina ambos, categoría por categoría: usa lo Real si ya registraste movimientos ese mes, y si todavía no hay nada registrado en alguna categoría, usa lo Presupuestado como estimado. Por eso este número se va ajustando y volviendo más preciso conforme avanza el mes, y solo aplica al mes que estás viendo. Es distinto al <strong>Balance disponible</strong> de arriba, que siempre es 100% real y acumulado de todo tu historial: no depende del mes que estés filtrando.</p>
       </div>
 
@@ -197,7 +197,7 @@
 
   <div class="card">
     <div class="tabs" id="mainTabs">
-      <button type="button" class="tab-btn active" data-tab="form">Registro</button>
+      <button type="button" class="tab-btn active" data-tab="form">Movimientos</button>
       <button type="button" class="tab-btn" data-tab="resumen">Resumen</button>
       <button type="button" class="tab-btn" data-tab="budget">Presupuesto</button>
     </div>
@@ -298,7 +298,7 @@
 
       <div id="registroListView">
 
-      <div class="resumen-section" style="margin-top:28px;padding-top:24px;border-top:1px solid var(--line);">
+      <div class="resumen-section">
         <h3 class="section-title">Movimientos <span class="h2-note">toca ✕ para eliminar</span></h3>
         <div class="ledger-filter-row">
           <select id="categoryFilterInput" class="ledger-filter-input">
@@ -311,7 +311,7 @@
       </div>
       </div>
 
-      <button type="button" id="addTxFab" class="fab-add" style="display:none;" title="Registrar movimiento" aria-label="Registrar movimiento">+</button>
+      <button type="button" id="addTxFab" class="fab-add" style="display:none;" title="Registrar movimiento" aria-label="Registrar movimiento"><span>Registrar</span> +</button>
     </div>
 
     <div class="tab-panel" id="tabPanelBudget" style="display:none;">
