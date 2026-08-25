@@ -263,6 +263,7 @@
         <div class="field span-2" id="categoryFieldWrap">
           <label for="category" id="categoryLabel">Categoría</label>
           <select id="category"></select>
+          <p class="error-msg" id="categoryError">Selecciona una categoría.</p>
           <button type="button" id="toggleCatChips" class="manage-cat-link" style="display:none;">Gestionar categorías (editar grupo / eliminar) ▾</button>
           <div class="cat-chips" id="catChips" style="display:none;"></div>
           <div class="cat-add-row">
@@ -285,6 +286,7 @@
         <div class="field">
           <label id="dateLabel" for="date">Fecha</label>
           <input type="date" id="date" required>
+          <p class="error-msg" id="dateError">Selecciona una fecha.</p>
         </div>
 
         <button type="submit" class="submit-btn span-2" id="submitBtn">Registrar movimiento</button>

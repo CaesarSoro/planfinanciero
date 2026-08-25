@@ -123,6 +123,8 @@
   .field label{display:block;font-size:11.5px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:5px;}
   .field input, .field select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:var(--input-bg);font-family:'Montserrat',sans-serif;font-size:14px;color:var(--ink);}
   .field input:focus, .field select:focus{outline:2px solid var(--gold);outline-offset:1px;}
+  .field input.field-error, .field select.field-error{border-color:var(--expense);background:var(--expense-soft);}
+  .field input.field-error:focus, .field select.field-error:focus{outline-color:var(--expense);}
 
   .type-toggle{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;}
   .type-toggle button{flex:1;padding:9px 0;border:none;background:var(--input-bg);font-family:'Montserrat',sans-serif;font-weight:600;font-size:13px;color:var(--ink-soft);cursor:pointer;transition:background .15s, color .15s;}
@@ -403,7 +405,12 @@
   .ledger-row{padding:10px 0;border-bottom:1px dashed var(--line);}
   .ledger-row:last-child{border-bottom:none;}
   .ledger-row-line1{display:flex;align-items:baseline;gap:8px;}
-  .ledger-date{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);flex-shrink:0;}
+  .ledger-day-header{display:flex;justify-content:space-between;align-items:baseline;padding:14px 0 6px;margin-top:4px;border-top:1px solid var(--line);}
+  .ledger-list > .ledger-day-header:first-child{border-top:none;margin-top:0;padding-top:0;}
+  .ledger-day-label{font-family:'Montserrat',sans-serif;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);}
+  .ledger-day-net{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;}
+  .ledger-day-net.pos{color:var(--income);}
+  .ledger-day-net.neg{color:var(--expense);}
   .ledger-desc{flex:1;min-width:0;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .ledger-row-line2{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:5px;}
   .ledger-badges{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}

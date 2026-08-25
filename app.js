@@ -58,6 +58,7 @@
 
   /* ---------- Filtro de periodo (día / mes / año / todo) ---------- */
   const MONTH_NAMES_ES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+  const DAY_NAMES_ES = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
   let periodMode = 'mes';
   let recListOpen = false;
   let periodValue = new Date().toISOString().slice(0,7); // YYYY-MM, mes actual por defecto
@@ -232,6 +233,8 @@
     amountLabel: document.getElementById('amountLabel'),
     amountError: document.getElementById('amountError'),
     paymentMethodError: document.getElementById('paymentMethodError'),
+    categoryError: document.getElementById('categoryError'),
+    dateError: document.getElementById('dateError'),
     paymentMethod: document.getElementById('paymentMethod'),
     msiRow: document.getElementById('msiRow'),
     isMsi: document.getElementById('isMsi'),
@@ -2049,8 +2052,28 @@
           : '<p class="ledger-empty">Sin movimientos en este periodo.</p>';
         return;
       }
+      // Neto del día (solo pesos) para mostrar en cada encabezado de fecha.
+      const dayNet = {};
+      sorted.forEach(t=>{
+        if((t.moneda || 'MXN') !== 'MXN') return;
+        let delta = 0;
+        if(t.type === 'ingreso') delta = t.amount;
+        else if(t.type === 'gasto') delta = -expenseContribution(t);
+        else if(t.type === 'ahorro') delta = (t.subtype === 'retiro' ? t.amount : -t.amount);
+        dayNet[t.date] = (dayNet[t.date] || 0) + delta;
+      });
+      function dayHeaderHtml(date){
+        const d = new Date(date + 'T00:00:00');
+        const label = `${DAY_NAMES_ES[d.getDay()]} ${d.getDate()} de ${MONTH_NAMES_ES[d.getMonth()]}`;
+        const net = dayNet[date] || 0;
+        return `<div class="ledger-day-header">
+          <span class="ledger-day-label">${escapeHtml(label)}</span>
+          <span class="ledger-day-net ${net >= 0 ? 'pos' : 'neg'}">${net >= 0 ? '+' : '−'} ${fmt.format(Math.abs(net))}</span>
+        </div>`;
+      }
+
+      let prevDate = null;
       els.ledgerList.innerHTML = `<div class="ledger-list">` + sorted.map(t=>{
-        const shortDate = t.date.slice(5).split('-').reverse().join('/');
         let sign, desc, catLabel;
         if(t.type === 'ahorro'){
           sign = t.subtype === 'retiro' ? '−' : '+';
@@ -2077,9 +2100,10 @@
             </div>
           </div>`;
         }
-        return `<div class="ledger-row">
+        const header = (t.date !== prevDate) ? dayHeaderHtml(t.date) : '';
+        prevDate = t.date;
+        return header + `<div class="ledger-row">
           <div class="ledger-row-line1">
-            <span class="ledger-date">${shortDate}</span>
             <span class="ledger-desc">${escapeHtml(desc)}</span>
             <button class="ledger-edit" data-id="${t.id}" title="Editar" aria-label="Editar movimiento">✎</button>
             <button class="ledger-del" data-id="${t.id}" title="Eliminar" aria-label="Eliminar movimiento">✕</button>
@@ -2162,20 +2186,61 @@
     setType(currentType);
   });
 
+  els.amount.addEventListener('input', ()=>{
+    els.amount.classList.remove('field-error');
+    els.amountError.style.display = 'none';
+  });
+  els.paymentMethod.addEventListener('change', ()=>{
+    els.paymentMethod.classList.remove('field-error');
+    els.paymentMethodError.style.display = 'none';
+  });
+  els.category.addEventListener('change', ()=>{
+    els.category.classList.remove('field-error');
+    els.categoryError.style.display = 'none';
+  });
+  els.date.addEventListener('input', ()=>{
+    els.date.classList.remove('field-error');
+    els.dateError.style.display = 'none';
+  });
+
   els.form.addEventListener('submit', async (e)=>{
     e.preventDefault();
     const amountVal = parseFloat(els.amount.value);
     if(!amountVal || amountVal <= 0){
       els.amountError.style.display = 'block';
+      els.amount.classList.add('field-error');
+      els.amount.focus();
       return;
     }
     els.amountError.style.display = 'none';
+    els.amount.classList.remove('field-error');
 
     if(!els.paymentMethod.value){
       els.paymentMethodError.style.display = 'block';
+      els.paymentMethod.classList.add('field-error');
+      els.paymentMethod.focus();
       return;
     }
     els.paymentMethodError.style.display = 'none';
+    els.paymentMethod.classList.remove('field-error');
+
+    if(!els.category.value){
+      els.categoryError.style.display = 'block';
+      els.category.classList.add('field-error');
+      els.category.focus();
+      return;
+    }
+    els.categoryError.style.display = 'none';
+    els.category.classList.remove('field-error');
+
+    if(!els.date.value){
+      els.dateError.style.display = 'block';
+      els.date.classList.add('field-error');
+      els.date.focus();
+      return;
+    }
+    els.dateError.style.display = 'none';
+    els.date.classList.remove('field-error');
 
     const txData = {
       type: currentType,
