@@ -801,10 +801,15 @@
   });
 
   function updateAmountGate(){
-    const valid = parseFloat(els.amount.value) > 0;
-    [els.paymentMethod, els.category, els.description, els.date].forEach(el=>{
-      el.disabled = !valid;
-    });
+    const amountValid = parseFloat(els.amount.value) > 0;
+    els.paymentMethod.disabled = !amountValid;
+
+    const paymentValid = amountValid && !!els.paymentMethod.value;
+    els.category.disabled = !paymentValid;
+
+    const categoryValid = paymentValid && !!els.category.value;
+    els.description.disabled = !categoryValid;
+    els.date.disabled = !categoryValid;
   }
   function setType(type){
     currentType = type;
@@ -2170,11 +2175,11 @@
       });
     }
     els.amount.value = t.amount;
-    updateAmountGate();
     els.paymentMethod.value = t.paymentMethod || '';
     els.category.value = t.category || '';
     els.description.value = t.description || '';
     els.date.value = t.date;
+    updateAmountGate();
     if(t.type === 'gasto'){
       els.isMsi.checked = !!t.isMsi;
       els.isMsi.dispatchEvent(new Event('change'));
@@ -2204,10 +2209,12 @@
   els.paymentMethod.addEventListener('change', ()=>{
     els.paymentMethod.classList.remove('field-error');
     els.paymentMethodError.style.display = 'none';
+    updateAmountGate();
   });
   els.category.addEventListener('change', ()=>{
     els.category.classList.remove('field-error');
     els.categoryError.style.display = 'none';
+    updateAmountGate();
   });
   els.date.addEventListener('input', ()=>{
     els.date.classList.remove('field-error');
