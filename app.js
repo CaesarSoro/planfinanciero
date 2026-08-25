@@ -2067,7 +2067,7 @@
     } else {
       const catFilter = categoryFilterText;
       const catOptions = [...new Set(transactions.map(t=>t.category))].sort();
-      els.categoryFilterInput.innerHTML = '<option value="">🔍 Todas las categorías</option>' +
+      els.categoryFilterInput.innerHTML = '<option value="">Todas las categorías</option>' +
         catOptions.map(c=>`<option value="${escapeHtml(c)}" ${c===catFilter?'selected':''}>${escapeHtml(c)}</option>`).join('');
       const sorted = transactions
         .filter(t=> isInPeriod(t.date) && (!catFilter || t.category === catFilter))

@@ -299,10 +299,11 @@
       <div id="registroListView">
 
       <div class="resumen-section">
-        <h3 class="section-title">Movimientos <span class="h2-note">toca ✕ para eliminar</span></h3>
+        <p class="ledger-hint">toca ✕ para eliminar un movimiento</p>
         <div class="ledger-filter-row">
+          <span class="ledger-filter-icon">🔍</span>
           <select id="categoryFilterInput" class="ledger-filter-input">
-            <option value="">🔍 Todas las categorías</option>
+            <option value="">Todas las categorías</option>
           </select>
         </div>
         <div id="ledgerList">
@@ -406,7 +407,7 @@
             <div class="stat-label">Fondo de ahorro</div>
             <div class="stat-value" id="statSavings">$0.00</div>
           </div>
-          <div class="stat expense">
+          <div class="stat expense stat-top-category">
             <div class="stat-label">Categoría con más gasto</div>
             <div class="stat-value text" id="statTopCategory">—</div>
             <div class="stat-subvalue" id="statTopCategoryAmount"></div>
