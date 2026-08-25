@@ -203,7 +203,9 @@
     </div>
 
     <div class="tab-panel" id="tabPanelForm">
-      <form id="txForm" class="form-grid">
+      <div id="registroFormView" style="display:none;">
+        <button type="button" id="backToListBtn" class="back-to-list-btn">← Volver a Movimientos</button>
+        <form id="txForm" class="form-grid">
         <div class="field span-2">
           <label>Tipo<button type="button" class="help-icon" data-help="form">?</button></label>
           <div class="type-toggle" id="typeToggle">
@@ -291,7 +293,10 @@
 
         <button type="submit" class="submit-btn span-2" id="submitBtn">Registrar movimiento</button>
         <button type="button" class="cancel-edit-btn span-2" id="cancelEditBtn" style="display:none;">Cancelar edición</button>
-      </form>
+        </form>
+      </div>
+
+      <div id="registroListView">
 
       <div class="resumen-section" style="margin-top:28px;padding-top:24px;border-top:1px solid var(--line);">
         <h3 class="section-title">Movimientos <span class="h2-note">toca ✕ para eliminar</span></h3>
@@ -304,6 +309,9 @@
           <p class="loading-note">Cargando movimientos…</p>
         </div>
       </div>
+      </div>
+
+      <button type="button" id="addTxFab" class="fab-add" style="display:none;" title="Registrar movimiento" aria-label="Registrar movimiento">+</button>
     </div>
 
     <div class="tab-panel" id="tabPanelBudget" style="display:none;">

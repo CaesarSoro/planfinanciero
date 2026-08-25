@@ -272,6 +272,10 @@
     expenseDonut: document.getElementById('expenseDonut'),
     incomeDonut: document.getElementById('incomeDonut'),
     ledgerList: document.getElementById('ledgerList'),
+    registroFormView: document.getElementById('registroFormView'),
+    registroListView: document.getElementById('registroListView'),
+    addTxFab: document.getElementById('addTxFab'),
+    backToListBtn: document.getElementById('backToListBtn'),
     categoryFilterInput: document.getElementById('categoryFilterInput'),
     msiCard: document.getElementById('msiCard'),
     msiPanel: document.getElementById('msiPanel'),
@@ -850,6 +854,17 @@
   const tabPanelCobrar = document.getElementById('tabPanelCobrar');
   const tabPanelPerfil = document.getElementById('tabPanelPerfil');
   let currentTab = 'form';
+  let registroView = 'list';
+  function showRegistroView(view){
+    registroView = view;
+    els.registroFormView.style.display = view === 'form' ? 'block' : 'none';
+    els.registroListView.style.display = view === 'list' ? 'block' : 'none';
+    updateFabVisibility();
+    if(view === 'form') window.scrollTo({top:0, behavior:'smooth'});
+  }
+  function updateFabVisibility(){
+    els.addTxFab.style.display = (currentTab === 'form' && registroView === 'list') ? 'flex' : 'none';
+  }
   function switchTab(tab){
     currentTab = tab;
     [...mainTabs.querySelectorAll('.tab-btn')].forEach(b=>{
@@ -862,6 +877,7 @@
     tabPanelCobrar.style.display = tab === 'cobrar' ? 'block' : 'none';
     tabPanelPerfil.style.display = tab === 'perfil' ? 'block' : 'none';
     if(tab === 'perfil') openProfileTab();
+    updateFabVisibility();
   }
   mainTabs.addEventListener('click', (e)=>{
     const btn = e.target.closest('.tab-btn');
@@ -2161,6 +2177,7 @@
     const t = transactions.find(x=>x.id === id);
     if(!t) return;
     editingTransactionId = id;
+    showRegistroView('form');
     setType(t.type);
     if(t.type === 'ahorro'){
       currentSubtype = t.subtype || 'aporte';
@@ -2190,13 +2207,21 @@
     els.form.scrollIntoView({ behavior:'smooth', block:'start' });
   }
 
-  els.cancelEditBtn.addEventListener('click', ()=>{
+  function resetFormToBlank(){
     editingTransactionId = null;
     els.submitBtn.textContent = 'Registrar movimiento';
     els.cancelEditBtn.style.display = 'none';
     els.form.reset();
     els.date.value = todayStr();
     setType(currentType);
+  }
+  els.cancelEditBtn.addEventListener('click', resetFormToBlank);
+  els.addTxFab.addEventListener('click', ()=>{
+    showRegistroView('form');
+  });
+  els.backToListBtn.addEventListener('click', ()=>{
+    resetFormToBlank();
+    showRegistroView('list');
   });
 
   els.amount.addEventListener('input', ()=>{
@@ -2309,6 +2334,7 @@
     els.form.reset();
     els.date.value = todayStr();
     setType(currentType);
+    showRegistroView('list');
   });
 
   /* ---------- Filtro de periodo: eventos ---------- */
@@ -2487,6 +2513,7 @@
     await Promise.all([loadCategories(), loadBudget(), loadTransactions(), loadReceivables(), loadCategoryGroups(), loadTravelBudgets(), loadPaymentMethods()]);
     await pruneOrphanedMsiBudgetLines();
     setType('gasto');
+    showRegistroView('list');
     render();
     if(isFirstTimeUser){
       els.firstTimeBanner.style.display = 'flex';
