@@ -1057,9 +1057,10 @@
     return `<div class="compare-chart">
       ${rows.map(r=>{
         const diff = r.real - r.presu;
-        const good = r.lowerIsBetter ? diff <= 0 : diff >= 0;
+        const isEqual = Math.abs(diff) < 0.005;
+        const good = isEqual || (r.lowerIsBetter ? diff <= 0 : diff >= 0);
         let diffText;
-        if(diff === 0){
+        if(isEqual){
           diffText = 'Igual al presupuesto';
         } else if(r.lowerIsBetter){
           diffText = diff < 0 ? `${fmt.format(Math.abs(diff))} por debajo` : `${fmt.format(diff)} por encima`;
