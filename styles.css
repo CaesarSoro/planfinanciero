@@ -249,13 +249,19 @@
   .msi-extra{border-left:3px solid var(--gold);padding-left:12px;margin-bottom:14px;}
 
   .submit-btn{width:100%;padding:11px 0;border:none;border-radius:6px;background:var(--ink);color:var(--surface);font-family:'Montserrat',sans-serif;font-weight:600;font-size:14px;cursor:pointer;margin-top:6px;}
-  .fab-add{position:fixed;right:20px;bottom:24px;height:52px;padding:0 22px 0 20px;border-radius:30px;border:none;background:var(--gold);color:#fff;font-family:'Montserrat',sans-serif;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.3);z-index:120;display:flex;align-items:center;gap:8px;transition:transform .15s, background .15s;}
+  .fab-add{position:fixed;right:20px;bottom:24px;height:52px;padding:0 22px 0 20px;border-radius:30px;border:none;background:var(--gold);color:#fff;font-family:'Montserrat',sans-serif;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.3);z-index:120;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s, background .15s;}
   .fab-add span{font-size:14.5px;}
   .fab-add:hover{background:var(--ink);transform:scale(1.04);}
   .fab-add:active{transform:scale(.96);}
   .back-to-list-btn{background:none;border:none;color:var(--ink-soft);font-family:'Montserrat',sans-serif;font-weight:600;font-size:13.5px;cursor:pointer;padding:0 0 16px;display:block;}
   .back-to-list-btn:hover{color:var(--gold);}
-  @media (max-width:560px){.fab-add{right:16px;bottom:18px;height:48px;padding:0 18px 0 16px;font-size:14px;}}
+  /* Móvil y tablet: anclado abajo, ancho completo. Escritorio: flotante (regla base de arriba). */
+  @media (max-width:860px){
+    .fab-add{left:16px;right:16px;bottom:16px;width:auto;height:52px;border-radius:14px;font-size:15px;box-shadow:0 -2px 14px rgba(0,0,0,.18);}
+    .fab-add:hover{transform:none;}
+    .fab-add:active{transform:scale(.98);}
+    #registroListView{padding-bottom:84px;}
+  }
   .cancel-edit-btn{width:100%;padding:9px 0;border:1px solid var(--line);border-radius:6px;background:none;color:var(--ink-soft);font-family:'Montserrat',sans-serif;font-weight:600;font-size:12.5px;cursor:pointer;margin-top:8px;}
   .cancel-edit-btn:hover{border-color:var(--expense-soft);color:var(--expense);}
   .submit-btn:hover{background:#3A4133;}

@@ -863,7 +863,7 @@
     if(view === 'form') window.scrollTo({top:0, behavior:'smooth'});
   }
   function updateFabVisibility(){
-    els.addTxFab.style.display = (currentTab === 'form' && registroView === 'list') ? 'flex' : 'none';
+    els.addTxFab.style.display = (registroView === 'form') ? 'none' : 'flex';
   }
   function switchTab(tab){
     currentTab = tab;
@@ -2218,6 +2218,7 @@
   }
   els.cancelEditBtn.addEventListener('click', resetFormToBlank);
   els.addTxFab.addEventListener('click', ()=>{
+    switchTab('form');
     showRegistroView('form');
   });
   els.backToListBtn.addEventListener('click', ()=>{
