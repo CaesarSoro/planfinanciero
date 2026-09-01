@@ -577,5 +577,9 @@
     .pr-num{text-align:right;font-variant-numeric:tabular-nums;}
     .pr-summary td{font-weight:600;padding:5px 6px;}
     .pr-empty{font-size:11px;color:#8a8578;font-style:italic;}
+    .donut-chart, .donut-pct-pill, .donut-legend-row{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .donut-wrap{border-bottom:1px solid #C6BEA6;padding-bottom:14px;margin-bottom:14px;page-break-inside:avoid;}
+    .donut-caption{color:#22271F;}
+    .donut-legend-label, .donut-legend-amt{color:#22271F;}
     @page{margin:1.4cm;}
   }

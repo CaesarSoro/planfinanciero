@@ -612,11 +612,6 @@
       return `<table class="pr-table"><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>`;
     };
 
-    const breakdownRows = (entries, total)=> entries.map(([label, amt])=>{
-      const pct = total ? ((amt/total)*100).toFixed(1) : '0.0';
-      return `<tr><td>${escapeHtml(label)}</td><td class="pr-num">${fmt.format(amt)}</td><td class="pr-num">${pct}%</td></tr>`;
-    }).join('');
-
     const movRows = moves.map(t=>{
       const sign = t.type === 'gasto' ? '−' : '+';
       const monto = (t.isMsi ? msiPeriodContribution(t) : t.amount);
@@ -645,14 +640,21 @@
         <tr><td>Balance del periodo</td><td class="pr-num">${fmt.format(balance)}</td></tr>
       </table>
 
+      <h2>Presupuestado vs. Real</h2>
+      ${table(computeBudgetVsRealRows().map(r=>{
+        const diff = r.real - r.presu;
+        const diffLabel = Math.abs(diff) < 0.005 ? 'Igual' : (diff >= 0 ? `+${fmt.format(diff)}` : `−${fmt.format(Math.abs(diff))}`);
+        return `<tr><td>${escapeHtml(r.label)}</td><td class="pr-num">${fmt.format(r.presu)}</td><td class="pr-num">${fmt.format(r.real)}</td><td class="pr-num">${diffLabel}</td></tr>`;
+      }).join(''), ['Grupo','Presupuestado','Real','Diferencia'])}
+
       <h2>Gastos por categoría</h2>
-      ${table(breakdownRows(catBreak, expense), ['Categoría','Monto','%'])}
+      ${catBreak.length > 0 ? buildDonutHtml(catBreak, 'Gastos', 120) : '<p class="pr-empty">Sin gastos en este periodo.</p>'}
 
       <h2>Gastos por forma de pago</h2>
-      ${table(breakdownRows(payBreak, expense), ['Forma de pago','Monto','%'])}
+      ${payBreak.length > 0 ? buildDonutHtml(payBreak, 'Gastos', 120) : '<p class="pr-empty">Sin gastos en este periodo.</p>'}
 
       <h2>Ingresos por categoría</h2>
-      ${table(breakdownRows(incBreak, income), ['Categoría','Monto','%'])}
+      ${incBreak.length > 0 ? buildDonutHtml(incBreak, 'Ingresos', 120) : '<p class="pr-empty">Sin ingresos en este periodo.</p>'}
 
       <h2>Movimientos del periodo</h2>
       ${table(movRows, ['Fecha','Tipo','Categoría','Forma de pago','Descripción','Monto'])}
@@ -1146,7 +1148,7 @@
     </div>`;
   }
 
-  function buildBudgetCompareChart(){
+  function computeBudgetVsRealRows(){
     // Presupuestado normalmente es el equivalente mensual. Si el filtro está en "Año",
     // lo anualizamos (×12) para que sí se compare justo contra Real, que en ese filtro
     // suma el año completo — antes esto se quedaba en mensual y la comparación salía mal.
@@ -1156,12 +1158,15 @@
     const totalInversiones = groupTotal('inversiones') * scale;
     const totalIngresos = groupTotal('ingresos') * scale;
     const { realFijos, realVariables, realInversiones, realIngresos } = computeRealTotals();
-    const rows = [
+    return [
       { label:'Gastos fijos', presu:totalFijos, real:realFijos, color:'var(--expense)', lowerIsBetter:true },
       { label:'Gastos variables', presu:totalVariables, real:realVariables, color:'#A15C4A', lowerIsBetter:true },
       { label:'Inversiones y seguros', presu:totalInversiones, real:realInversiones, color:'var(--gold)', lowerIsBetter:true },
       { label:'Ingresos fijos', presu:totalIngresos, real:realIngresos, color:'var(--income)', lowerIsBetter:false }
     ];
+  }
+  function buildBudgetCompareChart(){
+    const rows = computeBudgetVsRealRows();
     const max = Math.max(1, ...rows.flatMap(r=>[r.presu, r.real]));
     const bar = (val, color, ghost) => {
       const pct = Math.min(100, (val/max)*100);
