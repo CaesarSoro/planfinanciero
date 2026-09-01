@@ -1384,23 +1384,53 @@
   async function updateTravelBudget(id, nombre, presupuesto, categoria, fechaInicio, fechaFin, tipo){
     tipo = tipo === 'ahorro' ? 'ahorro' : 'gasto';
     const catList = tipo === 'ahorro' ? categories.ahorro : categories.gasto;
+    let categoriesChanged = false;
     if(!catList.includes(categoria)){
       catList.push(categoria);
       if(tipo === 'gasto' && !CATEGORY_GROUPS[categoria]) CATEGORY_GROUPS[categoria] = 'Variables';
-      await saveCategories();
+      categoriesChanged = true;
     }
     const idx = travelBudgets.findIndex(t=>t.id === id);
     if(idx !== -1){
-      travelBudgets[idx] = { ...travelBudgets[idx], nombre, presupuesto, categoria, fechaInicio, fechaFin, tipo };
+      const old = travelBudgets[idx];
+      const oldTipo = old.tipo === 'ahorro' ? 'ahorro' : 'gasto';
+      travelBudgets[idx] = { ...old, nombre, presupuesto, categoria, fechaInicio, fechaFin, tipo };
+      // Si cambió el tipo o la categoría, la vieja combinación (tipo, categoría) puede haber
+      // quedado sin usarse por nada más — la limpiamos si de verdad ya no sirve para nada.
+      if(oldTipo !== tipo || old.categoria !== categoria){
+        const stillUsedByGoal = travelBudgets.some(t=>t.tipo === oldTipo && t.categoria === old.categoria);
+        const stillUsedByTx = transactions.some(t=>t.type === oldTipo && t.category === old.categoria);
+        const isDefaultCategory = (DEFAULT_CATEGORIES[oldTipo] || []).includes(old.categoria);
+        if(!stillUsedByGoal && !stillUsedByTx && !isDefaultCategory && categories[oldTipo]){
+          const before = categories[oldTipo].length;
+          categories[oldTipo] = categories[oldTipo].filter(c=>c !== old.categoria);
+          if(categories[oldTipo].length !== before) categoriesChanged = true;
+        }
+      }
     }
     editingTravelId = null;
     await saveTravelBudgets();
+    if(categoriesChanged) await saveCategories();
     render();
   }
   async function deleteTravelBudget(id){
     if(editingTravelId === id) editingTravelId = null;
+    const removed = travelBudgets.find(t=>t.id === id);
     travelBudgets = travelBudgets.filter(t=>t.id !== id);
+    let categoriesChanged = false;
+    if(removed){
+      const tipo = removed.tipo === 'ahorro' ? 'ahorro' : 'gasto';
+      const stillUsedByGoal = travelBudgets.some(t=>t.tipo === tipo && t.categoria === removed.categoria);
+      const stillUsedByTx = transactions.some(t=>t.type === tipo && t.category === removed.categoria);
+      const isDefaultCategory = (DEFAULT_CATEGORIES[tipo] || []).includes(removed.categoria);
+      if(!stillUsedByGoal && !stillUsedByTx && !isDefaultCategory && categories[tipo]){
+        const before = categories[tipo].length;
+        categories[tipo] = categories[tipo].filter(c=>c !== removed.categoria);
+        categoriesChanged = categories[tipo].length !== before;
+      }
+    }
     await saveTravelBudgets();
+    if(categoriesChanged) await saveCategories();
     render();
   }
   function receivableAbonado(r){
