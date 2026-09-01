@@ -558,3 +558,24 @@
   @media (max-width:560px){
     .toast{bottom:16px;font-size:12.5px;padding:10px 16px;}
   }
+
+  /* ---------- Reporte / impresión ---------- */
+  #printReport{display:none;}
+  @media print{
+    body *{visibility:hidden;}
+    #printReport, #printReport *{visibility:visible;}
+    #printReport{display:block;position:absolute;top:0;left:0;width:100%;padding:0;margin:0;}
+    .pr-header{text-align:center;margin-bottom:24px;border-bottom:2px solid #22271F;padding-bottom:14px;}
+    .pr-header h1{font-family:'Montserrat',sans-serif;font-size:22px;margin:0 0 4px;color:#22271F;}
+    .pr-header p{font-size:13px;color:#5B5A4E;margin:2px 0;}
+    .pr-generated{font-size:10.5px;color:#8a8578;}
+    #printReport h2{font-family:'Montserrat',sans-serif;font-size:14px;color:#22271F;margin:22px 0 8px;padding-bottom:4px;border-bottom:1px solid #C6BEA6;page-break-after:avoid;}
+    .pr-table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:6px;}
+    .pr-table th{text-align:left;font-size:9.5px;text-transform:uppercase;letter-spacing:.03em;color:#5B5A4E;padding:4px 6px;border-bottom:1px solid #22271F;}
+    .pr-table td{padding:4px 6px;border-bottom:1px solid #E7E3D6;color:#22271F;}
+    .pr-table tr{page-break-inside:avoid;}
+    .pr-num{text-align:right;font-variant-numeric:tabular-nums;}
+    .pr-summary td{font-weight:600;padding:5px 6px;}
+    .pr-empty{font-size:11px;color:#8a8578;font-style:italic;}
+    @page{margin:1.4cm;}
+  }

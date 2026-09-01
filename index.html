@@ -52,6 +52,7 @@
     <div class="drawer-nav" id="drawerNav">
       <button type="button" class="drawer-nav-item" data-nav="form">📋 Movimientos</button>
       <button type="button" class="drawer-nav-item" data-nav="resumen">📈 Resumen</button>
+      <button type="button" class="drawer-nav-item" id="openReportBtn">📄 Reporte / Exportar</button>
       <button type="button" class="drawer-nav-item" data-nav="metas">🎯 Metas y Proyectos</button>
       <button type="button" class="drawer-nav-item" data-nav="cobrar">💵 Por cobrar</button>
       <button type="button" class="drawer-nav-item" data-nav="perfil">👤 Mi perfil</button>
@@ -143,6 +144,21 @@
       </div>
     </div>
   </div>
+
+  <div class="drawer-backdrop" id="reportBackdrop"></div>
+  <div class="help-modal" id="reportModal">
+    <div class="help-modal-header">
+      <h2>Reporte / Exportar</h2>
+      <button type="button" id="reportModalClose" class="drawer-close" aria-label="Cerrar reporte">✕</button>
+    </div>
+    <div class="help-modal-body">
+      <p class="backup-note" style="margin-bottom:18px;">Se genera con el periodo que tengas filtrado ahorita: <strong id="reportPeriodLabel"></strong>. Cambia el filtro arriba antes de abrir esto si quieres otro periodo.</p>
+      <button type="button" id="printReportBtn" class="submit-btn" style="margin-bottom:10px;">🖨️ Ver reporte / Guardar como PDF</button>
+      <button type="button" id="exportCsvBtn" class="cancel-edit-btn" style="width:100%;">⬇️ Exportar movimientos a CSV (Excel)</button>
+    </div>
+  </div>
+
+  <div id="printReport"></div>
 
   <header>
     <div>

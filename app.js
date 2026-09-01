@@ -206,6 +206,14 @@
     firstTimeBannerClose: document.getElementById('firstTimeBannerClose'),
     helpModal: document.getElementById('helpModal'),
     helpBackdrop: document.getElementById('helpBackdrop'),
+    reportBackdrop: document.getElementById('reportBackdrop'),
+    reportModal: document.getElementById('reportModal'),
+    reportModalClose: document.getElementById('reportModalClose'),
+    openReportBtn: document.getElementById('openReportBtn'),
+    reportPeriodLabel: document.getElementById('reportPeriodLabel'),
+    printReportBtn: document.getElementById('printReportBtn'),
+    exportCsvBtn: document.getElementById('exportCsvBtn'),
+    printReport: document.getElementById('printReport'),
     helpModalClose: document.getElementById('helpModalClose'),
     accountMenuPanel: document.getElementById('accountMenuPanel'),
     drawerBackdrop: document.getElementById('drawerBackdrop'),
@@ -573,6 +581,111 @@
   });
   els.helpModalClose.addEventListener('click', closeHelpModal);
   els.helpBackdrop.addEventListener('click', closeHelpModal);
+
+  /* ---------- Reporte mensual / exportar ---------- */
+  function openReportModal(){
+    els.reportPeriodLabel.textContent = periodLabel();
+    els.reportModal.classList.add('open');
+    els.reportBackdrop.classList.add('open');
+  }
+  function closeReportModal(){
+    els.reportModal.classList.remove('open');
+    els.reportBackdrop.classList.remove('open');
+  }
+  els.openReportBtn.addEventListener('click', ()=>{
+    closeDrawer();
+    openReportModal();
+  });
+  els.reportModalClose.addEventListener('click', closeReportModal);
+  els.reportBackdrop.addEventListener('click', closeReportModal);
+
+  function buildReportHtml(){
+    buildExpenseBreakdownCache();
+    const { income, expense, utilidad, balance } = computeTotals();
+    const catBreak = computeCategoryBreakdown();
+    const payBreak = computePaymentBreakdown();
+    const incBreak = computeIncomeBreakdown();
+    const moves = transactions.filter(t=>isInPeriod(t.date)).sort((a,b)=> a.date.localeCompare(b.date) || a.id - b.id);
+
+    const table = (rows, cols)=>{
+      if(rows.length === 0) return '<p class="pr-empty">Sin datos en este periodo.</p>';
+      return `<table class="pr-table"><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>`;
+    };
+
+    const breakdownRows = (entries, total)=> entries.map(([label, amt])=>{
+      const pct = total ? ((amt/total)*100).toFixed(1) : '0.0';
+      return `<tr><td>${escapeHtml(label)}</td><td class="pr-num">${fmt.format(amt)}</td><td class="pr-num">${pct}%</td></tr>`;
+    }).join('');
+
+    const movRows = moves.map(t=>{
+      const sign = t.type === 'gasto' ? '−' : '+';
+      const monto = (t.isMsi ? msiPeriodContribution(t) : t.amount);
+      return `<tr>
+        <td>${t.date.split('-').reverse().join('/')}</td>
+        <td>${escapeHtml(t.type === 'ahorro' ? (t.subtype === 'retiro' ? 'Ahorro (retiro)' : 'Ahorro (aporte)') : (t.type === 'ingreso' ? 'Ingreso' : 'Gasto'))}</td>
+        <td>${escapeHtml(t.category)}${t.isMsi ? ' (MSI)' : ''}</td>
+        <td>${escapeHtml(t.paymentMethod || '—')}</td>
+        <td>${escapeHtml(t.description || '')}</td>
+        <td class="pr-num">${sign} ${fmt.format(monto)}${t.moneda === 'USD' ? ' USD' : ''}</td>
+      </tr>`;
+    }).join('');
+
+    return `
+      <div class="pr-header">
+        <h1>Finanzas Personales</h1>
+        <p>Estado de cuenta — ${escapeHtml(periodLabel())}</p>
+        <p class="pr-generated">Generado el ${new Date().toLocaleDateString('es-MX', {day:'2-digit', month:'long', year:'numeric'})}</p>
+      </div>
+
+      <h2>Resumen del periodo</h2>
+      <table class="pr-table pr-summary">
+        <tr><td>Ingresos</td><td class="pr-num">${fmt.format(income)}</td></tr>
+        <tr><td>Gastos</td><td class="pr-num">${fmt.format(expense)}</td></tr>
+        <tr><td>Utilidad</td><td class="pr-num">${fmt.format(utilidad)}</td></tr>
+        <tr><td>Balance del periodo</td><td class="pr-num">${fmt.format(balance)}</td></tr>
+      </table>
+
+      <h2>Gastos por categoría</h2>
+      ${table(breakdownRows(catBreak, expense), ['Categoría','Monto','%'])}
+
+      <h2>Gastos por forma de pago</h2>
+      ${table(breakdownRows(payBreak, expense), ['Forma de pago','Monto','%'])}
+
+      <h2>Ingresos por categoría</h2>
+      ${table(breakdownRows(incBreak, income), ['Categoría','Monto','%'])}
+
+      <h2>Movimientos del periodo</h2>
+      ${table(movRows, ['Fecha','Tipo','Categoría','Forma de pago','Descripción','Monto'])}
+    `;
+  }
+
+  els.printReportBtn.addEventListener('click', ()=>{
+    els.printReport.innerHTML = buildReportHtml();
+    closeReportModal();
+    setTimeout(()=> window.print(), 100);
+  });
+
+  els.exportCsvBtn.addEventListener('click', ()=>{
+    const moves = transactions.filter(t=>isInPeriod(t.date)).sort((a,b)=> a.date.localeCompare(b.date) || a.id - b.id);
+    const escCsv = v => `"${String(v).replace(/"/g,'""')}"`;
+    const header = ['Fecha','Tipo','Categoría','Forma de pago','Descripción','Monto','Moneda'].map(escCsv).join(',');
+    const rows = moves.map(t=>{
+      const tipo = t.type === 'ahorro' ? (t.subtype === 'retiro' ? 'Ahorro (retiro)' : 'Ahorro (aporte)') : (t.type === 'ingreso' ? 'Ingreso' : 'Gasto');
+      const monto = t.isMsi ? msiPeriodContribution(t) : t.amount;
+      return [t.date, tipo, t.category, t.paymentMethod || '', t.description || '', monto.toFixed(2), t.moneda || 'MXN'].map(escCsv).join(',');
+    });
+    const csv = '\uFEFF' + [header, ...rows].join('\r\n');
+    const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `movimientos-${periodValue || 'reporte'}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    closeReportModal();
+  });
 
   /* ---------- Tema oscuro ---------- */
   const THEME_KEY = 'libro-cuentas:theme';
