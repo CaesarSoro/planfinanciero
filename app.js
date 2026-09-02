@@ -643,18 +643,26 @@
       <h2>Presupuestado vs. Real</h2>
       ${table(computeBudgetVsRealRows().map(r=>{
         const diff = r.real - r.presu;
-        const diffLabel = Math.abs(diff) < 0.005 ? 'Igual' : (diff >= 0 ? `+${fmt.format(diff)}` : `−${fmt.format(Math.abs(diff))}`);
-        return `<tr><td>${escapeHtml(r.label)}</td><td class="pr-num">${fmt.format(r.presu)}</td><td class="pr-num">${fmt.format(r.real)}</td><td class="pr-num">${diffLabel}</td></tr>`;
+        const isEqual = Math.abs(diff) < 0.005;
+        const good = isEqual || (r.lowerIsBetter ? diff <= 0 : diff >= 0);
+        const diffLabel = isEqual ? 'Igual' : (diff >= 0 ? `+${fmt.format(diff)}` : `−${fmt.format(Math.abs(diff))}`);
+        const diffColor = isEqual ? '#8a8578' : (good ? '#2E6F4F' : '#7A2E2E');
+        return `<tr><td>${escapeHtml(r.label)}</td><td class="pr-num">${fmt.format(r.presu)}</td><td class="pr-num">${fmt.format(r.real)}</td><td class="pr-num" style="color:${diffColor};font-weight:700;">${diffLabel}</td></tr>`;
       }).join(''), ['Grupo','Presupuestado','Real','Diferencia'])}
 
-      <h2>Gastos por categoría</h2>
-      ${catBreak.length > 0 ? buildDonutHtml(catBreak, 'Gastos', 120) : '<p class="pr-empty">Sin gastos en este periodo.</p>'}
-
-      <h2>Gastos por forma de pago</h2>
-      ${payBreak.length > 0 ? buildDonutHtml(payBreak, 'Gastos', 120) : '<p class="pr-empty">Sin gastos en este periodo.</p>'}
+      <div class="pr-two-col">
+        <div>
+          <h2>Gastos por categoría</h2>
+          ${catBreak.length > 0 ? buildDonutHtml(catBreak, 'Gastos', 95) : '<p class="pr-empty">Sin gastos en este periodo.</p>'}
+        </div>
+        <div>
+          <h2>Gastos por forma de pago</h2>
+          ${payBreak.length > 0 ? buildDonutHtml(payBreak, 'Gastos', 95) : '<p class="pr-empty">Sin gastos en este periodo.</p>'}
+        </div>
+      </div>
 
       <h2>Ingresos por categoría</h2>
-      ${incBreak.length > 0 ? buildDonutHtml(incBreak, 'Ingresos', 120) : '<p class="pr-empty">Sin ingresos en este periodo.</p>'}
+      ${incBreak.length > 0 ? buildDonutHtml(incBreak, 'Ingresos', 95) : '<p class="pr-empty">Sin ingresos en este periodo.</p>'}
 
       <h2>Movimientos del periodo</h2>
       ${table(movRows, ['Fecha','Tipo','Categoría','Forma de pago','Descripción','Monto'])}
@@ -662,9 +670,15 @@
   }
 
   els.printReportBtn.addEventListener('click', ()=>{
+    switchTab('form');
+    showRegistroView('list');
     els.printReport.innerHTML = buildReportHtml();
     closeReportModal();
     setTimeout(()=> window.print(), 100);
+  });
+  window.addEventListener('afterprint', ()=>{
+    switchTab('form');
+    showRegistroView('list');
   });
 
   els.exportCsvBtn.addEventListener('click', ()=>{
