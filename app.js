@@ -652,17 +652,17 @@
 
       <div class="pr-two-col">
         <div>
-          <h2>Gastos por categoría</h2>
-          ${catBreak.length > 0 ? buildDonutHtml(catBreak, 'Gastos', 95) : '<p class="pr-empty">Sin gastos en este periodo.</p>'}
-        </div>
-        <div>
           <h2>Gastos por forma de pago</h2>
           ${payBreak.length > 0 ? buildDonutHtml(payBreak, 'Gastos', 95) : '<p class="pr-empty">Sin gastos en este periodo.</p>'}
         </div>
+        <div>
+          <h2>Ingresos por categoría</h2>
+          ${incBreak.length > 0 ? buildDonutHtml(incBreak, 'Ingresos', 95) : '<p class="pr-empty">Sin ingresos en este periodo.</p>'}
+        </div>
       </div>
 
-      <h2>Ingresos por categoría</h2>
-      ${incBreak.length > 0 ? buildDonutHtml(incBreak, 'Ingresos', 95) : '<p class="pr-empty">Sin ingresos en este periodo.</p>'}
+      <h2>Gastos por categoría</h2>
+      ${catBreak.length > 0 ? buildDonutHtml(catBreak, 'Gastos', 110) : '<p class="pr-empty">Sin gastos en este periodo.</p>'}
 
       <h2>Movimientos del periodo</h2>
       ${table(movRows, ['Fecha','Tipo','Categoría','Forma de pago','Descripción','Monto'])}
