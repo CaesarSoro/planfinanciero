@@ -152,7 +152,30 @@
       <button type="button" id="reportModalClose" class="drawer-close" aria-label="Cerrar reporte">✕</button>
     </div>
     <div class="help-modal-body">
-      <p class="backup-note" style="margin-bottom:18px;">Se genera con el periodo que tengas filtrado ahorita: <strong id="reportPeriodLabel"></strong>. Cambia el filtro arriba antes de abrir esto si quieres otro periodo.</p>
+      <p class="backup-note" style="margin-bottom:10px;">Elige el periodo para el reporte — es independiente del filtro que tengas activo en la pantalla principal.</p>
+      <div class="period-toggle" id="reportPeriodToggle">
+        <button type="button" class="period-btn" data-period="dia">Día</button>
+        <button type="button" class="period-btn active" data-period="mes">Mes</button>
+        <button type="button" class="period-btn" data-period="anio">Año</button>
+        <button type="button" class="period-btn" data-period="todo">Todo</button>
+      </div>
+      <div class="period-nav" id="reportPeriodNav" style="margin:8px 0 18px;">
+        <button type="button" class="period-nav-btn" id="reportPeriodPrevBtn" aria-label="Periodo anterior">‹</button>
+        <input type="date" id="reportPeriodDate" class="period-input" style="display:none;" aria-label="Día del reporte">
+        <input type="month" id="reportPeriodMonth" class="period-input" aria-label="Mes del reporte">
+        <input type="number" id="reportPeriodYear" class="period-input" style="display:none;" min="2000" max="2100" aria-label="Año del reporte">
+        <button type="button" class="period-nav-btn" id="reportPeriodNextBtn" aria-label="Periodo siguiente">›</button>
+      </div>
+
+      <p class="backup-note" style="margin-bottom:8px;">¿Qué quieres incluir?</p>
+      <div class="report-check-list">
+        <label><input type="checkbox" id="repIncResumen" checked> Resumen del periodo</label>
+        <label><input type="checkbox" id="repIncPresupuesto" checked> Presupuestado vs. Real</label>
+        <label><input type="checkbox" id="repIncGastos" checked> Gastos (por categoría y forma de pago)</label>
+        <label><input type="checkbox" id="repIncIngresos" checked> Ingresos por categoría</label>
+        <label><input type="checkbox" id="repIncMovimientos" checked> Lista de movimientos</label>
+      </div>
+
       <button type="button" id="printReportBtn" class="submit-btn" style="margin-bottom:10px;">🖨️ Ver reporte / Guardar como PDF</button>
       <button type="button" id="exportCsvBtn" class="cancel-edit-btn" style="width:100%;">⬇️ Exportar movimientos a CSV (Excel)</button>
     </div>

@@ -71,19 +71,21 @@
     if(periodMode === 'anio') return dateStr.slice(0,4) === periodValue;
     return true;
   }
-  function periodLabel(){
-    if(periodMode === 'todo') return 'todo el historial';
-    if(periodMode === 'dia'){
-      if(!periodValue) return 'un día';
-      const [y,m,d] = periodValue.split('-');
+  function periodLabel(mode, value){
+    mode = mode || periodMode;
+    value = value === undefined ? periodValue : value;
+    if(mode === 'todo') return 'todo el historial';
+    if(mode === 'dia'){
+      if(!value) return 'un día';
+      const [y,m,d] = value.split('-');
       return `${d}/${m}/${y}`;
     }
-    if(periodMode === 'mes'){
-      if(!periodValue) return 'un mes';
-      const [y,m] = periodValue.split('-');
+    if(mode === 'mes'){
+      if(!value) return 'un mes';
+      const [y,m] = value.split('-');
       return `${MONTH_NAMES_ES[parseInt(m,10)-1]} ${y}`;
     }
-    if(periodMode === 'anio') return periodValue ? `año ${periodValue}` : 'un año';
+    if(mode === 'anio') return value ? `año ${value}` : 'un año';
     return '';
   }
   // Convierte el filtro de periodo activo en una fecha de referencia puntual, para ver
@@ -210,7 +212,18 @@
     reportModal: document.getElementById('reportModal'),
     reportModalClose: document.getElementById('reportModalClose'),
     openReportBtn: document.getElementById('openReportBtn'),
-    reportPeriodLabel: document.getElementById('reportPeriodLabel'),
+    reportPeriodToggle: document.getElementById('reportPeriodToggle'),
+    reportPeriodNav: document.getElementById('reportPeriodNav'),
+    reportPeriodPrevBtn: document.getElementById('reportPeriodPrevBtn'),
+    reportPeriodNextBtn: document.getElementById('reportPeriodNextBtn'),
+    reportPeriodDate: document.getElementById('reportPeriodDate'),
+    reportPeriodMonth: document.getElementById('reportPeriodMonth'),
+    reportPeriodYear: document.getElementById('reportPeriodYear'),
+    repIncResumen: document.getElementById('repIncResumen'),
+    repIncPresupuesto: document.getElementById('repIncPresupuesto'),
+    repIncGastos: document.getElementById('repIncGastos'),
+    repIncIngresos: document.getElementById('repIncIngresos'),
+    repIncMovimientos: document.getElementById('repIncMovimientos'),
     printReportBtn: document.getElementById('printReportBtn'),
     exportCsvBtn: document.getElementById('exportCsvBtn'),
     printReport: document.getElementById('printReport'),
@@ -583,8 +596,60 @@
   els.helpBackdrop.addEventListener('click', closeHelpModal);
 
   /* ---------- Reporte mensual / exportar ---------- */
+  let reportPeriodMode = 'mes';
+  let reportPeriodValue = todayStr().slice(0,7);
+  function updateReportPeriodInputVisibility(){
+    els.reportPeriodDate.style.display = reportPeriodMode === 'dia' ? 'inline-block' : 'none';
+    els.reportPeriodMonth.style.display = reportPeriodMode === 'mes' ? 'inline-block' : 'none';
+    els.reportPeriodYear.style.display = reportPeriodMode === 'anio' ? 'inline-block' : 'none';
+    els.reportPeriodNav.style.display = reportPeriodMode === 'todo' ? 'none' : 'flex';
+  }
+  function shiftReportPeriod(direction){
+    if(reportPeriodMode === 'dia'){
+      const d = new Date(reportPeriodValue + 'T00:00:00');
+      d.setDate(d.getDate() + direction);
+      reportPeriodValue = d.toISOString().slice(0,10);
+      els.reportPeriodDate.value = reportPeriodValue;
+    } else if(reportPeriodMode === 'mes'){
+      const [y,m] = reportPeriodValue.split('-').map(Number);
+      const d = new Date(y, (m - 1) + direction, 1);
+      reportPeriodValue = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+      els.reportPeriodMonth.value = reportPeriodValue;
+    } else if(reportPeriodMode === 'anio'){
+      reportPeriodValue = String(Number(reportPeriodValue) + direction);
+      els.reportPeriodYear.value = reportPeriodValue;
+    }
+  }
+  els.reportPeriodPrevBtn.addEventListener('click', ()=> shiftReportPeriod(-1));
+  els.reportPeriodNextBtn.addEventListener('click', ()=> shiftReportPeriod(1));
+  els.reportPeriodToggle.addEventListener('click', (e)=>{
+    const btn = e.target.closest('.period-btn');
+    if(!btn) return;
+    reportPeriodMode = btn.dataset.period;
+    [...els.reportPeriodToggle.querySelectorAll('.period-btn')].forEach(b=>{
+      b.classList.toggle('active', b.dataset.period === reportPeriodMode);
+    });
+    if(reportPeriodMode === 'dia') reportPeriodValue = els.reportPeriodDate.value || todayStr();
+    else if(reportPeriodMode === 'mes') reportPeriodValue = els.reportPeriodMonth.value || todayStr().slice(0,7);
+    else if(reportPeriodMode === 'anio') reportPeriodValue = els.reportPeriodYear.value || todayStr().slice(0,4);
+    updateReportPeriodInputVisibility();
+  });
+  els.reportPeriodDate.addEventListener('change', ()=>{ reportPeriodValue = els.reportPeriodDate.value; });
+  els.reportPeriodMonth.addEventListener('change', ()=>{ reportPeriodValue = els.reportPeriodMonth.value; });
+  els.reportPeriodYear.addEventListener('input', ()=>{ reportPeriodValue = els.reportPeriodYear.value; });
+
   function openReportModal(){
-    els.reportPeriodLabel.textContent = periodLabel();
+    // Arranca con lo mismo que tengas filtrado en la pantalla principal — un punto de
+    // partida cómodo — pero desde aquí se puede cambiar sin afectar el filtro real.
+    reportPeriodMode = periodMode;
+    reportPeriodValue = periodValue;
+    [...els.reportPeriodToggle.querySelectorAll('.period-btn')].forEach(b=>{
+      b.classList.toggle('active', b.dataset.period === reportPeriodMode);
+    });
+    if(reportPeriodMode === 'dia') els.reportPeriodDate.value = reportPeriodValue;
+    else if(reportPeriodMode === 'mes') els.reportPeriodMonth.value = reportPeriodValue;
+    else if(reportPeriodMode === 'anio') els.reportPeriodYear.value = reportPeriodValue;
+    updateReportPeriodInputVisibility();
     els.reportModal.classList.add('open');
     els.reportBackdrop.classList.add('open');
   }
@@ -599,74 +664,110 @@
   els.reportModalClose.addEventListener('click', closeReportModal);
   els.reportBackdrop.addEventListener('click', closeReportModal);
 
+  // Genera el HTML del reporte usando el periodo elegido AQUÍ (no el filtro principal):
+  // intercambia el estado global un momento, reutiliza todas las funciones de cálculo
+  // que ya existen tal cual, y lo regresa a como estaba al terminar.
+  function withReportPeriod(fn){
+    const savedMode = periodMode, savedValue = periodValue;
+    periodMode = reportPeriodMode;
+    periodValue = reportPeriodValue;
+    try{ return fn(); }
+    finally{ periodMode = savedMode; periodValue = savedValue; }
+  }
+
   function buildReportHtml(){
-    buildExpenseBreakdownCache();
-    const { income, expense, utilidad, balance } = computeTotals();
-    const catBreak = computeCategoryBreakdown();
-    const payBreak = computePaymentBreakdown();
-    const incBreak = computeIncomeBreakdown();
-    const moves = transactions.filter(t=>isInPeriod(t.date)).sort((a,b)=> a.date.localeCompare(b.date) || a.id - b.id);
+    return withReportPeriod(()=>{
+      buildExpenseBreakdownCache();
+      const { income, expense, utilidad, balance } = computeTotals();
+      const catBreak = computeCategoryBreakdown();
+      const payBreak = computePaymentBreakdown();
+      const incBreak = computeIncomeBreakdown();
+      const moves = transactions.filter(t=>isInPeriod(t.date)).sort((a,b)=> a.date.localeCompare(b.date) || a.id - b.id);
 
-    const table = (rows, cols)=>{
-      if(rows.length === 0) return '<p class="pr-empty">Sin datos en este periodo.</p>';
-      return `<table class="pr-table"><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>`;
-    };
+      const incResumen = els.repIncResumen.checked;
+      const incPresupuesto = els.repIncPresupuesto.checked;
+      const incGastos = els.repIncGastos.checked;
+      const incIngresos = els.repIncIngresos.checked;
+      const incMovimientos = els.repIncMovimientos.checked;
 
-    const movRows = moves.map(t=>{
-      const sign = t.type === 'gasto' ? '−' : '+';
-      const monto = (t.isMsi ? msiPeriodContribution(t) : t.amount);
-      return `<tr>
-        <td>${t.date.split('-').reverse().join('/')}</td>
-        <td>${escapeHtml(t.type === 'ahorro' ? (t.subtype === 'retiro' ? 'Ahorro (retiro)' : 'Ahorro (aporte)') : (t.type === 'ingreso' ? 'Ingreso' : 'Gasto'))}</td>
-        <td>${escapeHtml(t.category)}${t.isMsi ? ' (MSI)' : ''}</td>
-        <td>${escapeHtml(t.paymentMethod || '—')}</td>
-        <td>${escapeHtml(t.description || '')}</td>
-        <td class="pr-num">${sign} ${fmt.format(monto)}${t.moneda === 'USD' ? ' USD' : ''}</td>
-      </tr>`;
-    }).join('');
+      const table = (rows, cols)=>{
+        if(rows.length === 0) return '<p class="pr-empty">Sin datos en este periodo.</p>';
+        return `<table class="pr-table"><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>`;
+      };
 
-    return `
-      <div class="pr-header">
-        <h1>Finanzas Personales</h1>
-        <p>Estado de cuenta — ${escapeHtml(periodLabel())}</p>
-        <p class="pr-generated">Generado el ${new Date().toLocaleDateString('es-MX', {day:'2-digit', month:'long', year:'numeric'})}</p>
-      </div>
+      const movRows = moves.map(t=>{
+        const sign = t.type === 'gasto' ? '−' : '+';
+        const monto = (t.isMsi ? msiPeriodContribution(t) : t.amount);
+        return `<tr>
+          <td>${t.date.split('-').reverse().join('/')}</td>
+          <td>${escapeHtml(t.type === 'ahorro' ? (t.subtype === 'retiro' ? 'Ahorro (retiro)' : 'Ahorro (aporte)') : (t.type === 'ingreso' ? 'Ingreso' : 'Gasto'))}</td>
+          <td>${escapeHtml(t.category)}${t.isMsi ? ' (MSI)' : ''}</td>
+          <td>${escapeHtml(t.paymentMethod || '—')}</td>
+          <td>${escapeHtml(t.description || '')}</td>
+          <td class="pr-num">${sign} ${fmt.format(monto)}${t.moneda === 'USD' ? ' USD' : ''}</td>
+        </tr>`;
+      }).join('');
 
-      <h2>Resumen del periodo</h2>
-      <table class="pr-table pr-summary">
-        <tr><td>Ingresos</td><td class="pr-num">${fmt.format(income)}</td></tr>
-        <tr><td>Gastos</td><td class="pr-num">${fmt.format(expense)}</td></tr>
-        <tr><td>Utilidad</td><td class="pr-num">${fmt.format(utilidad)}</td></tr>
-        <tr><td>Balance del periodo</td><td class="pr-num">${fmt.format(balance)}</td></tr>
-      </table>
+      let html = `
+        <div class="pr-header">
+          <h1>Finanzas Personales</h1>
+          <p>Estado de cuenta — ${escapeHtml(periodLabel())}</p>
+          <p class="pr-generated">Generado el ${new Date().toLocaleDateString('es-MX', {day:'2-digit', month:'long', year:'numeric'})}</p>
+        </div>`;
 
-      <h2>Presupuestado vs. Real</h2>
-      ${table(computeBudgetVsRealRows().map(r=>{
-        const diff = r.real - r.presu;
-        const isEqual = Math.abs(diff) < 0.005;
-        const good = isEqual || (r.lowerIsBetter ? diff <= 0 : diff >= 0);
-        const diffLabel = isEqual ? 'Igual' : (diff >= 0 ? `+${fmt.format(diff)}` : `−${fmt.format(Math.abs(diff))}`);
-        const diffColor = isEqual ? '#8a8578' : (good ? '#2E6F4F' : '#7A2E2E');
-        return `<tr><td>${escapeHtml(r.label)}</td><td class="pr-num">${fmt.format(r.presu)}</td><td class="pr-num">${fmt.format(r.real)}</td><td class="pr-num" style="color:${diffColor};font-weight:700;">${diffLabel}</td></tr>`;
-      }).join(''), ['Grupo','Presupuestado','Real','Diferencia'])}
+      if(incResumen){
+        html += `
+        <h2>Resumen del periodo</h2>
+        <table class="pr-table pr-summary">
+          <tr><td>Ingresos</td><td class="pr-num">${fmt.format(income)}</td></tr>
+          <tr><td>Gastos</td><td class="pr-num">${fmt.format(expense)}</td></tr>
+          <tr><td>Utilidad</td><td class="pr-num">${fmt.format(utilidad)}</td></tr>
+          <tr><td>Balance del periodo</td><td class="pr-num">${fmt.format(balance)}</td></tr>
+        </table>`;
+      }
 
-      <div class="pr-two-col">
-        <div>
-          <h2>Gastos por forma de pago</h2>
-          ${payBreak.length > 0 ? buildDonutHtml(payBreak, 'Gastos', 95) : '<p class="pr-empty">Sin gastos en este periodo.</p>'}
+      if(incPresupuesto){
+        html += `
+        <h2>Presupuestado vs. Real</h2>
+        ${table(computeBudgetVsRealRows().map(r=>{
+          const diff = r.real - r.presu;
+          const isEqual = Math.abs(diff) < 0.005;
+          const good = isEqual || (r.lowerIsBetter ? diff <= 0 : diff >= 0);
+          const diffLabel = isEqual ? 'Igual' : (diff >= 0 ? `+${fmt.format(diff)}` : `−${fmt.format(Math.abs(diff))}`);
+          const diffColor = isEqual ? '#8a8578' : (good ? '#2E6F4F' : '#7A2E2E');
+          return `<tr><td>${escapeHtml(r.label)}</td><td class="pr-num">${fmt.format(r.presu)}</td><td class="pr-num">${fmt.format(r.real)}</td><td class="pr-num" style="color:${diffColor};font-weight:700;">${diffLabel}</td></tr>`;
+        }).join(''), ['Grupo','Presupuestado','Real','Diferencia'])}`;
+      }
+
+      if(incGastos){
+        html += `
+        <div class="pr-two-col">
+          <div>
+            <h2>Gastos por forma de pago</h2>
+            ${payBreak.length > 0 ? buildDonutHtml(payBreak, 'Gastos', 95) : '<p class="pr-empty">Sin gastos en este periodo.</p>'}
+          </div>
+          ${incIngresos ? `<div>
+            <h2>Ingresos por categoría</h2>
+            ${incBreak.length > 0 ? buildDonutHtml(incBreak, 'Ingresos', 95) : '<p class="pr-empty">Sin ingresos en este periodo.</p>'}
+          </div>` : ''}
         </div>
-        <div>
-          <h2>Ingresos por categoría</h2>
-          ${incBreak.length > 0 ? buildDonutHtml(incBreak, 'Ingresos', 95) : '<p class="pr-empty">Sin ingresos en este periodo.</p>'}
-        </div>
-      </div>
 
-      <h2>Gastos por categoría</h2>
-      ${catBreak.length > 0 ? buildDonutHtml(catBreak, 'Gastos', 110) : '<p class="pr-empty">Sin gastos en este periodo.</p>'}
+        <h2>Gastos por categoría</h2>
+        ${catBreak.length > 0 ? buildDonutHtml(catBreak, 'Gastos', 110) : '<p class="pr-empty">Sin gastos en este periodo.</p>'}`;
+      } else if(incIngresos){
+        html += `
+        <h2>Ingresos por categoría</h2>
+        ${incBreak.length > 0 ? buildDonutHtml(incBreak, 'Ingresos', 110) : '<p class="pr-empty">Sin ingresos en este periodo.</p>'}`;
+      }
 
-      <h2>Movimientos del periodo</h2>
-      ${table(movRows, ['Fecha','Tipo','Categoría','Forma de pago','Descripción','Monto'])}
-    `;
+      if(incMovimientos){
+        html += `
+        <h2>Movimientos del periodo</h2>
+        ${table(movRows, ['Fecha','Tipo','Categoría','Forma de pago','Descripción','Monto'])}`;
+      }
+
+      return html;
+    });
   }
 
   els.printReportBtn.addEventListener('click', ()=>{
@@ -682,24 +783,26 @@
   });
 
   els.exportCsvBtn.addEventListener('click', ()=>{
-    const moves = transactions.filter(t=>isInPeriod(t.date)).sort((a,b)=> a.date.localeCompare(b.date) || a.id - b.id);
-    const escCsv = v => `"${String(v).replace(/"/g,'""')}"`;
-    const header = ['Fecha','Tipo','Categoría','Forma de pago','Descripción','Monto','Moneda'].map(escCsv).join(',');
-    const rows = moves.map(t=>{
-      const tipo = t.type === 'ahorro' ? (t.subtype === 'retiro' ? 'Ahorro (retiro)' : 'Ahorro (aporte)') : (t.type === 'ingreso' ? 'Ingreso' : 'Gasto');
-      const monto = t.isMsi ? msiPeriodContribution(t) : t.amount;
-      return [t.date, tipo, t.category, t.paymentMethod || '', t.description || '', monto.toFixed(2), t.moneda || 'MXN'].map(escCsv).join(',');
+    withReportPeriod(()=>{
+      const moves = transactions.filter(t=>isInPeriod(t.date)).sort((a,b)=> a.date.localeCompare(b.date) || a.id - b.id);
+      const escCsv = v => `"${String(v).replace(/"/g,'""')}"`;
+      const header = ['Fecha','Tipo','Categoría','Forma de pago','Descripción','Monto','Moneda'].map(escCsv).join(',');
+      const rows = moves.map(t=>{
+        const tipo = t.type === 'ahorro' ? (t.subtype === 'retiro' ? 'Ahorro (retiro)' : 'Ahorro (aporte)') : (t.type === 'ingreso' ? 'Ingreso' : 'Gasto');
+        const monto = t.isMsi ? msiPeriodContribution(t) : t.amount;
+        return [t.date, tipo, t.category, t.paymentMethod || '', t.description || '', monto.toFixed(2), t.moneda || 'MXN'].map(escCsv).join(',');
+      });
+      const csv = '\uFEFF' + [header, ...rows].join('\r\n');
+      const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `movimientos-${reportPeriodValue || 'reporte'}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     });
-    const csv = '\uFEFF' + [header, ...rows].join('\r\n');
-    const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `movimientos-${periodValue || 'reporte'}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
     closeReportModal();
   });
 
@@ -2021,16 +2124,39 @@
       ? buildDonutCircleHtml(groupBreakdown, GROUP_COLORS, 'Gastos')
       : '<p class="ledger-empty">Sin gastos registrados en este periodo.</p>';
     const groupGrandTotal = groupBreakdown.reduce((s,[,v])=> s + v, 0);
-    els.groupBreakdownDetail.innerHTML = groupBreakdown.map(([groupName, total])=>{
+
+    // Cada grupo con su total, % y cuántas categorías tiene — para decidir el acomodo.
+    const groupBlocks = groupBreakdown.map(([groupName, total])=>{
+      const cats = computeCategoryBreakdownByGroup(groupName);
       const pct = groupGrandTotal ? ((total/groupGrandTotal)*100).toFixed(1) : '0.0';
-      return `<div class="group-detail-block">
+      const barsHtml = buildCategoryBarsHtml(cats);
+      const html = `<div class="group-detail-block">
         <div class="group-detail-title">
           <span class="group-detail-name"><span class="group-detail-dot" style="background:${GROUP_COLORS[groupName] || '#8a8578'};"></span>${escapeHtml(groupName)}</span>
           <span class="group-detail-right"><span class="group-detail-pct">${pct}%</span><span class="group-detail-total">${fmt.format(total)}</span></span>
         </div>
-        ${buildCategoryBarsHtml(computeCategoryBreakdownByGroup(groupName))}
+        <div class="${cats.length > 4 ? 'cat-bars-2col' : ''}">${barsHtml}</div>
       </div>`;
-    }).join('');
+      return { count: cats.length, html };
+    });
+
+    if(groupBlocks.length <= 1){
+      // Un solo grupo (o ninguno): ancho completo — sus categorías ya se acomodan en
+      // 2 columnas solas si hay más de 4, para no dejar una lista larga y angosta.
+      els.groupBreakdownDetail.className = '';
+      els.groupBreakdownDetail.innerHTML = groupBlocks.map(b=>b.html).join('');
+    } else {
+      // Varios grupos: el que tenga más categorías se queda solo en su propia columna;
+      // el resto se apila junto en la otra — así un grupo de 2 categorías no se lleva
+      // el mismo ancho que uno de 11.
+      const sorted = [...groupBlocks].sort((a,b)=> b.count - a.count);
+      const [biggest, ...rest] = sorted;
+      els.groupBreakdownDetail.className = 'group-breakdown-split';
+      els.groupBreakdownDetail.innerHTML = `
+        <div class="group-col">${biggest.html}</div>
+        <div class="group-col">${rest.map(b=>b.html).join('')}</div>
+      `;
+    }
 
     const paymentBreakdown = computePaymentBreakdown();
     els.paymentDonut.innerHTML = paymentBreakdown.length > 0
