@@ -307,6 +307,7 @@
     msiPendingNote: document.getElementById('msiPendingNote'),
     msiCardBreakdown: document.getElementById('msiCardBreakdown'),
     savingsPanel: document.getElementById('savingsPanel'),
+    cardsPanel: document.getElementById('cardsPanel'),
     budgetPanel: document.getElementById('budgetPanel'),
     travelPanel: document.getElementById('travelPanel'),
     receivablesPanel: document.getElementById('receivablesPanel'),
@@ -2263,6 +2264,41 @@
       }).join('');
     }
     els.savingsPanel.innerHTML = savingsHtml;
+
+    // Tarjetas de crédito: lo que se carga a cada tarjeta en el periodo (compras normales + mensualidades MSI).
+    // Es lo que normalmente toca pagar en el siguiente corte. No cambia el Balance disponible.
+    (function renderCardsPanel(){
+      const cards = {};
+      transactions.forEach(t=>{
+        if(t.type !== 'gasto' || !String(t.paymentMethod || '').startsWith('Crédito')) return;
+        let amt, isMsi = false;
+        if(t.isMsi){ amt = msiPeriodContribution(t); isMsi = true; }
+        else { if(!isInPeriod(t.date)) return; amt = t.amount; }
+        if(!(amt > 0)) return;
+        const c = cards[t.paymentMethod] || (cards[t.paymentMethod] = { compras:0, msi:0 });
+        if(isMsi) c.msi += amt; else c.compras += amt;
+      });
+      const entries = Object.entries(cards).map(([name,c])=>[name, c, c.compras + c.msi]).sort((a,b)=> b[2]-a[2]);
+      if(entries.length === 0){
+        els.cardsPanel.innerHTML = '<p class="ledger-empty">Sin cargos a tarjetas de crédito en este periodo.</p>';
+        return;
+      }
+      const total = entries.reduce((s,e)=> s + e[2], 0);
+      const max = entries[0][2];
+      els.cardsPanel.innerHTML =
+        `<p class="cards-total">Total a pagar en tarjetas: <strong>${fmt.format(total)}</strong> · ${escapeHtml(periodLabel())}</p>` +
+        entries.map(([name, c, sum])=>{
+          const pct = max ? Math.max(6, (sum/max)*100) : 0;
+          const detail = [];
+          if(c.compras > 0) detail.push('Compras ' + fmt.format(c.compras));
+          if(c.msi > 0) detail.push('MSI ' + fmt.format(c.msi));
+          return `<div class="card-pay-row">
+            <div class="card-pay-line"><span class="card-pay-name">${escapeHtml(name)}</span><span class="card-pay-amt">${fmt.format(sum)}</span></div>
+            <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${pct}%;"></div></div>
+            <div class="card-pay-detail">${detail.join(' · ')}</div>
+          </div>`;
+        }).join('');
+    })();
 
     const msiRefDate = periodReferenceDate();
     const msiPlans = transactions.filter(t=>t.isMsi && msiIsActiveInPeriod(t));
