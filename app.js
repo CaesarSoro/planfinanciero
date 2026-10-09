@@ -163,6 +163,7 @@
   let customCategoryGroups = {}; // categorías nuevas que el usuario clasificó como Fijo/Variable/Inversión/General
   let currentType = "gasto";
   let currentSubtype = "aporte";
+  const SUBTYPE_LABEL = { aporte:'Aporte', retiro:'Retiro', inicial:'Saldo inicial' };
   let currentMoneda = "MXN";
   let editingTransactionId = null;
   let editingTravelId = null;
@@ -696,11 +697,11 @@
       };
 
       const movRows = moves.map(t=>{
-        const sign = t.type === 'gasto' ? '−' : '+';
+        const sign = (t.type === 'gasto' || (t.type === 'ahorro' && t.subtype === 'aporte')) ? '−' : '+';
         const monto = (t.isMsi ? msiPeriodContribution(t) : t.amount);
         return `<tr>
           <td>${t.date.split('-').reverse().join('/')}</td>
-          <td>${escapeHtml(t.type === 'ahorro' ? (t.subtype === 'retiro' ? 'Ahorro (retiro)' : 'Ahorro (aporte)') : (t.type === 'ingreso' ? 'Ingreso' : 'Gasto'))}</td>
+          <td>${escapeHtml(t.type === 'ahorro' ? ('Ahorro (' + (SUBTYPE_LABEL[t.subtype] || 'Aporte').toLowerCase() + ')') : (t.type === 'ingreso' ? 'Ingreso' : 'Gasto'))}</td>
           <td>${escapeHtml(t.category)}${t.isMsi ? ' (MSI)' : ''}</td>
           <td>${escapeHtml(t.paymentMethod || '—')}</td>
           <td>${escapeHtml(t.description || '')}</td>
@@ -788,7 +789,7 @@
       const escCsv = v => `"${String(v).replace(/"/g,'""')}"`;
       const header = ['Fecha','Tipo','Categoría','Forma de pago','Descripción','Monto','Moneda'].map(escCsv).join(',');
       const rows = moves.map(t=>{
-        const tipo = t.type === 'ahorro' ? (t.subtype === 'retiro' ? 'Ahorro (retiro)' : 'Ahorro (aporte)') : (t.type === 'ingreso' ? 'Ingreso' : 'Gasto');
+        const tipo = t.type === 'ahorro' ? ('Ahorro (' + (SUBTYPE_LABEL[t.subtype] || 'Aporte').toLowerCase() + ')') : (t.type === 'ingreso' ? 'Ingreso' : 'Gasto');
         const monto = t.isMsi ? msiPeriodContribution(t) : t.amount;
         return [t.date, tipo, t.category, t.paymentMethod || '', t.description || '', monto.toFixed(2), t.moneda || 'MXN'].map(escCsv).join(',');
       });
@@ -1004,7 +1005,7 @@
       els.amountLabel.textContent = 'Monto total de la compra';
       els.dateLabel.textContent = 'Fecha de la primera mensualidad';
     } else if(currentType === 'ahorro'){
-      els.amountLabel.textContent = currentSubtype === 'retiro' ? 'Monto a retirar' : 'Monto a aportar';
+      els.amountLabel.textContent = currentSubtype === 'retiro' ? 'Monto a retirar' : (currentSubtype === 'inicial' ? 'Saldo con el que ya contabas' : 'Monto a aportar');
       els.dateLabel.textContent = 'Fecha';
     } else {
       els.amountLabel.textContent = 'Monto (MXN)';
@@ -1892,7 +1893,7 @@
       // Solo ahorro en pesos afecta el balance en pesos — un aporte en dólares no debe
       // restarse como si fuera pesos.
       else if(t.type === 'ahorro' && (t.moneda || 'MXN') === 'MXN'){
-        if(t.subtype === 'retiro') savingsOut += t.amount; else savingsIn += t.amount;
+        if(t.subtype === 'retiro') savingsOut += t.amount; else if(t.subtype !== 'inicial') savingsIn += t.amount;
       }
     });
     const savingsNetPeriod = savingsIn - savingsOut;
@@ -1906,7 +1907,7 @@
       if(t.type === 'ingreso') income += t.amount;
       else if(t.type === 'gasto') expense += expenseContribution(t);
       else if(t.type === 'ahorro' && (t.moneda || 'MXN') === 'MXN'){
-        if(t.subtype === 'retiro') savingsOut += t.amount; else savingsIn += t.amount;
+        if(t.subtype === 'retiro') savingsOut += t.amount; else if(t.subtype !== 'inicial') savingsIn += t.amount;
       }
     });
     return income - expense - (savingsIn - savingsOut);
@@ -2253,7 +2254,7 @@
           <div class="ledger-row-line2">
             <div class="ledger-badges">
               <span class="ledger-cat">${escapeHtml(t.category)}</span>
-              <span class="ledger-subtype-badge ${t.subtype}">${t.subtype === 'retiro' ? 'Retiro' : 'Aporte'}</span>
+              <span class="ledger-subtype-badge ${t.subtype}">${SUBTYPE_LABEL[t.subtype] || 'Aporte'}</span>
               ${monedaBadge}
             </div>
             <span class="ledger-amount ${t.subtype}">${sign} ${fmt.format(t.amount)}${t.moneda === 'USD' ? ' USD' : ''}</span>
@@ -2376,7 +2377,7 @@
         let delta = 0;
         if(t.type === 'ingreso') delta = t.amount;
         else if(t.type === 'gasto') delta = -t.amount;
-        else if(t.type === 'ahorro') delta = (t.subtype === 'retiro' ? t.amount : -t.amount);
+        else if(t.type === 'ahorro') delta = (t.subtype === 'retiro' ? t.amount : (t.subtype === 'inicial' ? 0 : -t.amount));
         dayNet[t.date] = (dayNet[t.date] || 0) + delta;
       });
       function dayHeaderHtml(date){
@@ -2393,7 +2394,9 @@
       els.ledgerList.innerHTML = `<div class="ledger-list">` + sorted.map(t=>{
         let sign, desc, catLabel;
         if(t.type === 'ahorro'){
-          sign = t.subtype === 'retiro' ? '−' : '+';
+          // Desde la perspectiva de tu balance disponible: un aporte SALE (−) hacia el ahorro,
+          // un retiro REGRESA (+) a tu balance. El panel Fondo de ahorro usa la perspectiva inversa.
+          sign = t.subtype === 'retiro' ? '+' : (t.subtype === 'inicial' ? '' : '−');
           desc = t.description ? t.description : t.category;
           catLabel = t.category;
         } else {
@@ -2403,7 +2406,7 @@
         }
         const payBadge = `<span class="ledger-pay">${escapeHtml(t.paymentMethod || 'Efectivo')}</span>`;
         const msiBadge = t.isMsi ? `<span class="ledger-msi-badge">MSI</span>` : '';
-        const subtypeBadge = t.type === 'ahorro' ? `<span class="ledger-subtype-badge ${t.subtype}">${t.subtype === 'retiro' ? 'Retiro' : 'Aporte'}</span>` : '';
+        const subtypeBadge = t.type === 'ahorro' ? `<span class="ledger-subtype-badge ${t.subtype}">${SUBTYPE_LABEL[t.subtype] || 'Aporte'}</span>` : '';
         const monedaBadge = (t.type === 'ahorro' && t.moneda === 'USD') ? `<span class="ledger-moneda-badge">USD</span>` : '';
         let msiMini = '';
         if(t.isMsi){
@@ -2433,7 +2436,7 @@
               ${subtypeBadge}
               ${monedaBadge}
             </div>
-            <span class="ledger-amount ${t.type}">${sign} ${fmt.format(t.amount)}${t.moneda === 'USD' ? ' USD' : ''}</span>
+            <span class="ledger-amount ${t.type}${t.type === 'ahorro' && t.subtype === 'retiro' ? ' pos' : ''}">${sign} ${fmt.format(t.amount)}${t.moneda === 'USD' ? ' USD' : ''}</span>
           </div>
           ${msiMini}
         </div>`;

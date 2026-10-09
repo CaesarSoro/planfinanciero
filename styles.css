@@ -137,6 +137,7 @@
   .type-toggle button.active[data-type="ahorro"]{background:var(--gold);color:#fff;}
   .type-toggle button.active[data-subtype="aporte"]{background:var(--income);color:#fff;}
   .type-toggle button.active[data-subtype="retiro"]{background:var(--expense);color:#fff;}
+  .type-toggle button.active[data-subtype="inicial"]{background:var(--gold);color:#fff;}
   .type-toggle button.active[data-moneda="MXN"]{background:var(--ink);color:var(--surface);}
   .type-toggle button.active[data-moneda="USD"]{background:var(--gold);color:#fff;}
 
@@ -434,10 +435,10 @@
   .ledger-pay{font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);border:1px solid var(--line);padding:2px 6px;border-radius:20px;flex-shrink:0;white-space:nowrap;}
   .ledger-msi-badge{font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;color:#fff;background:var(--gold);padding:2px 6px;border-radius:20px;flex-shrink:0;}
   .ledger-subtype-badge{font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;padding:2px 6px;border-radius:20px;flex-shrink:0;}
-  .ledger-subtype-badge.aporte{background:var(--income-soft);color:var(--income);} .ledger-subtype-badge.retiro{background:var(--expense-soft);color:var(--expense);}
+  .ledger-subtype-badge.aporte{background:var(--income-soft);color:var(--income);} .ledger-subtype-badge.retiro{background:var(--expense-soft);color:var(--expense);} .ledger-subtype-badge.inicial{background:var(--gold-soft);color:var(--gold);} .ledger-amount.inicial{color:var(--gold);}
   .ledger-moneda-badge{font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;padding:2px 6px;border-radius:20px;flex-shrink:0;background:var(--gold-soft);color:var(--gold);}
   .ledger-amount{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;flex-shrink:0;margin-left:auto;}
-  .ledger-amount.ingreso{color:var(--income);} .ledger-amount.gasto{color:var(--expense);} .ledger-amount.ahorro{color:var(--gold);}
+  .ledger-amount.ingreso{color:var(--income);} .ledger-amount.gasto{color:var(--expense);} .ledger-amount.ahorro{color:var(--gold);} .ledger-amount.ahorro.pos{color:var(--income);}
   .ledger-del{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:18px;line-height:1;padding:4px 2px 4px 8px;flex-shrink:0;}
   .ledger-edit{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:15px;line-height:1;padding:4px 2px 4px 8px;flex-shrink:0;}
   .ledger-edit:hover{color:var(--gold);}
