@@ -103,7 +103,7 @@
   // Lista genérica: única fuente para categorías de una cuenta nueva. Las cuentas existentes
   // simplemente usan lo que ya tienen guardado — no se vuelve a fusionar con nada del código.
   const DEFAULT_CATEGORIES = {
-    ingreso: ["Salario","Freelance","Ventas","Inversiones","Cobranza","Otros ingresos"],
+    ingreso: ["Salario","Freelance","Ventas","Inversiones","Cobranza","Otros ingresos","Saldo Inicial"],
     gasto: [
       "Renta o hipoteca","Luz","Agua","Gas","Internet","Celular","Seguros",
       "Transporte","Comidas","Entretenimiento","Suscripciones","Compras en línea","Ropa","Salud",
@@ -320,6 +320,11 @@
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
+  }
+  // Un ingreso "Saldo inicial" es dinero que ya tenías antes de usar la app: suma a tu Balance
+  // disponible, pero NO cuenta como ingreso del mes ni de ningún periodo.
+  function isOpeningIncome(t){
+    return t.type === 'ingreso' && (t.isOpening === true || String(t.category || '').trim().toLowerCase() === 'saldo inicial');
   }
   function newId(){ return Date.now() + Math.floor(Math.random()*1000); }
 
@@ -564,7 +569,7 @@
   els.drawerCloseBtn.addEventListener('click', closeDrawer);
   els.drawerBackdrop.addEventListener('click', closeDrawer);
   document.getElementById('drawerNav').addEventListener('click', (e)=>{
-    const btn = e.target.closest('.drawer-nav-item');
+    const btn = e.target.closest('.drawer-nav-item[data-nav]');
     if(!btn) return;
     switchTab(btn.dataset.nav);
     closeDrawer();
@@ -985,6 +990,81 @@
     caret.textContent = showing ? '▾' : '▴';
   });
 
+
+  /* ---------- Saldos iniciales (punto de partida) ---------- */
+  const setupEls = {
+    modal: document.getElementById('setupModal'),
+    backdrop: document.getElementById('setupBackdrop'),
+    date: document.getElementById('setupDate'),
+    free: document.getElementById('setupFree'),
+    rows: document.getElementById('setupSavingsRows'),
+    list: document.getElementById('setupSavingsList'),
+    error: document.getElementById('setupError'),
+  };
+  function setupAddRow(cat, moneda, amount){
+    const row = document.createElement('div');
+    row.className = 'setup-row';
+    row.innerHTML = `<input type="text" class="setup-cat" list="setupSavingsList" placeholder="Ej. Ahorro Emergencia" value="${escapeHtml(cat || '')}" aria-label="Nombre del ahorro">
+      <select class="setup-moneda" aria-label="Moneda"><option value="MXN">MXN</option><option value="USD">USD</option></select>
+      <input type="number" class="setup-amt" min="0" step="0.01" placeholder="0.00" value="${amount || ''}" aria-label="Monto">
+      <button type="button" class="setup-del" aria-label="Quitar">✕</button>`;
+    row.querySelector('.setup-moneda').value = moneda || 'MXN';
+    row.querySelector('.setup-del').addEventListener('click', ()=> row.remove());
+    setupEls.rows.appendChild(row);
+  }
+  function openSetupModal(){
+    setupEls.date.value = todayStr();
+    setupEls.free.value = '';
+    setupEls.error.style.display = 'none';
+    setupEls.rows.innerHTML = '';
+    setupEls.list.innerHTML = (categories.ahorro || []).map(c=>`<option value="${escapeHtml(c)}">`).join('');
+    setupAddRow('', 'MXN', '');
+    setupEls.modal.classList.add('open');
+    setupEls.backdrop.classList.add('open');
+  }
+  function closeSetupModal(remember){
+    setupEls.modal.classList.remove('open');
+    setupEls.backdrop.classList.remove('open');
+    if(remember){ try{ localStorage.setItem('setupSeen', '1'); }catch(e){} }
+  }
+  document.getElementById('setupAddRow').addEventListener('click', ()=> setupAddRow('', 'MXN', ''));
+  document.getElementById('setupSkip').addEventListener('click', ()=> closeSetupModal(true));
+  document.getElementById('setupModalClose').addEventListener('click', ()=> closeSetupModal(true));
+  setupEls.backdrop.addEventListener('click', ()=> closeSetupModal(true));
+  document.getElementById('openSetupBtn').addEventListener('click', ()=>{ closeDrawer(); openSetupModal(); });
+  document.getElementById('setupSave').addEventListener('click', async ()=>{
+    const fail = (msg)=>{ setupEls.error.textContent = msg; setupEls.error.style.display = 'block'; };
+    const date = setupEls.date.value || todayStr();
+    const free = parseFloat(setupEls.free.value) || 0;
+    if(free < 0) return fail('El dinero libre no puede ser negativo.');
+    const savings = [];
+    for(const row of setupEls.rows.querySelectorAll('.setup-row')){
+      const cat = row.querySelector('.setup-cat').value.trim();
+      const amt = parseFloat(row.querySelector('.setup-amt').value) || 0;
+      const moneda = row.querySelector('.setup-moneda').value;
+      if(!cat && !amt) continue;
+      if(!cat) return fail('Falta el nombre de uno de tus ahorros.');
+      if(amt <= 0) return fail('Escribe un monto mayor a 0 para "' + cat + '", o quita esa fila.');
+      savings.push({ cat, amt, moneda });
+    }
+    if(free <= 0 && savings.length === 0) return fail('Escribe al menos tu dinero libre o un ahorro. Si empiezas desde cero, usa "Omitir".');
+    const newTx = [];
+    if(free > 0){
+      if(!categories.ingreso.includes('Saldo Inicial')) categories.ingreso.push('Saldo Inicial');
+      newTx.push({ id: newId(), type:'ingreso', amount: free, paymentMethod: (paymentMethods.ingreso && paymentMethods.ingreso[0]) || 'Transferencia', description:'Saldo inicial', date, category:'Saldo Inicial', isMsi:false, isOpening:true });
+    }
+    savings.forEach(sv=>{
+      if(!categories.ahorro.includes(sv.cat)) categories.ahorro.push(sv.cat);
+      newTx.push({ id: newId(), type:'ahorro', subtype:'inicial', moneda: sv.moneda, amount: sv.amt, paymentMethod: (paymentMethods.ahorro && paymentMethods.ahorro[0]) || 'Transferencia', description:'Saldo inicial', date, category: sv.cat });
+    });
+    transactions.push(...newTx);
+    closeSetupModal(true);
+    populateCategories();
+    render();
+    await saveCategories(true);
+    await saveTransactions();
+  });
+
   /* ---------- Payment method / MSI / Ahorro visibility ---------- */
   function populatePaymentMethods(){
     els.paymentMethod.innerHTML = '<option value="">Elige una forma de pago…</option>' + paymentMethods[currentType]
@@ -1036,7 +1116,14 @@
     });
   });
 
+  function updateOpeningHint(){
+    const hint = document.getElementById('openingHint');
+    if(!hint) return;
+    const show = currentType === 'ingreso' && String(els.category.value || '').trim().toLowerCase() === 'saldo inicial';
+    hint.style.display = show ? 'block' : 'none';
+  }
   function updateAmountGate(){
+    updateOpeningHint();
     const amountValid = parseFloat(els.amount.value) > 0;
     els.paymentMethod.disabled = !amountValid;
 
@@ -1890,7 +1977,7 @@
         return;
       }
       if(!isInPeriod(t.date)) return;
-      if(t.type === 'ingreso') income += t.amount;
+      if(t.type === 'ingreso'){ if(!isOpeningIncome(t)) income += t.amount; }
       // Solo ahorro en pesos afecta el balance en pesos — un aporte en dólares no debe
       // restarse como si fuera pesos.
       else if(t.type === 'ahorro' && (t.moneda || 'MXN') === 'MXN'){
@@ -1902,6 +1989,26 @@
     const balance = utilidad - savingsNetPeriod;
     return { income, expense, savingsIn, savingsOut, savingsNetPeriod, utilidad, balance };
   }
+  // Aviso cuando el Balance disponible es negativo: explica posibles causas y se puede cerrar por hoy.
+  function updateBalanceNotice(balance){
+    const box = document.getElementById('balanceNotice');
+    if(!box) return;
+    let dismissed = false;
+    try{ dismissed = localStorage.getItem('balanceNoticeDismissed') === new Date().toISOString().slice(0,10); }catch(e){}
+    box.style.display = (balance < -0.005 && !dismissed) ? 'flex' : 'none';
+  }
+  (function bindBalanceNotice(){
+    const help = document.getElementById('balanceNoticeHelp');
+    const dis = document.getElementById('balanceNoticeDismiss');
+    if(help) help.addEventListener('click', ()=>{
+      const icon = document.querySelector('.tape-label .help-icon');
+      if(icon) icon.click();
+    });
+    if(dis) dis.addEventListener('click', ()=>{
+      try{ localStorage.setItem('balanceNoticeDismissed', new Date().toISOString().slice(0,10)); }catch(e){}
+      document.getElementById('balanceNotice').style.display = 'none';
+    });
+  })();
   function computeAllTimeBalance(){
     let income = 0, expense = 0, savingsIn = 0, savingsOut = 0;
     transactions.forEach(t=>{
@@ -1961,7 +2068,7 @@
   }
   function computeIncomeBreakdown(){
     const byCat = {};
-    transactions.filter(t=>t.type==='ingreso' && isInPeriod(t.date)).forEach(t=>{
+    transactions.filter(t=>t.type==='ingreso' && !isOpeningIncome(t) && isInPeriod(t.date)).forEach(t=>{
       byCat[t.category] = (byCat[t.category]||0) + t.amount;
     });
     return Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
@@ -1973,7 +2080,7 @@
     const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const prevKey = prevDate.getFullYear() + '-' + String(prevDate.getMonth()+1).padStart(2,'0');
     let curTotal = 0, prevTotal = 0;
-    transactions.filter(t=>t.type==='ingreso').forEach(t=>{
+    transactions.filter(t=>t.type==='ingreso' && !isOpeningIncome(t)).forEach(t=>{
       const key = t.date.slice(0,7);
       if(key === curKey) curTotal += t.amount;
       else if(key === prevKey) prevTotal += t.amount;
@@ -2080,7 +2187,7 @@
       }
       if(!isInPeriod(t.date)) return;
       if(t.type === 'ingreso'){
-        realIngresos += t.amount;
+        if(!isOpeningIncome(t)) realIngresos += t.amount;
       }
     });
     return { realFijos, realVariables, realInversiones, realIngresos };
@@ -2116,6 +2223,7 @@
     els.tapeAmount.textContent = fmt.format(allTimeBalance);
     els.tapeAmount.classList.remove('pos','neg');
     els.tapeAmount.classList.add(allTimeBalance >= 0 ? 'pos' : 'neg');
+    updateBalanceNotice(allTimeBalance);
 
     renderBudget();
     renderTravelPanel();
@@ -2411,7 +2519,7 @@
       sorted.forEach(t=>{
         if((t.moneda || 'MXN') !== 'MXN' || t.isMsi) return;
         let delta = 0;
-        if(t.type === 'ingreso') delta = t.amount;
+        if(t.type === 'ingreso') delta = isOpeningIncome(t) ? 0 : t.amount;
         else if(t.type === 'gasto') delta = -t.amount;
         else if(t.type === 'ahorro') delta = (t.subtype === 'retiro' ? t.amount : (t.subtype === 'inicial' ? 0 : -t.amount));
         dayNet[t.date] = (dayNet[t.date] || 0) + delta;
@@ -2442,7 +2550,7 @@
         }
         const payBadge = `<span class="ledger-pay">${escapeHtml(t.paymentMethod || 'Efectivo')}</span>`;
         const msiBadge = t.isMsi ? `<span class="ledger-msi-badge">MSI</span>` : '';
-        const subtypeBadge = t.type === 'ahorro' ? `<span class="ledger-subtype-badge ${t.subtype}">${SUBTYPE_LABEL[t.subtype] || 'Aporte'}</span>` : '';
+        const subtypeBadge = t.type === 'ahorro' ? `<span class="ledger-subtype-badge ${t.subtype}">${SUBTYPE_LABEL[t.subtype] || 'Aporte'}</span>` : (isOpeningIncome(t) ? '<span class="ledger-subtype-badge inicial">Saldo inicial</span>' : '');
         const monedaBadge = (t.type === 'ahorro' && t.moneda === 'USD') ? `<span class="ledger-moneda-badge">USD</span>` : '';
         let msiMini = '';
         if(t.isMsi){
@@ -2847,6 +2955,9 @@
     if(isFirstTimeUser){
       els.firstTimeBanner.style.display = 'flex';
     }
+    let setupSeen = false;
+    try{ setupSeen = localStorage.getItem('setupSeen') === '1'; }catch(e){}
+    if(transactions.length === 0 && !setupSeen) openSetupModal();
   }
 
   /* ---------- Sincronización en tiempo real entre dispositivos ---------- */

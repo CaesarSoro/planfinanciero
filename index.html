@@ -52,6 +52,7 @@
     <div class="drawer-nav" id="drawerNav">
       <button type="button" class="drawer-nav-item" data-nav="form">📋 Movimientos</button>
       <button type="button" class="drawer-nav-item" data-nav="resumen">📈 Resumen</button>
+      <button type="button" class="drawer-nav-item" id="openSetupBtn">🏁 Saldos iniciales</button>
       <button type="button" class="drawer-nav-item" id="openReportBtn">📄 Reporte / Exportar</button>
       <button type="button" class="drawer-nav-item" data-nav="metas">🎯 Metas y Proyectos</button>
       <button type="button" class="drawer-nav-item" data-nav="cobrar">💵 Por cobrar</button>
@@ -76,6 +77,37 @@
     <p style="text-align:center;margin-top:16px;"><a href="aviso-privacidad.html" target="_blank" style="font-size:11px;color:var(--ink-soft);">Aviso de Privacidad</a></p>
   </div>
 
+  <div class="drawer-backdrop" id="setupBackdrop"></div>
+  <div class="help-modal" id="setupModal">
+    <div class="help-modal-header">
+      <h2>Tu punto de partida</h2>
+      <button type="button" id="setupModalClose" class="drawer-close" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="help-modal-body">
+      <p class="setup-intro">Dile a la app con cuánto empiezas, para que tu Balance disponible sea real desde el primer día. Esto <strong>no cuenta como ingreso</strong> del mes.</p>
+      <div class="setup-field">
+        <label for="setupDate">Empecé a usar la app el</label>
+        <input type="date" id="setupDate">
+      </div>
+      <div class="setup-field">
+        <label for="setupFree">Dinero libre hoy (MXN)</label>
+        <input type="number" id="setupFree" min="0" step="0.01" placeholder="0.00">
+        <span class="setup-help">Lo que tienes en cuenta y efectivo, sin contar tus ahorros. Si no tienes, déjalo vacío.</span>
+      </div>
+      <div class="setup-field">
+        <label>Ahorros que ya tenías</label>
+        <span class="setup-help">Uno por fila: emergencia, inversiones, seguros… Se guardan como "Saldo inicial", sin restar de tu balance.</span>
+        <div id="setupSavingsRows"></div>
+        <datalist id="setupSavingsList"></datalist>
+        <button type="button" id="setupAddRow" class="manage-cat-link">+ Agregar otro ahorro</button>
+      </div>
+      <p class="setup-help">Las deudas de tarjeta anteriores a hoy no se cuentan: solo las compras que registres desde ahora.</p>
+      <p class="error-msg" id="setupError" style="display:none;"></p>
+      <button type="button" id="setupSave" class="setup-primary">Guardar saldos iniciales</button>
+      <button type="button" id="setupSkip" class="setup-secondary">Omitir por ahora</button>
+    </div>
+  </div>
+
   <div class="drawer-backdrop" id="helpBackdrop"></div>
   <div class="help-modal" id="helpModal">
     <div class="help-modal-header">
@@ -85,7 +117,14 @@
     <div class="help-modal-body">
       <div class="help-section" id="help-disponible">
         <h3>💰 Balance disponible</h3>
-        <p>Es tu balance real, acumulado de <strong>todo tu historial</strong> (ingresos − gastos − ahorro neto), sin importar qué filtro de periodo tengas activo arriba. No cambia si ves "Julio 2026" o "Todo el historial" — siempre es el mismo número, porque contesta siempre la misma pregunta: "¿cuánto tengo, de verdad, ahora mismo?"</p>
+        <p>Es tu <strong>dinero libre</strong> (el que no está apartado en ahorro) <strong>menos lo que ya compraste con tarjeta</strong>, acumulado de <strong>todo tu historial</strong> y sin importar el filtro de periodo. Se calcula así: ingresos − gastos − ahorro neto (aportes − retiros).</p>
+        <p><strong>Si es negativo</strong> no siempre es un error: puede significar que debes en tarjetas más de lo que tienes libre. Pero también puede faltar algo por registrar. Revisa estos tres casos:</p>
+        <ul>
+          <li><strong>Ya tenías dinero antes de empezar</strong> y nunca lo registraste: agrega un Ingreso "Saldo inicial" con la fecha en que empezaste a usar la app.</li>
+          <li><strong>Ya tenías ahorros antes de empezar:</strong> en Ahorro elige "Saldo inicial", no "Aporte". Suma al fondo sin restar de tu balance.</li>
+          <li><strong>Pagaste gastos o tarjetas con dinero de tus ahorros:</strong> registra un "Retiro" por ese monto. El retiro baja el fondo y sube el balance.</li>
+        </ul>
+        <p>Las mensualidades de MSI que aún no vencen no están restadas: solo se cuenta lo que ya se cobró.</p>
       </div>
 
       <div class="help-section" id="help-form">
@@ -199,6 +238,15 @@
       </div>
     </div>
   </header>
+  <div class="balance-notice" id="balanceNotice" style="display:none;" role="status">
+    <div class="balance-notice-text">
+      <strong>Tu Balance disponible es negativo.</strong> Puede ser deuda de tarjetas, o falta registrar un saldo inicial, un ingreso o un retiro de ahorro.
+    </div>
+    <div class="balance-notice-actions">
+      <button type="button" id="balanceNoticeHelp" class="balance-notice-btn">Cómo se calcula</button>
+      <button type="button" id="balanceNoticeDismiss" class="balance-notice-btn ghost">Entendido</button>
+    </div>
+  </div>
 
   <div class="first-time-banner" id="firstTimeBanner" style="display:none;">
     <span>👋 ¿Primera vez aquí? Te explicamos cómo funciona en un par de minutos.</span>
@@ -305,6 +353,7 @@
         <div class="field span-2" id="categoryFieldWrap">
           <label for="category" id="categoryLabel">Categoría</label>
           <select id="category"></select>
+          <p class="field-hint" id="openingHint" style="display:none;">Un <strong>Saldo inicial</strong> es dinero que ya tenías antes de usar la app. Suma a tu Balance disponible, pero <strong>no cuenta como ingreso</strong> del mes.</p>
           <button type="button" id="toggleCatChips" class="manage-cat-link" style="display:none;">Gestionar categorías (editar grupo / eliminar) ▾</button>
           <div class="cat-chips" id="catChips" style="display:none;"></div>
           <div class="cat-add-row">
