@@ -564,7 +564,7 @@
     const showing = els.payChips.style.display !== 'none';
     els.payChips.style.display = showing ? 'none' : 'block';
     els.togglePayManage.textContent = showing
-      ? 'Gestionar formas de pago (editar / eliminar) ▾'
+      ? 'Editar formas de pago ▾'
       : 'Ocultar formas de pago ▴';
   });
 
@@ -612,7 +612,7 @@
     const showing = els.catChips.style.display !== 'none';
     els.catChips.style.display = showing ? 'none' : 'block';
     els.toggleCatChips.textContent = showing
-      ? 'Gestionar categorías (editar grupo / eliminar) ▾'
+      ? 'Editar categorías ▾'
       : 'Ocultar categorías ▴';
   });
   function openDrawer(){
@@ -792,7 +792,7 @@
         <table class="pr-table pr-summary">
           <tr><td>Ingresos</td><td class="pr-num">${fmt.format(income)}</td></tr>
           <tr><td>Gastos</td><td class="pr-num">${fmt.format(expense)}</td></tr>
-          <tr><td>Utilidad</td><td class="pr-num">${fmt.format(utilidad)}</td></tr>
+          <tr><td>Saldo del mes</td><td class="pr-num">${fmt.format(utilidad)}</td></tr>
           <tr><td>Balance del periodo</td><td class="pr-num">${fmt.format(balance)}</td></tr>
         </table>`;
       }
@@ -1049,9 +1049,11 @@
     if(!btn) return;
     const panel = btn.parentElement.querySelector('.resumen-collapsible');
     const caret = btn.querySelector('.resumen-caret');
+    const lbl = btn.querySelector('.resumen-lbl');
     const showing = panel.style.display !== 'none';
     panel.style.display = showing ? 'none' : 'block';
     caret.textContent = showing ? '▾' : '▴';
+    if(lbl) lbl.textContent = showing ? 'Ver' : 'Ocultar';
   });
 
 
@@ -1110,6 +1112,72 @@
       transactions.push({ id: newId() + 1, type:'ahorro', subtype:'retiro', moneda:'MXN', amount, paymentMethod:'Transferencia', description:'Pago ' + card, date, category: source, linkedPago: pagoId });
     }
     closePayModal();
+    render();
+    await saveTransactions();
+  });
+
+
+  /* ---------- Ajustar saldo de tarjeta al saldo real del banco ---------- */
+  const adjEls = {
+    modal: document.getElementById('adjModal'),
+    backdrop: document.getElementById('adjBackdrop'),
+    title: document.getElementById('adjCardName'),
+    real: document.getElementById('adjReal'),
+    preview: document.getElementById('adjPreview'),
+    error: document.getElementById('adjError'),
+  };
+  let adjCard = null;
+  function adjCompute(){
+    const balances = computeCardBalances();
+    const saldo = balances[adjCard] ? balances[adjCard].saldo : 0;
+    const msiPending = transactions
+      .filter(t=> t.isMsi && t.type === 'gasto' && t.paymentMethod === adjCard)
+      .reduce((sum,t)=> sum + msiInfo(t).remaining, 0);
+    const real = parseFloat(adjEls.real.value);
+    const expected = Math.max(0, (isNaN(real) ? 0 : real) - msiPending);
+    return { saldo, msiPending, real, expected, pago: saldo - expected };
+  }
+  function adjRefresh(){
+    const c = adjCompute();
+    adjEls.error.style.display = 'none';
+    if(isNaN(c.real)){ adjEls.preview.innerHTML = 'Saldo en la app: <strong>' + fmt.format(c.saldo) + '</strong>'; return; }
+    adjEls.preview.innerHTML =
+      'Saldo en la app: <strong>' + fmt.format(c.saldo) + '</strong><br>' +
+      'Tu deuda en el banco: <strong>' + fmt.format(c.real) + '</strong>' +
+      (c.msiPending > 0 ? ' − MSI pendiente <strong>' + fmt.format(c.msiPending) + '</strong> = <strong>' + fmt.format(c.expected) + '</strong>' : '') + '<br>' +
+      (c.pago > 0.005 ? 'Se registrará un pago de <strong>' + fmt.format(c.pago) + '</strong> (dinero libre).'
+        : c.pago < -0.005 ? 'La app debe <strong>' + fmt.format(-c.pago) + '</strong> menos que tu banco: falta registrar algún gasto con esta tarjeta.'
+        : 'Ya coincide, no hace falta ajustar.');
+  }
+  function openAdjModal(card){
+    adjCard = card;
+    adjEls.title.textContent = card;
+    adjEls.real.value = '';
+    adjRefresh();
+    adjEls.modal.classList.add('open');
+    adjEls.backdrop.classList.add('open');
+    adjEls.real.focus();
+  }
+  function closeAdjModal(){
+    adjEls.modal.classList.remove('open');
+    adjEls.backdrop.classList.remove('open');
+  }
+  adjEls.real.addEventListener('input', adjRefresh);
+  document.getElementById('adjModalClose').addEventListener('click', closeAdjModal);
+  document.getElementById('adjCancel').addEventListener('click', closeAdjModal);
+  adjEls.backdrop.addEventListener('click', closeAdjModal);
+  els.cardsPanel.addEventListener('click', (e)=>{
+    const btn = e.target.closest('[data-adj-card]');
+    if(btn) openAdjModal(btn.dataset.adjCard);
+  });
+  document.getElementById('adjSave').addEventListener('click', async ()=>{
+    const c = adjCompute();
+    const fail = (msg)=>{ adjEls.error.textContent = msg; adjEls.error.style.display = 'block'; };
+    if(isNaN(c.real) || c.real < 0) return fail('Escribe cuánto debes hoy en esta tarjeta (puede ser 0).');
+    if(c.pago < -0.005) return fail('La app debe menos que tu banco. Registra primero los gastos que falten con esta tarjeta.');
+    if(c.pago <= 0.005){ closeAdjModal(); showToast('Ya coincide con tu banco.'); return; }
+    transactions.push({ id: newId(), type:'pago', amount: Math.round(c.pago * 100) / 100, paymentMethod: adjCard, description:'Ajuste al saldo real del banco', date: todayStr(), category:'Pago de tarjeta', source:'libre' });
+    closeAdjModal();
     render();
     await saveTransactions();
   });
@@ -1277,7 +1345,7 @@
     els.newCatGroup.style.display = (type === 'gasto') ? 'inline-block' : 'none';
     els.toggleCatChips.style.display = (type === 'gasto') ? 'inline-block' : 'none';
     els.catChips.style.display = 'none';
-    els.toggleCatChips.textContent = 'Gestionar categorías (editar grupo / eliminar) ▾';
+    els.toggleCatChips.textContent = 'Editar categorías ▾';
     els.ahorroSubtypeField.style.display = isAhorro ? 'block' : 'none';
     els.ahorroMonedaField.style.display = isAhorro ? 'block' : 'none';
     if(!isAhorro){
@@ -2616,7 +2684,10 @@
           ${balEntries.map(([name, c])=>`<div class="card-saldo-row">
             <span class="card-pay-name">${escapeHtml(name)}</span>
             <span class="card-pay-amt">${fmt.format(c.saldo)}</span>
-            <button type="button" class="card-pay-btn" data-pay-card="${escapeHtml(name)}">Registrar pago</button>
+            <span class="card-pay-btns">
+              <button type="button" class="card-pay-btn" data-pay-card="${escapeHtml(name)}">Registrar pago</button>
+              <button type="button" class="card-pay-btn ghost" data-adj-card="${escapeHtml(name)}">Ajustar a mi saldo</button>
+            </span>
           </div>`).join('')}
           <p class="card-pay-detail">${hasPagos ? 'Cargos acumulados menos los pagos que registraste.' : 'Todavía no registras pagos: este saldo suma todos tus cargos. Registra los pagos que ya hiciste para que sea real.'}</p>
         </div>`;
@@ -2729,8 +2800,18 @@
       });
     }
 
+    const filterRow = document.querySelector('.ledger-filter-row');
+    if(filterRow) filterRow.style.display = transactions.length === 0 ? 'none' : '';
     if(transactions.length === 0){
-      els.ledgerList.innerHTML = '<p class="ledger-empty">Aún no registras movimientos. Agrega el primero desde el formulario.</p>';
+      els.ledgerList.innerHTML = `<div class="empty-state">
+        <div class="empty-state-icon">📒</div>
+        <h3>Empieza con tu primer movimiento</h3>
+        <p>Anota un gasto, un ingreso o un ahorro. Tarda menos de 10 segundos.</p>
+        <button type="button" class="submit-btn" id="emptyAddBtn">+ Registrar movimiento</button>
+        <button type="button" class="manage-cat-link" id="emptySetupBtn">Primero quiero indicar con cuánto dinero empiezo</button>
+      </div>`;
+      document.getElementById('emptyAddBtn').addEventListener('click', ()=> showRegistroView('form'));
+      document.getElementById('emptySetupBtn').addEventListener('click', openSetupModal);
     } else {
       const catFilter = categoryFilterText;
       const catOptions = [...new Set(transactions.map(t=>t.category))].sort();
@@ -2803,21 +2884,24 @@
         }
         const header = (t.date !== prevDate) ? dayHeaderHtml(t.date) : '';
         prevDate = t.date;
+        const showCat = catLabel && desc !== catLabel;
         return header + `<div class="ledger-row">
           <div class="ledger-row-line1">
             <span class="ledger-desc">${escapeHtml(desc)}</span>
-            ${t.type === 'pago' ? '' : `<button class="ledger-edit" data-id="${t.id}" title="Editar" aria-label="Editar movimiento">✎</button>`}
-            <button class="ledger-del" data-id="${t.id}" title="Eliminar" aria-label="Eliminar movimiento">✕</button>
+            <span class="ledger-amount ${t.type}${t.type === 'ahorro' && t.subtype === 'retiro' ? ' pos' : ''}">${sign} ${fmt.format(t.amount)}${t.moneda === 'USD' ? ' USD' : ''}</span>
           </div>
           <div class="ledger-row-line2">
             <div class="ledger-badges">
-              <span class="ledger-cat">${escapeHtml(catLabel)}</span>
+              ${showCat ? `<span class="ledger-cat">${escapeHtml(catLabel)}</span>` : ''}
               ${payBadge}
               ${msiBadge}
               ${subtypeBadge}
               ${monedaBadge}
             </div>
-            <span class="ledger-amount ${t.type}${t.type === 'ahorro' && t.subtype === 'retiro' ? ' pos' : ''}">${sign} ${fmt.format(t.amount)}${t.moneda === 'USD' ? ' USD' : ''}</span>
+            <span class="ledger-actions">
+              ${t.type === 'pago' ? '' : `<button class="ledger-edit" data-id="${t.id}" title="Editar" aria-label="Editar movimiento">✎</button>`}
+              <button class="ledger-del" data-id="${t.id}" title="Eliminar" aria-label="Eliminar movimiento">🗑</button>
+            </span>
           </div>
           ${msiMini}
         </div>`;
@@ -3046,7 +3130,7 @@
     const showing = els.filterBarDetail.style.display !== 'none';
     els.filterBarDetail.style.display = showing ? 'none' : 'flex';
     els.filterCaret.textContent = showing ? '▾' : '▴';
-    els.filterToggleLabel.textContent = showing ? 'Ver más' : 'Ocultar';
+    els.filterToggleLabel.textContent = showing ? 'Cambiar' : 'Ocultar';
   });
   els.categoryFilterInput.addEventListener('change', ()=>{
     categoryFilterText = els.categoryFilterInput.value;

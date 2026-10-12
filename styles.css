@@ -268,7 +268,7 @@
   }
   .cancel-edit-btn{width:100%;padding:9px 0;border:1px solid var(--line);border-radius:8px;background:none;color:var(--ink-soft);font-family:'Montserrat',sans-serif;font-weight:600;font-size:12px;cursor:pointer;margin-top:8px;}
   .cancel-edit-btn:hover{border-color:var(--expense-soft);color:var(--expense);}
-  .submit-btn:hover{background:#3A4133;}
+  .submit-btn:hover{opacity:.88;}
   .submit-btn:disabled{opacity:.6;cursor:not-allowed;}
   .error-msg{font-size:12px;color:var(--expense);margin-top:-6px;margin-bottom:12px;display:none;}
 
@@ -336,7 +336,7 @@
   .msi-fix-warn{font-size:12px;color:var(--expense);font-weight:700;flex-shrink:0;}
   .msi-fix-payment{flex:1;min-width:140px;padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font-family:'Montserrat',sans-serif;font-size:12px;}
   .msi-fix-save{padding:5px 12px;border:none;border-radius:8px;background:var(--ink);color:var(--surface);font-family:'Montserrat',sans-serif;font-weight:600;font-size:12px;cursor:pointer;flex-shrink:0;}
-  .msi-fix-save:hover{background:#3A4133;}
+  .msi-fix-save:hover{opacity:.88;}
   .msi-plan-total{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink-soft);flex-shrink:0;}
   .msi-plan-actions{display:flex;align-items:center;gap:4px;flex-shrink:0;}
   .msi-plan-edit{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:14px;line-height:1;padding:2px 2px 2px 6px;flex-shrink:0;}
@@ -413,7 +413,7 @@
   .budget-add-row input[type=text]{flex:1.6 1 120px;}
   .budget-add-row input[type=number]{flex:1 1 80px;}
   .b-add,.rec-abono-btn{padding:8px 16px;border:none;border-radius:8px;background:var(--ink);color:var(--surface);font-family:'Montserrat',sans-serif;font-weight:600;font-size:13px;cursor:pointer;}
-  .b-add:hover,.rec-abono-btn:hover{background:#3A4133;}
+  .b-add:hover,.rec-abono-btn:hover{opacity:.88;}
   .budget-add-row select{flex:1 1 100px;}
   .budget-add-row input,.budget-add-row select{padding:6px 8px;font-size:12px;border:1px solid var(--line);border-radius:8px;}
   .budget-add-row button{padding:6px 12px;font-size:12px;font-weight:600;border:none;border-radius:8px;background:var(--ink);color:#fff;cursor:pointer;flex-shrink:0;}
@@ -657,3 +657,81 @@
   .card-pay-btn{font-family:inherit;font-size:12px;font-weight:600;padding:7px 12px;border-radius:20px;border:1px solid var(--gold);background:var(--gold-soft);color:var(--ink);cursor:pointer;flex-shrink:0;min-height:34px;}
 
   .ledger-amount.pago{color:var(--ink);}
+
+  .card-saldo-row{flex-wrap:wrap;}
+  .card-pay-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+  .card-pay-btn.ghost{background:transparent;border-color:var(--line);color:var(--ink-soft);}
+  .setup-help strong{color:var(--ink);}
+
+/* ===== v2 · primera vez, minimalismo ===== */
+/* Menú lateral cerrado: sin sombra ni foco que se asome por el borde */
+.account-drawer:not(.open){visibility:hidden;box-shadow:none;transition:transform .3s ease, visibility 0s linear .3s;}
+/* El botón flotante nunca tapa un modal o el menú */
+.fab-add{z-index:20;}
+body{padding-bottom:100px;}
+
+/* Menos cajas y menos mayúsculas con espaciado */
+.ledger-day-header{background:none;border-bottom:1px solid var(--line);border-radius:0;padding:6px 2px;margin:18px 0 4px;}
+.ledger-day-label{font-size:12px;letter-spacing:.02em;color:var(--ink-soft);}
+.ledger-pay,.ledger-msi-badge,.ledger-subtype-badge,.ledger-moneda-badge{text-transform:none;letter-spacing:0;}
+.ledger-row{padding:12px 0;}
+.ledger-row-line1{align-items:center;}
+.ledger-desc{font-size:15px;font-weight:500;}
+.ledger-amount{font-size:15px;}
+.ledger-actions{display:inline-flex;align-items:center;margin-left:auto;flex-shrink:0;}
+.ledger-actions .ledger-edit,.ledger-actions .ledger-del{opacity:.55;font-size:15px;min-width:36px;min-height:36px;padding:0;}
+.ledger-actions .ledger-del{filter:grayscale(1);}
+.ledger-actions .ledger-edit:hover,.ledger-actions .ledger-del:hover{opacity:1;}
+@media (max-width:860px),(pointer:coarse){
+  .ledger-actions .ledger-edit,.ledger-actions .ledger-del{min-width:40px;min-height:40px;font-size:16px;}
+}
+.ledger-list{max-height:none;overflow:visible;padding-right:0;}
+
+/* Estado vacío con acción clara */
+.empty-state{text-align:center;padding:36px 12px 28px;}
+.empty-state-icon{font-size:40px;line-height:1;margin-bottom:12px;}
+.empty-state h3{font-size:18px;font-weight:700;margin:0 0 6px;}
+.empty-state p{font-size:14px;color:var(--ink-soft);margin:0 auto 18px;max-width:300px;line-height:1.5;}
+.empty-state .submit-btn{width:100%;max-width:300px;margin:0 auto;display:block;}
+.empty-state .manage-cat-link{display:block;margin:14px auto 0;text-align:center;}
+
+/* Saldos iniciales: lo esencial primero */
+.setup-more{margin:6px 0 12px;border-top:1px dashed var(--line);padding-top:10px;}
+.setup-more > summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--gold);padding:6px 0;list-style:none;}
+.setup-more > summary::-webkit-details-marker{display:none;}
+.setup-more > summary::before{content:'+ ';}
+.setup-more[open] > summary::before{content:'– ';}
+
+/* Enlaces de gestión discretos */
+.manage-cat-link{font-size:12px;color:var(--ink-soft);}
+
+/* Resumen: tarjetas más compactas, sin borde grueso */
+.stat{padding:14px 16px;border-left-width:3px;}
+.stat-label{letter-spacing:.02em;text-transform:none;font-size:12px;}
+.toggle-hint{text-transform:none;letter-spacing:0;font-size:12px;}
+.resumen-toggle .toggle-hint{color:var(--gold);}
+
+@media (max-width:770px){
+  body{padding-top:16px;}
+  header{padding-top:78px;margin-bottom:14px;padding-bottom:12px;border-bottom-width:1px;}
+  h1{font-size:24px;}
+  .tagline{font-size:13px;margin-top:4px;}
+  .first-time-banner{padding:9px 12px;margin-bottom:12px;font-size:12px;flex-wrap:nowrap;}
+  #firstTimeBannerBtn{padding:6px 12px;}
+  .filter-summary-toggle{padding:8px 12px;margin-bottom:14px;}
+  .filter-summary-text{flex-direction:row;align-items:baseline;gap:8px;}
+  .filter-summary-value{font-size:14px;text-transform:capitalize;}
+  .filter-summary-label{text-transform:none;letter-spacing:0;}
+  .tab-btn{padding:12px 2px;letter-spacing:0;}
+  .stats{grid-template-columns:repeat(2,1fr);gap:10px;}
+  .stats .stat-top-category{grid-column:1 / -1;}
+  .stat-value{font-size:18px;}
+  .stat-subvalue{font-size:11px;}
+}
+@media (max-width:420px){
+  .stats{grid-template-columns:repeat(2,1fr);}
+  .stats .stat-top-category{grid-column:1 / -1;}
+}
+.ledger-filter-icon{display:none;}
+.ledger-filter-input{font-size:13px;padding:8px 10px;color:var(--ink-soft);}
+.ledger-row{border-bottom:none;padding:10px 0 4px;}

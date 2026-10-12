@@ -78,6 +78,22 @@
     <p style="text-align:center;margin-top:16px;"><a href="aviso-privacidad.html" target="_blank" style="font-size:11px;color:var(--ink-soft);">Aviso de Privacidad</a></p>
   </div>
 
+  <div class="drawer-backdrop" id="adjBackdrop"></div>
+  <div class="help-modal" id="adjModal">
+    <div class="help-modal-header">
+      <h2>Ajustar a mi saldo real</h2>
+      <button type="button" id="adjModalClose" class="drawer-close" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="help-modal-body">
+      <p class="setup-intro"><strong id="adjCardName"></strong><br>Escribe cuánto debes hoy en esta tarjeta, <strong>tal como lo muestra tu banco</strong> (con los MSI pendientes incluidos). La app resta los MSI sola y registra un pago por la diferencia, con dinero libre.</p>
+      <div class="setup-field"><label for="adjReal">Deuda según tu banco (MXN)</label><input type="number" id="adjReal" min="0" step="0.01" placeholder="0.00"></div>
+      <p class="setup-help" id="adjPreview"></p>
+      <p class="error-msg" id="adjError" style="display:none;"></p>
+      <button type="button" id="adjSave" class="setup-primary">Registrar ajuste</button>
+      <button type="button" id="adjCancel" class="setup-secondary">Cancelar</button>
+    </div>
+  </div>
+
   <div class="drawer-backdrop" id="payBackdrop"></div>
   <div class="help-modal" id="payModal">
     <div class="help-modal-header">
@@ -103,16 +119,14 @@
       <button type="button" id="setupModalClose" class="drawer-close" aria-label="Cerrar">✕</button>
     </div>
     <div class="help-modal-body">
-      <p class="setup-intro">Dile a la app con cuánto empiezas, para que tu Balance disponible sea real desde el primer día. Esto <strong>no cuenta como ingreso</strong> del mes.</p>
+      <p class="setup-intro">¿Con cuánto dinero empiezas? Así tu balance es real desde el primer día. Esto <strong>no cuenta como ingreso</strong> del mes.</p>
       <div class="setup-field">
-        <label for="setupDate">Empecé a usar la app el</label>
-        <input type="date" id="setupDate">
-      </div>
-      <div class="setup-field">
-        <label for="setupFree">Dinero libre hoy (MXN)</label>
+        <label for="setupFree">Dinero que tienes hoy (MXN)</label>
         <input type="number" id="setupFree" min="0" step="0.01" placeholder="0.00">
-        <span class="setup-help">Lo que tienes en cuenta y efectivo, sin contar tus ahorros. Si no tienes, déjalo vacío.</span>
+        <span class="setup-help">En cuenta y efectivo, sin contar tus ahorros. Si no tienes, déjalo vacío.</span>
       </div>
+      <details class="setup-more">
+      <summary>Tengo ahorros o inversiones</summary>
       <div class="setup-field">
         <label>Ahorros que ya tenías</label>
         <span class="setup-help">Uno por fila: emergencia, inversiones, seguros… Se guardan como "Saldo inicial", sin restar de tu balance.</span>
@@ -120,9 +134,14 @@
         <datalist id="setupSavingsList"></datalist>
         <button type="button" id="setupAddRow" class="manage-cat-link">+ Agregar otro ahorro</button>
       </div>
+      <div class="setup-field">
+        <label for="setupDate">Fecha en que empezaste a usar la app</label>
+        <input type="date" id="setupDate">
+      </div>
+      </details>
       <p class="setup-help">Las deudas de tarjeta anteriores a hoy no se cuentan: solo las compras que registres desde ahora.</p>
       <p class="error-msg" id="setupError" style="display:none;"></p>
-      <button type="button" id="setupSave" class="setup-primary">Guardar saldos iniciales</button>
+      <button type="button" id="setupSave" class="setup-primary">Guardar y empezar</button>
       <button type="button" id="setupSkip" class="setup-secondary">Omitir por ahora</button>
     </div>
   </div>
@@ -243,7 +262,6 @@
 
   <header>
     <div>
-      <p class="brand-eyebrow">Registro personal &middot; hoja de movimientos</p>
       <h1>Finanzas Personales</h1>
       <p class="tagline">Finanzas con los pies en la tierra y la vista en tu libertad.</p>
     </div>
@@ -273,7 +291,7 @@
   </div>
 
   <div class="first-time-banner" id="firstTimeBanner" style="display:none;">
-    <span>👋 ¿Primera vez aquí? Te explicamos cómo funciona en un par de minutos.</span>
+    <span>👋 ¿Primera vez? Mira cómo funciona en 2 minutos.</span>
     <div class="first-time-banner-actions">
       <button type="button" id="firstTimeBannerBtn">Ver guía</button>
       <button type="button" id="firstTimeBannerClose" aria-label="Cerrar aviso">✕</button>
@@ -282,13 +300,13 @@
 
   <button type="button" class="filter-summary-toggle" id="filterSummaryToggle">
     <span class="filter-summary-left">
-      <span class="filter-summary-icon">🔍</span>
+      <span class="filter-summary-icon">📅</span>
       <span class="filter-summary-text">
-        <span class="filter-summary-label">Filtro</span>
+        <span class="filter-summary-label">Periodo</span>
         <span class="filter-summary-value" id="periodDisplay"></span>
       </span>
     </span>
-    <span class="toggle-hint"><span id="filterToggleLabel">Ver más</span> <span class="resumen-caret" id="filterCaret">▾</span></span>
+    <span class="toggle-hint"><span id="filterToggleLabel">Cambiar</span> <span class="resumen-caret" id="filterCaret">▾</span></span>
   </button>
   <div class="filter-bar" id="filterBarDetail" style="display:none;">
     <div class="period-toggle" id="periodToggle">
@@ -351,7 +369,7 @@
         <div class="field">
           <label for="paymentMethod">Forma de pago</label>
           <select id="paymentMethod"></select>
-          <button type="button" id="togglePayManage" class="manage-cat-link">Gestionar formas de pago (editar / eliminar) ▾</button>
+          <button type="button" id="togglePayManage" class="manage-cat-link">Editar formas de pago ▾</button>
           <div class="cat-chips" id="payChips" style="display:none;"></div>
           <button type="button" id="togglePayAdd" class="manage-cat-link">+ Agregar forma de pago</button>
           <div class="pay-add-row" id="payAddRow" style="display:none;">
@@ -378,7 +396,7 @@
           <label for="category" id="categoryLabel">Categoría</label>
           <select id="category"></select>
           <p class="field-hint" id="openingHint" style="display:none;">Un <strong>Saldo inicial</strong> es dinero que ya tenías antes de usar la app. Suma a tu Balance disponible, pero <strong>no cuenta como ingreso</strong> del mes.</p>
-          <button type="button" id="toggleCatChips" class="manage-cat-link" style="display:none;">Gestionar categorías (editar grupo / eliminar) ▾</button>
+          <button type="button" id="toggleCatChips" class="manage-cat-link" style="display:none;">Editar categorías ▾</button>
           <div class="cat-chips" id="catChips" style="display:none;"></div>
           <div class="cat-add-row">
             <input type="text" aria-label="Nueva categoría" id="newCatInput" placeholder="Nueva categoría...">
@@ -412,9 +430,8 @@
       <div id="registroListView">
 
       <div class="resumen-section">
-        <p class="ledger-hint">toca ✕ para eliminar un movimiento</p>
         <div class="ledger-filter-row">
-          <span class="ledger-filter-icon">🔍</span>
+          <span class="ledger-filter-icon">⏷</span>
           <select aria-label="Filtrar movimientos por categoría" id="categoryFilterInput" class="ledger-filter-input">
             <option value="">Todas las categorías</option>
           </select>
@@ -513,11 +530,11 @@
             <div class="stat-value" id="statExpense">$0.00</div>
           </div>
           <div class="stat">
-            <div class="stat-label">Utilidad</div>
+            <div class="stat-label">Saldo del mes</div>
             <div class="stat-value" id="statUtilidad">$0.00</div>
           </div>
           <div class="stat savings">
-            <div class="stat-label">Fondo de ahorro</div>
+            <div class="stat-label">Total ahorrado</div>
             <div class="stat-value" id="statSavings">$0.00</div>
           </div>
           <div class="stat expense stat-top-category">
@@ -541,7 +558,7 @@
       <div class="resumen-section" id="cardsCard">
         <button type="button" class="resumen-toggle" data-resumen-key="tarjetas">
           <span class="section-title-text">Tarjetas de crédito <span class="h2-note">por pagar</span></span>
-          <span class="toggle-hint">Ocultar <span class="resumen-caret">▴</span></span>
+          <span class="toggle-hint"><span class="resumen-lbl">Ocultar</span> <span class="resumen-caret">▴</span></span>
         </button>
         <div class="resumen-collapsible" data-resumen-panel="tarjetas" style="display:block;">
           <div id="cardsPanel"></div>
@@ -550,8 +567,8 @@
 
       <div class="resumen-section" id="savingsCard">
         <button type="button" class="resumen-toggle" data-resumen-key="ahorro">
-          <span class="section-title-text">Fondo de ahorro <span class="h2-note">alcancía</span></span>
-          <span class="toggle-hint">Ocultar <span class="resumen-caret">▴</span></span>
+          <span class="section-title-text">Ahorro <span class="h2-note">tu alcancía</span></span>
+          <span class="toggle-hint"><span class="resumen-lbl">Ocultar</span> <span class="resumen-caret">▴</span></span>
         </button>
         <div class="resumen-collapsible" data-resumen-panel="ahorro" style="display:block;">
           <div id="savingsPanel"></div>
@@ -561,9 +578,9 @@
       <div class="resumen-section">
         <button type="button" class="resumen-toggle" data-resumen-key="ingresos">
           <span class="section-title-text">Ingresos por categoría</span>
-          <span class="toggle-hint">Ocultar <span class="resumen-caret">▴</span></span>
+          <span class="toggle-hint"><span class="resumen-lbl">Ver</span> <span class="resumen-caret">▾</span></span>
         </button>
-        <div class="resumen-collapsible" data-resumen-panel="ingresos" style="display:block;">
+        <div class="resumen-collapsible" data-resumen-panel="ingresos" style="display:none;">
           <div id="incomeDonut"></div>
         </div>
       </div>
@@ -571,9 +588,9 @@
       <div class="resumen-section">
         <button type="button" class="resumen-toggle" data-resumen-key="pago">
           <span class="section-title-text">Gastos por forma de pago</span>
-          <span class="toggle-hint">Ocultar <span class="resumen-caret">▴</span></span>
+          <span class="toggle-hint"><span class="resumen-lbl">Ver</span> <span class="resumen-caret">▾</span></span>
         </button>
-        <div class="resumen-collapsible" data-resumen-panel="pago" style="display:block;">
+        <div class="resumen-collapsible" data-resumen-panel="pago" style="display:none;">
           <div id="paymentDonut"></div>
         </div>
       </div>
@@ -581,7 +598,7 @@
       <div class="resumen-section">
         <button type="button" class="resumen-toggle" data-resumen-key="categoria">
           <span class="section-title-text">Gastos por categoría</span>
-          <span class="toggle-hint">Ocultar <span class="resumen-caret">▴</span></span>
+          <span class="toggle-hint"><span class="resumen-lbl">Ocultar</span> <span class="resumen-caret">▴</span></span>
         </button>
         <div class="resumen-collapsible" data-resumen-panel="categoria" style="display:block;">
           <div id="expenseDonut"></div>
@@ -591,9 +608,9 @@
       <div class="resumen-section">
         <button type="button" class="resumen-toggle" data-resumen-key="grupo">
           <span class="section-title-text">Gastos por Grupos</span>
-          <span class="toggle-hint">Ocultar <span class="resumen-caret">▴</span></span>
+          <span class="toggle-hint"><span class="resumen-lbl">Ver</span> <span class="resumen-caret">▾</span></span>
         </button>
-        <div class="resumen-collapsible" data-resumen-panel="grupo" style="display:block;">
+        <div class="resumen-collapsible" data-resumen-panel="grupo" style="display:none;">
           <div id="groupDonut"></div>
           <div id="groupBreakdownDetail"></div>
         </div>
