@@ -24,9 +24,9 @@
     </button>
     <div class="auth-divider"><span>o con tu correo</span></div>
     <form id="authForm">
-      <input type="email" id="authEmail" placeholder="Correo" autocomplete="email" required>
+      <input type="email" aria-label="Correo electrónico" id="authEmail" placeholder="Correo" autocomplete="email" required>
       <div class="password-field-wrap icon-mode">
-        <input type="password" id="authPassword" placeholder="Contraseña" autocomplete="current-password" required minlength="6">
+        <input type="password" aria-label="Contraseña" id="authPassword" placeholder="Contraseña" autocomplete="current-password" required minlength="6">
         <button type="button" class="password-toggle-btn icon-only" data-target="authPassword" aria-label="Mostrar contraseña">👁</button>
       </div>
       <button type="submit" id="authSubmitBtn">Entrar</button>
@@ -52,6 +52,7 @@
     <div class="drawer-nav" id="drawerNav">
       <button type="button" class="drawer-nav-item" data-nav="form">📋 Movimientos</button>
       <button type="button" class="drawer-nav-item" data-nav="resumen">📈 Resumen</button>
+      <button type="button" class="drawer-nav-item" id="openPayBtn">💳 Pagar tarjeta</button>
       <button type="button" class="drawer-nav-item" id="openSetupBtn">🏁 Saldos iniciales</button>
       <button type="button" class="drawer-nav-item" id="openReportBtn">📄 Reporte / Exportar</button>
       <button type="button" class="drawer-nav-item" data-nav="metas">🎯 Metas y Proyectos</button>
@@ -75,6 +76,24 @@
       <p class="danger-zone-note">Borra movimientos, presupuesto, categorías, por cobrar y metas de esta cuenta. No se puede deshacer.</p>
     </div>
     <p style="text-align:center;margin-top:16px;"><a href="aviso-privacidad.html" target="_blank" style="font-size:11px;color:var(--ink-soft);">Aviso de Privacidad</a></p>
+  </div>
+
+  <div class="drawer-backdrop" id="payBackdrop"></div>
+  <div class="help-modal" id="payModal">
+    <div class="help-modal-header">
+      <h2>Pago de tarjeta</h2>
+      <button type="button" id="payModalClose" class="drawer-close" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="help-modal-body">
+      <p class="setup-intro">Registra cuando pagas una tarjeta. Si lo pagas con dinero libre, tu Balance disponible <strong>no cambia</strong> (la deuda y el dinero bajan igual). Si lo pagas con ahorros, se registra un retiro de ese ahorro y tu balance sube.</p>
+      <div class="setup-field"><label for="payCard">Tarjeta</label><select id="payCard"></select></div>
+      <div class="setup-field"><label for="payAmount">Monto pagado (MXN)</label><input type="number" id="payAmount" min="0.01" step="0.01" placeholder="0.00"></div>
+      <div class="setup-field"><label for="paySource">Pagado con</label><select id="paySource"></select></div>
+      <div class="setup-field"><label for="payDate">Fecha</label><input type="date" id="payDate"></div>
+      <p class="error-msg" id="payError" style="display:none;"></p>
+      <button type="button" id="paySave" class="setup-primary">Guardar pago</button>
+      <button type="button" id="payCancel" class="setup-secondary">Cancelar</button>
+    </div>
   </div>
 
   <div class="drawer-backdrop" id="setupBackdrop"></div>
@@ -232,12 +251,17 @@
       <div class="tape">
         <span class="tape-label">Balance disponible<button type="button" class="help-icon" data-help="disponible">?</button></span>
         <span class="tape-amount" id="tapeAmount">$0.00</span>
+        <span class="tape-sub" id="tapeSub" style="display:none;"></span>
       </div>
       <div class="account-menu-wrap">
         <button type="button" id="accountMenuBtn" class="account-menu-btn" aria-label="Cuenta y respaldo">☰ <span class="account-menu-btn-label">Menú</span></button>
       </div>
     </div>
   </header>
+  <div class="data-error-banner" id="dataErrorBanner" style="display:none;" role="alert">
+    <span><strong>No se pudieron cargar tus datos.</strong> Para no borrar lo que ya tienes guardado, la app no guardará cambios hasta que se carguen. Revisa tu conexión y recarga.</span>
+    <button type="button" class="balance-notice-btn" onclick="location.reload()">Recargar</button>
+  </div>
   <div class="balance-notice" id="balanceNotice" style="display:none;" role="status">
     <div class="balance-notice-text">
       <strong>Tu Balance disponible es negativo.</strong> Puede ser deuda de tarjetas, o falta registrar un saldo inicial, un ingreso o un retiro de ahorro.
@@ -331,7 +355,7 @@
           <div class="cat-chips" id="payChips" style="display:none;"></div>
           <button type="button" id="togglePayAdd" class="manage-cat-link">+ Agregar forma de pago</button>
           <div class="pay-add-row" id="payAddRow" style="display:none;">
-            <input type="text" id="newPayInput" placeholder="Ej. Crédito - Platino">
+            <input type="text" aria-label="Nueva forma de pago" id="newPayInput" placeholder="Ej. Crédito - Platino">
             <button type="button" id="addPayBtn">Agregar</button>
           </div>
         </div>
@@ -357,8 +381,8 @@
           <button type="button" id="toggleCatChips" class="manage-cat-link" style="display:none;">Gestionar categorías (editar grupo / eliminar) ▾</button>
           <div class="cat-chips" id="catChips" style="display:none;"></div>
           <div class="cat-add-row">
-            <input type="text" id="newCatInput" placeholder="Nueva categoría...">
-            <select id="newCatGroup" style="display:none;">
+            <input type="text" aria-label="Nueva categoría" id="newCatInput" placeholder="Nueva categoría...">
+            <select aria-label="Grupo de la nueva categoría" id="newCatGroup" style="display:none;">
               <option value="Fijos">Fijo</option>
               <option value="Variables" selected>Variable</option>
               <option value="Inversiones y seguros">Inversión/Seguro</option>
@@ -391,7 +415,7 @@
         <p class="ledger-hint">toca ✕ para eliminar un movimiento</p>
         <div class="ledger-filter-row">
           <span class="ledger-filter-icon">🔍</span>
-          <select id="categoryFilterInput" class="ledger-filter-input">
+          <select aria-label="Filtrar movimientos por categoría" id="categoryFilterInput" class="ledger-filter-input">
             <option value="">Todas las categorías</option>
           </select>
         </div>
@@ -442,7 +466,7 @@
         </div>
         <div class="field">
           <label>Correo</label>
-          <input type="email" id="profileEmail" disabled>
+          <input type="email" aria-label="Correo de la cuenta" id="profileEmail" disabled>
         </div>
         <button type="button" id="profileSaveBtn" class="submit-btn">Guardar cambios</button>
         <p class="profile-save-note" id="profileSaveNote"></p>

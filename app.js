@@ -23,13 +23,19 @@
      Si el archivo se abre fuera de Claude (descargado, hospedado, etc.)
      usa localStorage del navegador automáticamente, sin cambiar nada más. */
   const hasClaudeStorage = typeof window.storage !== 'undefined' && window.storage && typeof window.storage.get === 'function';
+  // Claves cuya lectura falló: mientras sigan así NO se permite guardarlas, porque la app
+  // creería que están vacías y sobrescribiría lo que tienes en la nube.
+  const failedLoads = new Set();
+  function showDataLoadBanner(){ const b = document.getElementById('dataErrorBanner'); if(b) b.style.display = 'flex'; }
+  function hideDataLoadBanner(){ const b = document.getElementById('dataErrorBanner'); if(b) b.style.display = 'none'; }
   const storageAdapter = {
     async get(key){
       if(currentUser){
         try{
           const snap = await fbDb.collection('users').doc(currentUser.uid).collection('appData').doc(key).get();
+          failedLoads.delete(key);
           return snap.exists ? { key, value: snap.data().value } : null;
-        }catch(err){ console.error('Firestore get error:', err); return null; }
+        }catch(err){ console.error('Firestore get error:', err); failedLoads.add(key); showDataLoadBanner(); return null; }
       }
       if(hasClaudeStorage){
         try{ return await window.storage.get(key, false); }
@@ -42,10 +48,14 @@
     },
     async set(key, value){
       if(currentUser){
+        if(failedLoads.has(key)){
+          showDataLoadBanner();
+          throw new Error('No se guardó: tus datos no se pudieron cargar. Recarga la página.');
+        }
         try{
           await fbDb.collection('users').doc(currentUser.uid).collection('appData').doc(key).set({ value });
           return { key, value };
-        }catch(err){ console.error('Firestore set error:', err); return null; }
+        }catch(err){ console.error('Firestore set error:', err); throw err; }
       }
       if(hasClaudeStorage){
         try{ return await window.storage.set(key, value, false); }
@@ -321,6 +331,21 @@
     div.textContent = str;
     return div.innerHTML;
   }
+  // Saldo acumulado por pagar de cada tarjeta de crédito: lo cargado (compras + MSI ya cobrados)
+  // menos los pagos registrados. Solo es exacto si registras los pagos que ya hiciste.
+  function computeCardBalances(){
+    const cards = {};
+    const get = (name)=> cards[name] || (cards[name] = { cargos:0, pagos:0 });
+    transactions.forEach(t=>{
+      if(t.type === 'gasto' && String(t.paymentMethod || '').startsWith('Crédito')){
+        get(t.paymentMethod).cargos += t.isMsi ? msiInfo(t).paid : t.amount;
+      } else if(t.type === 'pago'){
+        get(t.paymentMethod).pagos += t.amount;
+      }
+    });
+    Object.values(cards).forEach(c=>{ c.saldo = c.cargos - c.pagos; });
+    return cards;
+  }
   // Un ingreso "Saldo inicial" es dinero que ya tenías antes de usar la app: suma a tu Balance
   // disponible, pero NO cuenta como ingreso del mes ni de ningún periodo.
   function isOpeningIncome(t){
@@ -330,6 +355,45 @@
 
   /* ---------- Toast: aviso de guardado ---------- */
   let toastTimer = null;
+
+  /* ---------- Diálogos propios (reemplazan alert / confirm del navegador) ---------- */
+  function uiDialog({ message, confirmText, cancelText, danger }){
+    return new Promise(resolve=>{
+      const back = document.createElement('div');
+      back.className = 'dlg-backdrop';
+      const box = document.createElement('div');
+      box.className = 'dlg';
+      box.setAttribute('role', 'alertdialog');
+      box.setAttribute('aria-modal', 'true');
+      const p = document.createElement('p');
+      p.className = 'dlg-msg';
+      p.textContent = message;
+      const actions = document.createElement('div');
+      actions.className = 'dlg-actions';
+      let cancelBtn = null;
+      if(cancelText){
+        cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button'; cancelBtn.className = 'dlg-btn ghost'; cancelBtn.textContent = cancelText;
+        actions.appendChild(cancelBtn);
+      }
+      const okBtn = document.createElement('button');
+      okBtn.type = 'button'; okBtn.className = 'dlg-btn' + (danger ? ' danger' : ''); okBtn.textContent = confirmText || 'Aceptar';
+      actions.appendChild(okBtn);
+      box.append(p, actions);
+      back.appendChild(box);
+      document.body.appendChild(back);
+      const done = (val)=>{ document.removeEventListener('keydown', onKey); back.remove(); resolve(val); };
+      const onKey = (e)=>{ if(e.key === 'Escape') done(false); };
+      document.addEventListener('keydown', onKey);
+      okBtn.addEventListener('click', ()=> done(true));
+      if(cancelBtn) cancelBtn.addEventListener('click', ()=> done(false));
+      back.addEventListener('click', (e)=>{ if(e.target === back) done(false); });
+      (cancelBtn || okBtn).focus();
+    });
+  }
+  function uiAlert(message){ return uiDialog({ message, confirmText: 'Entendido' }); }
+  function uiConfirm(message, opts){ opts = opts || {}; return uiDialog({ message, confirmText: opts.confirmText || 'Aceptar', cancelText: opts.cancelText || 'Cancelar', danger: !!opts.danger }); }
+
   function showToast(message, isError){
     if(!els.toast) return;
     clearTimeout(toastTimer);
@@ -478,7 +542,7 @@
           const newName = input.value.trim();
           if(!newName || newName === oldName){ renderPayChips(); return; }
           if(paymentMethods[currentType].includes(newName)){
-            alert('Ya existe una forma de pago con ese nombre.');
+            showToast('Ya existe una forma de pago con ese nombre.', true);
             return;
           }
           const idx = paymentMethods[currentType].indexOf(oldName);
@@ -703,11 +767,11 @@
       };
 
       const movRows = moves.map(t=>{
-        const sign = (t.type === 'gasto' || (t.type === 'ahorro' && t.subtype === 'aporte')) ? '−' : '+';
+        const sign = t.type === 'pago' ? '' : ((t.type === 'gasto' || (t.type === 'ahorro' && t.subtype === 'aporte')) ? '−' : '+');
         const monto = (t.isMsi ? msiPeriodContribution(t) : t.amount);
         return `<tr>
           <td>${t.date.split('-').reverse().join('/')}</td>
-          <td>${escapeHtml(t.type === 'ahorro' ? ('Ahorro (' + (SUBTYPE_LABEL[t.subtype] || 'Aporte').toLowerCase() + ')') : (t.type === 'ingreso' ? 'Ingreso' : 'Gasto'))}</td>
+          <td>${escapeHtml(t.type === 'pago' ? 'Pago de tarjeta' : t.type === 'ahorro' ? ('Ahorro (' + (SUBTYPE_LABEL[t.subtype] || 'Aporte').toLowerCase() + ')') : (t.type === 'ingreso' ? 'Ingreso' : 'Gasto'))}</td>
           <td>${escapeHtml(t.category)}${t.isMsi ? ' (MSI)' : ''}</td>
           <td>${escapeHtml(t.paymentMethod || '—')}</td>
           <td>${escapeHtml(t.description || '')}</td>
@@ -795,7 +859,7 @@
       const escCsv = v => `"${String(v).replace(/"/g,'""')}"`;
       const header = ['Fecha','Tipo','Categoría','Forma de pago','Descripción','Monto','Moneda'].map(escCsv).join(',');
       const rows = moves.map(t=>{
-        const tipo = t.type === 'ahorro' ? ('Ahorro (' + (SUBTYPE_LABEL[t.subtype] || 'Aporte').toLowerCase() + ')') : (t.type === 'ingreso' ? 'Ingreso' : 'Gasto');
+        const tipo = t.type === 'pago' ? 'Pago de tarjeta' : t.type === 'ahorro' ? ('Ahorro (' + (SUBTYPE_LABEL[t.subtype] || 'Aporte').toLowerCase() + ')') : (t.type === 'ingreso' ? 'Ingreso' : 'Gasto');
         const monto = t.isMsi ? msiPeriodContribution(t) : t.amount;
         return [t.date, tipo, t.category, t.paymentMethod || '', t.description || '', monto.toFixed(2), t.moneda || 'MXN'].map(escCsv).join(',');
       });
@@ -991,6 +1055,65 @@
   });
 
 
+
+  /* ---------- Pago de tarjeta ---------- */
+  const payEls = {
+    modal: document.getElementById('payModal'),
+    backdrop: document.getElementById('payBackdrop'),
+    card: document.getElementById('payCard'),
+    amount: document.getElementById('payAmount'),
+    date: document.getElementById('payDate'),
+    source: document.getElementById('paySource'),
+    error: document.getElementById('payError'),
+  };
+  function openPayModal(card){
+    const cards = (paymentMethods.gasto || []).filter(p=> String(p).startsWith('Crédito'));
+    if(cards.length === 0){ showToast('No tienes tarjetas de crédito en tus formas de pago.', true); return; }
+    payEls.card.innerHTML = cards.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+    if(card && cards.includes(card)) payEls.card.value = card;
+    const funds = computeSavingsFundByCategory('MXN');
+    payEls.source.innerHTML = '<option value="libre">Dinero libre (cuenta o efectivo)</option>' +
+      funds.map(([cat, bal])=>`<option value="${escapeHtml(cat)}">Mis ahorros: ${escapeHtml(cat)} (${fmt.format(bal)})</option>`).join('');
+    payEls.amount.value = '';
+    payEls.date.value = todayStr();
+    payEls.error.style.display = 'none';
+    payEls.modal.classList.add('open');
+    payEls.backdrop.classList.add('open');
+    payEls.amount.focus();
+  }
+  function closePayModal(){
+    payEls.modal.classList.remove('open');
+    payEls.backdrop.classList.remove('open');
+  }
+  document.getElementById('payModalClose').addEventListener('click', closePayModal);
+  document.getElementById('payCancel').addEventListener('click', closePayModal);
+  payEls.backdrop.addEventListener('click', closePayModal);
+  document.getElementById('openPayBtn').addEventListener('click', ()=>{ closeDrawer(); openPayModal(); });
+  els.cardsPanel.addEventListener('click', (e)=>{
+    const btn = e.target.closest('[data-pay-card]');
+    if(btn) openPayModal(btn.dataset.payCard);
+  });
+  document.getElementById('paySave').addEventListener('click', async ()=>{
+    const fail = (msg)=>{ payEls.error.textContent = msg; payEls.error.style.display = 'block'; };
+    const amount = parseFloat(payEls.amount.value) || 0;
+    if(amount <= 0) return fail('Escribe un monto mayor a 0.');
+    const source = payEls.source.value;
+    if(source !== 'libre'){
+      const fund = computeSavingsFundByCategory('MXN').find(([c])=> c === source);
+      if(!fund || amount > fund[1] + 0.005) return fail('Ese ahorro solo tiene ' + fmt.format(fund ? fund[1] : 0) + '.');
+    }
+    const date = payEls.date.value || todayStr();
+    const card = payEls.card.value;
+    const pagoId = newId();
+    transactions.push({ id: pagoId, type:'pago', amount, paymentMethod: card, description:'Pago de tarjeta', date, category:'Pago de tarjeta', source });
+    if(source !== 'libre'){
+      transactions.push({ id: newId() + 1, type:'ahorro', subtype:'retiro', moneda:'MXN', amount, paymentMethod:'Transferencia', description:'Pago ' + card, date, category: source, linkedPago: pagoId });
+    }
+    closePayModal();
+    render();
+    await saveTransactions();
+  });
+
   /* ---------- Saldos iniciales (punto de partida) ---------- */
   const setupEls = {
     modal: document.getElementById('setupModal'),
@@ -1066,11 +1189,19 @@
   });
 
   /* ---------- Payment method / MSI / Ahorro visibility ---------- */
+  function rememberPayment(type, value){ try{ localStorage.setItem('lastPay:' + type, value); }catch(e){} }
+  function recallPayment(type){ try{ return localStorage.getItem('lastPay:' + type) || ''; }catch(e){ return ''; } }
   function populatePaymentMethods(){
     els.paymentMethod.innerHTML = '<option value="">Elige una forma de pago…</option>' + paymentMethods[currentType]
       .map(p => `<option value="${p}">${p}</option>`).join('');
+    // Sugiere la última forma de pago que usaste en este tipo (solo en registros nuevos).
+    if(!editingTransactionId){
+      const last = recallPayment(currentType);
+      if(last && paymentMethods[currentType].includes(last)) els.paymentMethod.value = last;
+    }
     updateMsiVisibility();
     renderPayChips();
+    updateAmountGate();
   }
   function updateMsiVisibility(){
     const showMsiOption = currentType === 'gasto' && els.paymentMethod.value.startsWith('Crédito');
@@ -1207,16 +1338,95 @@
   });
 
   /* ---------- Storage: transactions ---------- */
+  /* TXDATA START */
+  // Los movimientos se guardan UN DOCUMENTO POR AÑO (más un índice de años), para no toparse con el
+  // límite de 1 MB por documento de Firestore. El documento viejo (todo junto) se conserva como respaldo.
+  const TX_INDEX_KEY = TX_KEY + ':index';
+  const TX_YEAR_PREFIX = TX_KEY + ':y';
+  let savedYearJson = {};   // año -> último JSON que sabemos que está en la nube
+  let savedIndexJson = '';
+  function txYearOf(t){ return String(t.date || '').slice(0,4) || String(new Date().getFullYear()); }
+  function groupByYear(list){
+    const g = {};
+    list.forEach(t=>{ const y = txYearOf(t); (g[y] = g[y] || []).push(t); });
+    return g;
+  }
+  function txKeyFailed(){
+    for(const k of failedLoads){ if(k === TX_KEY || k === TX_INDEX_KEY || k.startsWith(TX_YEAR_PREFIX)) return true; }
+    return false;
+  }
   async function loadTransactions(){
+    savedYearJson = {}; savedIndexJson = '';
     try{
-      const res = await storageAdapter.get(TX_KEY);
-      transactions = res && res.value ? JSON.parse(res.value) : [];
-    }catch(err){ transactions = []; }
+      if(!currentUser){
+        const res = await storageAdapter.get(TX_KEY);
+        transactions = res && res.value ? JSON.parse(res.value) : [];
+        return;
+      }
+      const idxRes = await storageAdapter.get(TX_INDEX_KEY);
+      if(failedLoads.has(TX_INDEX_KEY)){ transactions = []; return; }
+      if(idxRes && idxRes.value){
+        const years = (JSON.parse(idxRes.value).years || []).map(String);
+        const results = await Promise.all(years.map(y=> storageAdapter.get(TX_YEAR_PREFIX + y)));
+        let all = [];
+        years.forEach((y, i)=>{
+          const r = results[i];
+          savedYearJson[y] = r && r.value ? r.value : '[]';
+          all = all.concat(r && r.value ? JSON.parse(r.value) : []);
+        });
+        savedIndexJson = idxRes.value;
+        transactions = all;
+        return;
+      }
+      // Sin índice: cuenta nueva, o datos en el formato anterior (un solo documento).
+      const legacy = await storageAdapter.get(TX_KEY);
+      if(failedLoads.has(TX_KEY)){ transactions = []; return; }
+      transactions = legacy && legacy.value ? JSON.parse(legacy.value) : [];
+      if(transactions.length > 0) await saveTransactions(true); // migra a documentos por año; el viejo queda de respaldo
+    }catch(err){ console.error('No se pudieron cargar los movimientos:', err); transactions = []; if(currentUser){ failedLoads.add(TX_INDEX_KEY); showDataLoadBanner(); } }
   }
-  async function saveTransactions(){
-    try{ await storageAdapter.set(TX_KEY, JSON.stringify(transactions)); showToast('Guardado'); }
-    catch(err){ console.error('No se pudo guardar el movimiento:', err); showToast('Error, intenta de nuevo.', true); }
+  async function saveTransactions(silent){
+    const prevYears = Object.assign({}, savedYearJson);
+    const prevIndex = savedIndexJson;
+    try{
+      if(!currentUser){
+        await storageAdapter.set(TX_KEY, JSON.stringify(transactions));
+      } else {
+        if(txKeyFailed()){ showDataLoadBanner(); throw new Error('No se guardó: tus datos no se pudieron cargar. Recarga la página.'); }
+        const groups = groupByYear(transactions);
+        const allYears = [...new Set([...Object.keys(groups), ...Object.keys(savedYearJson)])].sort();
+        const writes = [];
+        allYears.forEach(y=>{
+          const json = JSON.stringify(groups[y] || []);
+          if(savedYearJson[y] !== json) writes.push([y, json]);
+        });
+        // Se anota antes de escribir para que el "eco" de Firestore no se confunda con un cambio ajeno.
+        writes.forEach(([y, json])=>{ savedYearJson[y] = json; });
+        await Promise.all(writes.map(([y, json])=> storageAdapter.set(TX_YEAR_PREFIX + y, json)));
+        const idxJson = JSON.stringify({ years: allYears });
+        if(idxJson !== savedIndexJson){
+          savedIndexJson = idxJson;
+          await storageAdapter.set(TX_INDEX_KEY, idxJson);
+        }
+      }
+      if(!silent) showToast('Guardado');
+    }catch(err){
+      savedYearJson = prevYears; savedIndexJson = prevIndex;
+      console.error('No se pudo guardar el movimiento:', err);
+      showToast('Error, intenta de nuevo.', true);
+    }
   }
+  // Cambio remoto de un documento de año (otro dispositivo). Devuelve true si cambió algo.
+  function applyRemoteYear(year, jsonOrNull){
+    const json = jsonOrNull === null ? '[]' : jsonOrNull;
+    if(savedYearJson[year] === json) return false;
+    savedYearJson[year] = json;
+    let arr = [];
+    try{ arr = JSON.parse(json) || []; }catch(e){ return false; }
+    transactions = transactions.filter(t=> txYearOf(t) !== year).concat(arr);
+    return true;
+  }
+  /* TXDATA END */
 
   /* ---------- Budget (presupuesto) ---------- */
   async function loadBudget(){
@@ -1578,7 +1788,7 @@
         const categoria = catEl.value.trim();
         const presupuesto = parseFloat(presuEl.value);
         if(!nombre || !categoria || !presupuesto || presupuesto <= 0){
-          alert('Ponle nombre, categoría y un presupuesto/meta mayor a $0.');
+          showToast('Ponle nombre, categoría y un presupuesto/meta mayor a $0.', true);
           return;
         }
         if(editingTravelId){
@@ -1599,9 +1809,9 @@
       syncMsiBtn.addEventListener('click', async ()=>{
         const result = await syncMsiToBudget();
         if(result.total === 0){
-          alert('No tienes ningún MSI activo en este momento.');
+          await uiAlert('No tienes ningún MSI activo en este momento.');
         } else {
-          alert(`Listo. MSI activos: ${result.total}. Agregadas: ${result.added}. Actualizadas: ${result.updated}.`);
+          await uiAlert(`Listo. MSI activos: ${result.total}. Agregadas: ${result.added}. Actualizadas: ${result.updated}.`);
         }
       });
     }
@@ -2224,6 +2434,14 @@
     els.tapeAmount.classList.remove('pos','neg');
     els.tapeAmount.classList.add(allTimeBalance >= 0 ? 'pos' : 'neg');
     updateBalanceNotice(allTimeBalance);
+    (function updateTapeSub(){
+      const sub = document.getElementById('tapeSub');
+      if(!sub) return;
+      if(!transactions.some(t=>t.type === 'pago')){ sub.style.display = 'none'; return; }
+      const debt = Object.values(computeCardBalances()).reduce((s,c)=> s + Math.max(0, c.saldo), 0);
+      sub.textContent = 'Libre ' + fmt.format(allTimeBalance + debt) + ' · Tarjetas −' + fmt.format(debt);
+      sub.style.display = 'block';
+    })();
 
     renderBudget();
     renderTravelPanel();
@@ -2387,8 +2605,20 @@
         if(isMsi) c.msi += amt; else c.compras += amt;
       });
       const entries = Object.entries(cards).map(([name,c])=>[name, c, c.compras + c.msi]).sort((a,b)=> b[2]-a[2]);
+      const balances = computeCardBalances();
+      const hasPagos = transactions.some(t=>t.type === 'pago');
+      const balEntries = Object.entries(balances).sort((a,b)=> b[1].saldo - a[1].saldo);
+      const saldoHtml = balEntries.length === 0 ? '' : `<div class="card-saldo-box">
+          <div class="msi-card-breakdown-title">Saldo acumulado por pagar</div>
+          ${balEntries.map(([name, c])=>`<div class="card-saldo-row">
+            <span class="card-pay-name">${escapeHtml(name)}</span>
+            <span class="card-pay-amt">${fmt.format(c.saldo)}</span>
+            <button type="button" class="card-pay-btn" data-pay-card="${escapeHtml(name)}">Registrar pago</button>
+          </div>`).join('')}
+          <p class="card-pay-detail">${hasPagos ? 'Cargos acumulados menos los pagos que registraste.' : 'Todavía no registras pagos: este saldo suma todos tus cargos. Registra los pagos que ya hiciste para que sea real.'}</p>
+        </div>`;
       if(entries.length === 0){
-        els.cardsPanel.innerHTML = '<p class="ledger-empty">Sin cargos a tarjetas de crédito en este periodo.</p>';
+        els.cardsPanel.innerHTML = '<p class="ledger-empty">Sin cargos a tarjetas de crédito en este periodo.</p>' + saldoHtml;
         return;
       }
       const total = entries.reduce((s,e)=> s + e[2], 0);
@@ -2405,7 +2635,7 @@
             <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${pct}%;"></div></div>
             <div class="card-pay-detail">${detail.join(' · ')}</div>
           </div>`;
-        }).join('');
+        }).join('') + saldoHtml;
     })();
 
     const msiRefDate = periodReferenceDate();
@@ -2476,8 +2706,8 @@
         btn.addEventListener('click', ()=> editTransaction(Number(btn.dataset.id)));
       });
       els.msiPanel.querySelectorAll('.msi-plan-del').forEach(btn=>{
-        btn.addEventListener('click', ()=>{
-          if(!confirm('¿Eliminar este MSI por completo? Se borra junto con todo su historial de pagos.')) return;
+        btn.addEventListener('click', async ()=>{
+          if(!(await uiConfirm('¿Eliminar este MSI por completo? Se borra junto con todo su historial de pagos.', { confirmText:'Eliminar', danger:true }))) return;
           deleteTransaction(Number(btn.dataset.id));
         });
       });
@@ -2504,7 +2734,7 @@
       els.categoryFilterInput.innerHTML = '<option value="">Todas las categorías</option>' +
         catOptions.map(c=>`<option value="${escapeHtml(c)}" ${c===catFilter?'selected':''}>${escapeHtml(c)}</option>`).join('');
       const sorted = transactions
-        .filter(t=> isInPeriod(t.date) && (!catFilter || t.category === catFilter))
+        .filter(t=> !t.linkedPago && isInPeriod(t.date) && (!catFilter || t.category === catFilter))
         .sort((a,b)=> b.date.localeCompare(a.date) || b.id - a.id);
       if(sorted.length === 0){
         els.ledgerList.innerHTML = catFilter
@@ -2537,7 +2767,11 @@
       let prevDate = null;
       els.ledgerList.innerHTML = `<div class="ledger-list">` + sorted.map(t=>{
         let sign, desc, catLabel;
-        if(t.type === 'ahorro'){
+        if(t.type === 'pago'){
+          sign = '';
+          desc = t.description ? t.description : 'Pago de tarjeta';
+          catLabel = 'Pago de tarjeta';
+        } else if(t.type === 'ahorro'){
           // Desde la perspectiva de tu balance disponible: un aporte SALE (−) hacia el ahorro,
           // un retiro REGRESA (+) a tu balance. El panel Fondo de ahorro usa la perspectiva inversa.
           sign = t.subtype === 'retiro' ? '+' : (t.subtype === 'inicial' ? '' : '−');
@@ -2550,7 +2784,7 @@
         }
         const payBadge = `<span class="ledger-pay">${escapeHtml(t.paymentMethod || 'Efectivo')}</span>`;
         const msiBadge = t.isMsi ? `<span class="ledger-msi-badge">MSI</span>` : '';
-        const subtypeBadge = t.type === 'ahorro' ? `<span class="ledger-subtype-badge ${t.subtype}">${SUBTYPE_LABEL[t.subtype] || 'Aporte'}</span>` : (isOpeningIncome(t) ? '<span class="ledger-subtype-badge inicial">Saldo inicial</span>' : '');
+        const subtypeBadge = t.type === 'pago' ? `<span class="ledger-subtype-badge inicial">Pago · ${escapeHtml(t.source && t.source !== 'libre' ? 'de ' + t.source : 'dinero libre')}</span>` : t.type === 'ahorro' ? `<span class="ledger-subtype-badge ${t.subtype}">${SUBTYPE_LABEL[t.subtype] || 'Aporte'}</span>` : (isOpeningIncome(t) ? '<span class="ledger-subtype-badge inicial">Saldo inicial</span>' : '');
         const monedaBadge = (t.type === 'ahorro' && t.moneda === 'USD') ? `<span class="ledger-moneda-badge">USD</span>` : '';
         let msiMini = '';
         if(t.isMsi){
@@ -2569,7 +2803,7 @@
         return header + `<div class="ledger-row">
           <div class="ledger-row-line1">
             <span class="ledger-desc">${escapeHtml(desc)}</span>
-            <button class="ledger-edit" data-id="${t.id}" title="Editar" aria-label="Editar movimiento">✎</button>
+            ${t.type === 'pago' ? '' : `<button class="ledger-edit" data-id="${t.id}" title="Editar" aria-label="Editar movimiento">✎</button>`}
             <button class="ledger-del" data-id="${t.id}" title="Eliminar" aria-label="Eliminar movimiento">✕</button>
           </div>
           <div class="ledger-row-line2">
@@ -2597,7 +2831,7 @@
 
   async function deleteTransaction(id){
     const removed = transactions.find(t=>t.id === id);
-    transactions = transactions.filter(t=>t.id !== id);
+    transactions = transactions.filter(t=>t.id !== id && t.linkedPago !== id);
     let budgetChanged = false;
     if(removed && removed.isMsi && budget.variables){
       const before = budget.variables.length;
@@ -2736,6 +2970,7 @@
       if(txData.isMsi) txData.months = Math.max(2, parseInt(els.msiMonths.value, 10) || 3);
     }
 
+    rememberPayment(currentType, txData.paymentMethod);
     let wasMsi = false;
     if(editingTransactionId){
       const idx = transactions.findIndex(x=>x.id === editingTransactionId);
@@ -2898,19 +3133,22 @@
 
   els.resetDataBtn.addEventListener('click', async ()=>{
     if(!currentUser) return;
-    const step1 = confirm(`Esto va a BORRAR TODO (movimientos, presupuesto, categorías, por cobrar y metas) de la cuenta ${currentUser.email}. Esta acción no se puede deshacer. ¿Quieres continuar?`);
+    const step1 = await uiConfirm(`Esto va a BORRAR TODO (movimientos, presupuesto, categorías, por cobrar y metas) de la cuenta ${currentUser.email}. Esta acción no se puede deshacer. ¿Quieres continuar?`, { confirmText:'Continuar', danger:true });
     if(!step1) return;
-    const step2 = confirm('¿Estás completamente seguro? Se va a perder toda la información de esta cuenta para siempre.');
+    const step2 = await uiConfirm('¿Estás completamente seguro? Se va a perder toda la información de esta cuenta para siempre.', { confirmText:'Borrar todo', danger:true });
     if(!step2) return;
     try{
       const keys = [TX_KEY, CAT_KEY, BUDGET_KEY, RECV_KEY, CATGROUPS_KEY, TRAVEL_KEY, PAYMENT_KEY];
       const col = fbDb.collection('users').doc(currentUser.uid).collection('appData');
       await Promise.all(keys.map(k => col.doc(k).delete()));
+      const allDocs = await col.get();
+      await Promise.all(allDocs.docs.filter(d=> d.id.startsWith(TX_KEY)).map(d=> d.ref.delete()));
+      savedYearJson = {}; savedIndexJson = '';
       closeDrawer();
       await loadAllDataAndRender();
-      alert('Listo. La cuenta quedó en blanco.');
+      showToast('Listo. La cuenta quedó en blanco.');
     }catch(err){
-      alert('No se pudieron borrar los datos. Intenta de nuevo.');
+      showToast('No se pudieron borrar los datos. Intenta de nuevo.', true);
     }
   });
 
@@ -2920,8 +3158,10 @@
     const MIGRATION_FLAG = 'libro-cuentas:migrated';
     if(localStorage.getItem(MIGRATION_FLAG) === 'true') return; // este navegador ya migró una vez, nunca más
     const keys = [TX_KEY, CAT_KEY, BUDGET_KEY, RECV_KEY, CATGROUPS_KEY, TRAVEL_KEY, PAYMENT_KEY];
-    const cloudTx = await fbDb.collection('users').doc(currentUser.uid).collection('appData').doc(TX_KEY).get();
-    if(cloudTx.exists){
+    const cloudCol = fbDb.collection('users').doc(currentUser.uid).collection('appData');
+    const cloudTx = await cloudCol.doc(TX_KEY).get();
+    const cloudIdx = await cloudCol.doc(TX_INDEX_KEY).get();
+    if(cloudTx.exists || cloudIdx.exists){
       localStorage.setItem(MIGRATION_FLAG, 'true');
       return; // ya hay datos en la nube, no migrar
     }
@@ -2935,7 +3175,7 @@
     }
     localStorage.setItem(MIGRATION_FLAG, 'true');
     keys.forEach(key => localStorage.removeItem(key)); // ya no la necesitamos ahí, evita futuras confusiones
-    if(migrated) alert('Tus datos guardados en este dispositivo se subieron a tu cuenta. Ya puedes verlos también desde otros dispositivos.');
+    if(migrated) await uiAlert('Tus datos guardados en este dispositivo se subieron a tu cuenta. Ya puedes verlos también desde otros dispositivos.');
   }
 
   async function pruneOrphanedMsiBudgetLines(){
@@ -2957,7 +3197,7 @@
     }
     let setupSeen = false;
     try{ setupSeen = localStorage.getItem('setupSeen') === '1'; }catch(e){}
-    if(transactions.length === 0 && !setupSeen) openSetupModal();
+    if(transactions.length === 0 && !setupSeen && !txKeyFailed()) openSetupModal();
   }
 
   /* ---------- Sincronización en tiempo real entre dispositivos ---------- */
@@ -2969,32 +3209,46 @@
   function attachRealtimeListeners(){
     detachRealtimeListeners();
     const col = fbDb.collection('users').doc(currentUser.uid).collection('appData');
-    realtimeUnsubs.push(col.doc(TX_KEY).onSnapshot(async snap=>{
-      if(!snap.exists) return;
-      try{ transactions = JSON.parse(snap.data().value) || []; await pruneOrphanedMsiBudgetLines(); render(); }catch(err){}
+    const FP = firebase.firestore.FieldPath.documentId();
+    realtimeUnsubs.push(col.where(FP, '>=', TX_YEAR_PREFIX).where(FP, '<', TX_YEAR_PREFIX + '\uf8ff').onSnapshot(async snap=>{
+      let changed = false;
+      snap.docChanges().forEach(ch=>{
+        if(ch.doc.metadata.hasPendingWrites) return; // eco de lo que yo mismo acabo de escribir
+        const year = ch.doc.id.slice(TX_YEAR_PREFIX.length);
+        failedLoads.delete(ch.doc.id); failedLoads.delete(TX_INDEX_KEY);
+        if(applyRemoteYear(year, ch.type === 'removed' ? null : ch.doc.data().value)) changed = true;
+      });
+      if(failedLoads.size === 0) hideDataLoadBanner();
+      if(changed){ try{ await pruneOrphanedMsiBudgetLines(); }catch(err){} render(); }
     }));
     realtimeUnsubs.push(col.doc(CAT_KEY).onSnapshot(snap=>{
       if(!snap.exists) return;
+      failedLoads.delete(CAT_KEY); if(failedLoads.size === 0) hideDataLoadBanner();
       try{ categories = JSON.parse(snap.data().value) || categories; render(); }catch(err){}
     }));
     realtimeUnsubs.push(col.doc(BUDGET_KEY).onSnapshot(snap=>{
       if(!snap.exists) return;
+      failedLoads.delete(BUDGET_KEY); if(failedLoads.size === 0) hideDataLoadBanner();
       try{ budget = JSON.parse(snap.data().value) || budget; render(); }catch(err){}
     }));
     realtimeUnsubs.push(col.doc(RECV_KEY).onSnapshot(snap=>{
       if(!snap.exists) return;
+      failedLoads.delete(RECV_KEY); if(failedLoads.size === 0) hideDataLoadBanner();
       try{ receivables = JSON.parse(snap.data().value) || []; render(); }catch(err){}
     }));
     realtimeUnsubs.push(col.doc(TRAVEL_KEY).onSnapshot(snap=>{
       if(!snap.exists) return;
+      failedLoads.delete(TRAVEL_KEY); if(failedLoads.size === 0) hideDataLoadBanner();
       try{ travelBudgets = JSON.parse(snap.data().value) || []; render(); }catch(err){}
     }));
     realtimeUnsubs.push(col.doc(PAYMENT_KEY).onSnapshot(snap=>{
       if(!snap.exists) return;
+      failedLoads.delete(PAYMENT_KEY); if(failedLoads.size === 0) hideDataLoadBanner();
       try{ paymentMethods = JSON.parse(snap.data().value) || paymentMethods; populatePaymentMethods(); }catch(err){}
     }));
     realtimeUnsubs.push(col.doc(CATGROUPS_KEY).onSnapshot(snap=>{
       if(!snap.exists) return;
+      failedLoads.delete(CATGROUPS_KEY); if(failedLoads.size === 0) hideDataLoadBanner();
       try{
         customCategoryGroups = JSON.parse(snap.data().value) || {};
         Object.assign(CATEGORY_GROUPS, customCategoryGroups);
