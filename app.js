@@ -2433,7 +2433,7 @@
     els.tapeAmount.textContent = fmt.format(allTimeBalance);
     els.tapeAmount.classList.remove('pos','neg');
     els.tapeAmount.classList.add(allTimeBalance >= 0 ? 'pos' : 'neg');
-    updateBalanceNotice(allTimeBalance);
+    let tapeLibre = null;
     (function updateTapeSub(){
       const sub = document.getElementById('tapeSub');
       if(!sub) return;
@@ -2441,7 +2441,10 @@
       const debt = Object.values(computeCardBalances()).reduce((s,c)=> s + Math.max(0, c.saldo), 0);
       sub.textContent = 'Libre ' + fmt.format(allTimeBalance + debt) + ' · Tarjetas −' + fmt.format(debt);
       sub.style.display = 'block';
+      tapeLibre = allTimeBalance + debt;
     })();
+    // Con pagos registrados, la deuda de tarjetas es esperada: solo avisa si el dinero LIBRE es negativo.
+    updateBalanceNotice(tapeLibre !== null ? tapeLibre : allTimeBalance);
 
     renderBudget();
     renderTravelPanel();
