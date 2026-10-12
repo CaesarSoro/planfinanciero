@@ -582,8 +582,13 @@
       }
       populateCategories();
       els.category.value = name;
+      updateAmountGate();
+    } else {
+      els.category.value = name; // ya existía: solo la selecciona
+      updateAmountGate();
     }
     els.newCatInput.value = '';
+    document.querySelector('.cat-add-row').classList.remove('open');
   });
   els.togglePayAdd.addEventListener('click', ()=>{
     const showing = els.payAddRow.style.display !== 'none';
@@ -598,6 +603,8 @@
       await savePaymentMethods();
       populatePaymentMethods();
       els.paymentMethod.value = name;
+      updateMsiVisibility();
+      updateAmountGate();
     }
     els.newPayInput.value = '';
     els.payAddRow.style.display = 'none';
@@ -1293,9 +1300,20 @@
     }
   }
   els.paymentMethod.addEventListener('change', updateMsiVisibility);
+  function updateMsiHint(){
+    const hint = document.getElementById('msiHint');
+    if(!hint) return;
+    const amt = parseFloat(els.amount.value), m = parseInt(els.msiMonths.value, 10);
+    if(els.isMsi.checked && amt > 0 && m >= 2){
+      hint.textContent = m + ' pagos de ' + fmt.format(amt / m) + ' al mes. El primer cobro cuenta desde el mes siguiente a la fecha.';
+    } else { hint.textContent = ''; }
+  }
+  els.amount.addEventListener('input', updateMsiHint);
+  els.msiMonths.addEventListener('input', updateMsiHint);
   els.isMsi.addEventListener('change', ()=>{
     els.msiFields.style.display = els.isMsi.checked ? 'block' : 'none';
     updateFieldLabels();
+    updateMsiHint();
   });
   els.ahorroSubtypeToggle.addEventListener('click', (e)=>{
     const btn = e.target.closest('button');
@@ -1323,16 +1341,63 @@
   }
   function updateAmountGate(){
     updateOpeningHint();
-    const amountValid = parseFloat(els.amount.value) > 0;
-    els.paymentMethod.disabled = !amountValid;
-
-    const paymentValid = amountValid && !!els.paymentMethod.value;
-    els.category.disabled = !paymentValid;
-
-    const categoryValid = paymentValid && !!els.category.value;
-    els.description.disabled = !categoryValid;
-    els.date.disabled = !categoryValid;
+    // Ya no se bloquean campos: se llena en el orden que quieras y se valida al guardar.
+    els.paymentMethod.disabled = false;
+    els.category.disabled = false;
+    els.description.disabled = false;
+    els.date.disabled = false;
+    renderPicks();
   }
+  /* ---------- Selección rápida (chips) para forma de pago y categoría ---------- */
+  const pickState = { cat:false };
+  const CAT_SELECT_LIMIT = 24; // más categorías que esto → lista desplegable
+  function buildPick(box, values, select, kind){
+    if(!box) return;
+    const sel = select.value;
+    let list = values.slice();
+    if(kind === 'cat'){
+      const freq = {};
+      transactions.forEach(t=>{ if(t.type === currentType && !t.linkedPago) freq[t.category] = (freq[t.category] || 0) + 1; });
+      list.sort((x,y)=> (freq[y] || 0) - (freq[x] || 0));
+    }
+    const LIMIT = kind === 'cat' ? 8 : 99;
+    let visible = pickState.cat && kind === 'cat' ? list : list.slice(0, LIMIT);
+    if(sel && !visible.includes(sel) && list.includes(sel)) visible = visible.concat(sel);
+    box.innerHTML = visible.map(v=>`<button type="button" class="pick-chip${v === sel ? ' active' : ''}" data-v="${escapeHtml(v)}">${escapeHtml(v)}</button>`).join('')
+      + (list.length > visible.length ? '<button type="button" class="pick-chip more" data-more="1">Más…</button>' : '')
+      + '<button type="button" class="pick-chip add" data-add="1">+ Nueva</button>';
+  }
+  function renderPicks(){
+    const payBox = document.getElementById('payPick');
+    const catBox = document.getElementById('catPick');
+    if(!payBox || !catBox) return;
+    buildPick(payBox, (paymentMethods[currentType] || []).slice(), els.paymentMethod, 'pay');
+    const catValues = [...els.category.options].map(o=>o.value).filter(Boolean);
+    if(catValues.length > CAT_SELECT_LIMIT){
+      // Muchas categorías: se usa la lista desplegable (mismo diseño), sin chips.
+      els.category.classList.remove('pick-native');
+      catBox.innerHTML = '<button type="button" class="pick-chip add" data-add="1">+ Nueva</button>';
+    } else {
+      els.category.classList.add('pick-native');
+      buildPick(catBox, catValues, els.category, 'cat');
+    }
+  }
+  function wirePick(boxId, select, kind){
+    document.getElementById(boxId).addEventListener('click', (e)=>{
+      const b = e.target.closest('.pick-chip');
+      if(!b) return;
+      if(b.dataset.more){ pickState.cat = true; renderPicks(); return; }
+      if(b.dataset.add){
+        if(kind === 'pay'){ els.togglePayAdd.click(); }
+        else { const row = document.querySelector('.cat-add-row'); row.classList.add('open'); els.newCatInput.focus(); }
+        return;
+      }
+      select.value = b.dataset.v;
+      select.dispatchEvent(new Event('change'));
+    });
+  }
+  wirePick('payPick', els.paymentMethod, 'pay');
+  wirePick('catPick', els.category, 'cat');
   function setType(type){
     currentType = type;
     [...els.typeToggle.querySelectorAll('button')].forEach(btn=>{
@@ -1345,6 +1410,8 @@
     els.newCatGroup.style.display = (type === 'gasto') ? 'inline-block' : 'none';
     els.toggleCatChips.style.display = (type === 'gasto') ? 'inline-block' : 'none';
     els.catChips.style.display = 'none';
+    pickState.cat = false;
+    document.querySelector('.cat-add-row').classList.remove('open');
     els.toggleCatChips.textContent = 'Editar categorías ▾';
     els.ahorroSubtypeField.style.display = isAhorro ? 'block' : 'none';
     els.ahorroMonedaField.style.display = isAhorro ? 'block' : 'none';
@@ -1380,7 +1447,10 @@
     els.registroFormView.style.display = view === 'form' ? 'block' : 'none';
     els.registroListView.style.display = view === 'list' ? 'block' : 'none';
     updateFabVisibility();
-    if(view === 'form') window.scrollTo({top:0, behavior:'smooth'});
+    if(view === 'form'){
+      window.scrollTo({top:0, behavior:'smooth'});
+      if(!editingTransactionId) setTimeout(()=>{ try{ els.amount.focus({preventScroll:true}); }catch(e){} }, 120);
+    }
   }
   function updateFabVisibility(){
     els.addTxFab.style.display = (registroView === 'form') ? 'none' : 'flex';
@@ -2804,7 +2874,6 @@
     if(filterRow) filterRow.style.display = transactions.length === 0 ? 'none' : '';
     if(transactions.length === 0){
       els.ledgerList.innerHTML = `<div class="empty-state">
-        <div class="empty-state-icon">📒</div>
         <h3>Empieza con tu primer movimiento</h3>
         <p>Anota un gasto, un ingreso o un ahorro. Tarda menos de 10 segundos.</p>
         <button type="button" class="submit-btn" id="emptyAddBtn">+ Registrar movimiento</button>
@@ -2900,7 +2969,7 @@
             </div>
             <span class="ledger-actions">
               ${t.type === 'pago' ? '' : `<button class="ledger-edit" data-id="${t.id}" title="Editar" aria-label="Editar movimiento">✎</button>`}
-              <button class="ledger-del" data-id="${t.id}" title="Eliminar" aria-label="Eliminar movimiento">🗑</button>
+              <button class="ledger-del" data-id="${t.id}" title="Eliminar" aria-label="Eliminar movimiento"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 4h11M6 4V2.5h4V4M4 4l.6 9h6.8l.6-9"/></svg></button>
             </span>
           </div>
           ${msiMini}
@@ -2934,6 +3003,7 @@
     const t = transactions.find(x=>x.id === id);
     if(!t) return;
     editingTransactionId = id;
+    els.form.classList.add('is-editing');
     showRegistroView('form');
     setType(t.type);
     if(t.type === 'ahorro'){
@@ -2966,6 +3036,7 @@
 
   function resetFormToBlank(){
     editingTransactionId = null;
+    els.form.classList.remove('is-editing');
     els.submitBtn.textContent = 'Registrar movimiento';
     els.cancelEditBtn.style.display = 'none';
     els.form.reset();
@@ -3002,8 +3073,15 @@
     els.dateError.style.display = 'none';
   });
 
+  let saveAndAddAnother = false;
+  document.getElementById('submitAnotherBtn').addEventListener('click', ()=>{
+    saveAndAddAnother = true;
+    if(els.form.requestSubmit) els.form.requestSubmit(); else els.submitBtn.click();
+  });
   els.form.addEventListener('submit', async (e)=>{
     e.preventDefault();
+    const another = saveAndAddAnother && !editingTransactionId;
+    saveAndAddAnother = false;
     const amountVal = parseFloat(els.amount.value);
     if(!amountVal || amountVal <= 0){
       els.amountError.style.display = 'block';
@@ -3067,6 +3145,7 @@
         transactions[idx] = { id: keepId, ...txData };
       }
       editingTransactionId = null;
+      els.form.classList.remove('is-editing');
       els.submitBtn.textContent = 'Registrar movimiento';
       els.cancelEditBtn.style.display = 'none';
     } else {
@@ -3093,7 +3172,13 @@
     els.form.reset();
     els.date.value = todayStr();
     setType(currentType);
-    showRegistroView('list');
+    if(another){
+      showToast('Guardado. Registra otro movimiento');
+      window.scrollTo({top:0, behavior:'smooth'});
+      setTimeout(()=>{ try{ els.amount.focus({preventScroll:true}); }catch(err){} }, 120);
+    } else {
+      showRegistroView('list');
+    }
   });
 
   /* ---------- Filtro de periodo: eventos ---------- */
@@ -3126,12 +3211,15 @@
   }
   els.periodPrevBtn.addEventListener('click', ()=> shiftPeriod(-1));
   els.periodNextBtn.addEventListener('click', ()=> shiftPeriod(1));
-  els.filterSummaryToggle.addEventListener('click', ()=>{
-    const showing = els.filterBarDetail.style.display !== 'none';
-    els.filterBarDetail.style.display = showing ? 'none' : 'flex';
-    els.filterCaret.textContent = showing ? '▾' : '▴';
-    els.filterToggleLabel.textContent = showing ? 'Cambiar' : 'Ocultar';
-  });
+  const periodModalEl = document.getElementById('periodModal');
+  const periodBackdropEl = document.getElementById('periodBackdrop');
+  function openPeriodModal(){ periodModalEl.classList.add('open'); periodBackdropEl.classList.add('open'); }
+  function closePeriodModal(){ periodModalEl.classList.remove('open'); periodBackdropEl.classList.remove('open'); }
+  els.filterSummaryToggle.addEventListener('click', openPeriodModal);
+  document.getElementById('periodModalClose').addEventListener('click', closePeriodModal);
+  document.getElementById('periodModalDone').addEventListener('click', closePeriodModal);
+  periodBackdropEl.addEventListener('click', closePeriodModal);
+  document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && periodModalEl.classList.contains('open')) closePeriodModal(); });
   els.categoryFilterInput.addEventListener('change', ()=>{
     categoryFilterText = els.categoryFilterInput.value;
     render();
@@ -3365,7 +3453,7 @@
       detachRealtimeListeners();
       currentUser = null;
       els.appRoot.style.display = 'none';
-      els.authScreen.style.display = 'flex';
+      els.authScreen.style.display = 'grid';
       els.authEmail.value = '';
       els.authPassword.value = '';
     }
