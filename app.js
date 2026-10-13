@@ -1079,6 +1079,16 @@
     if(b) setResumenView(b.dataset.rview);
   });
   document.getElementById('tabPanelResumen').addEventListener('click', (e)=>{
+    const more = e.target.closest('.rbars-more-btn');
+    if(more){
+      const box = more.parentElement.querySelector('.rbars-more');
+      const open = box.style.display === 'none';
+      box.style.display = open ? '' : 'none';
+      more.setAttribute('aria-expanded', open ? 'true' : 'false');
+      const hint = more.querySelector('.rbars-more-hint');
+      if(hint) hint.textContent = open ? 'Ocultar ▴' : 'Ver ' + box.children.length + ' más ▾';
+      return;
+    }
     const go = e.target.closest('[data-rview-go]');
     if(go) setResumenView(go.dataset.rviewGo);
   });
@@ -2483,22 +2493,23 @@
   function buildTopBarsHtml(entries, limit){
     limit = limit || 7;
     if(entries.length === 0) return '<p class="ledger-empty">Sin datos en este periodo.</p>';
-    let rows = entries;
-    if(entries.length > limit + 1){
-      const rest = entries.slice(limit);
-      rows = entries.slice(0, limit).concat([['Otras (' + rest.length + ')', rest.reduce((s,[,v])=> s + v, 0)]]);
-    }
     const total = entries.reduce((s,[,v])=> s + v, 0);
-    const max = Math.max(...rows.map(r=>r[1]));
-    return '<div class="rbars">' + rows.map(([name, amt])=>{
+    const max = Math.max(...entries.map(r=>r[1]));
+    const row = ([name, amt], extra)=>{
       const w = max ? Math.max(4, (amt/max)*100) : 0;
       const pct = total ? Math.round((amt/total)*100) : 0;
-      return `<div class="cat-row">
+      return `<div class="cat-row${extra || ''}">
         <div class="cat-name">${escapeHtml(name)}</div>
         <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${w}%;"></div></div>
         <div class="cat-amount">${fmt0.format(amt)} <span class="cat-pct">${pct}%</span></div>
       </div>`;
-    }).join('') + '</div>';
+    };
+    if(entries.length <= limit + 1) return '<div class="rbars">' + entries.map(r=>row(r)).join('') + '</div>';
+    const head = entries.slice(0, limit), rest = entries.slice(limit);
+    const otras = [`Otras (${rest.length})`, rest.reduce((s,[,v])=> s + v, 0)];
+    return '<div class="rbars">' + head.map(r=>row(r)).join('') +
+      `<button type="button" class="rbars-more-btn" aria-expanded="false">${row(otras)}<span class="rbars-more-hint">Ver ${rest.length} más ▾</span></button>` +
+      `<div class="rbars-more" style="display:none;">${rest.map(r=>row(r)).join('')}</div></div>`;
   }
   function computeCategoryBreakdownByGroup(groupName){
     const map = _expenseCache.byGroupCategory[groupName] || {};

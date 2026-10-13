@@ -893,3 +893,9 @@ html[data-theme="dark"] .rseg button.active{background:var(--line);}
 .savings-mini-stats .val{color:var(--ink);}
 .msi-card-box{border-left:1px solid var(--line) !important;}
 .msi-toggle .toggle-hint{white-space:nowrap;}
+.rbars-more-btn{display:block;width:100%;background:none;border:none;padding:0;margin:0;font:inherit;color:inherit;text-align:left;cursor:pointer;}
+.rbars-more-btn .cat-row{margin-bottom:2px;}
+.rbars-more-hint{display:block;font-size:12px;font-weight:600;color:var(--gold);margin:0 0 10px;}
+.rbars-more{border-left:2px solid var(--line);padding-left:10px;margin:4px 0 8px;}
+.rbars .rbars-more-btn .cat-bar-fill,.rbars .rbars-more .cat-bar-fill{opacity:.55;}
+.rbars-more-hint{display:block;text-align:center;font-size:13px;font-weight:600;color:var(--ink);background:var(--gold-soft);border:1px solid var(--gold);border-radius:20px;padding:8px 14px;margin:8px 0 12px;min-height:38px;line-height:22px;}
