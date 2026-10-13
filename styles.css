@@ -850,3 +850,46 @@ h1{font-family:'Montserrat',sans-serif;font-weight:700;font-size:18px;letter-spa
   .auth-brand{display:block;}
   .auth-card{padding-top:24px;}
 }
+
+/* ===== v8 Resumen: selector Mes · Tarjetas · Ahorro ===== */
+.rseg{display:flex;gap:4px;padding:4px;background:var(--input-bg);border:1px solid var(--line);border-radius:12px;margin:0 0 18px;}
+.rseg button{flex:1;font-family:inherit;font-size:14px;font-weight:600;padding:10px 8px;border:none;border-radius:9px;background:transparent;color:var(--ink-soft);cursor:pointer;min-height:42px;}
+.rseg button.active{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12);}
+html[data-theme="dark"] .rseg button.active{background:var(--line);}
+.r-sentence{font-size:15px;line-height:1.5;color:var(--ink);margin:0 0 16px;}
+.scope-tag{display:inline-block;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:600;letter-spacing:.02em;color:var(--ink-soft);background:var(--input-bg);border:1px solid var(--line);border-radius:20px;padding:2px 9px;margin-left:6px;vertical-align:middle;text-transform:none;}
+.stats.stats3{grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+.stats.stats3 .stat{padding:12px 12px;}
+.stats.stats3 .stat-value{font-size:17px;}
+@media (max-width:420px){ .stats.stats3 .stat-value{font-size:15px;} .stats.stats3 .stat-label{font-size:11px;} }
+.stat.expense{border-left-color:var(--line);} .stat.expense .stat-value{color:var(--ink);}
+.stat-subvalue.down{color:var(--ink-soft);}
+.r-links{display:flex;flex-direction:column;gap:8px;margin-bottom:26px;}
+.r-link{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;font-family:inherit;font-size:14px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:13px 14px;cursor:pointer;text-align:left;min-height:46px;}
+.r-link-val{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;font-weight:600;}
+.r-link-val em{font-style:normal;font-family:'Montserrat',sans-serif;font-weight:500;font-size:12px;color:var(--ink-soft);}
+.r-chips{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px;}
+.r-chips .chip{font-family:inherit;font-size:13px;font-weight:600;padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:transparent;color:var(--ink-soft);cursor:pointer;min-height:38px;}
+.r-chips .chip.on{background:var(--ink);border-color:var(--ink);color:var(--surface);}
+.rbars .cat-bar-fill{background:var(--ink-soft) !important;opacity:.55;}
+.rbars .cat-row:first-child .cat-bar-fill{opacity:.9;}
+.cat-pct{font-family:'Montserrat',sans-serif;font-size:11px;color:var(--ink-soft);margin-left:4px;}
+#groupBreakdownDetail .cat-bar-fill{background:var(--ink-soft) !important;opacity:.55;}
+.r-hero{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:22px;}
+.r-hero-lbl{font-size:13px;color:var(--ink-soft);margin-bottom:6px;}
+.r-hero-val{font-family:'IBM Plex Mono',monospace;font-size:30px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;}
+.r-hero-val.gold{color:var(--gold);}
+.r-hero-sub,.r-foot{font-size:12px;color:var(--ink-soft);margin-top:6px;line-height:1.45;}
+.r-empty{text-align:center;padding:30px 10px;color:var(--ink);}
+.tcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;}
+.tcard-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.tcard-name{font-size:15px;font-weight:600;color:var(--ink);}
+.tcard-amt{display:flex;flex-direction:column;align-items:flex-end;}
+.tcard-lbl{font-size:11px;color:var(--ink-soft);}
+.tc-owe{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;}
+.tc-fav{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;color:var(--income);}
+.tcard-meta{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--ink-soft);margin:8px 0 12px;}
+.tcard-btns{display:flex;gap:8px;flex-wrap:wrap;}
+.savings-mini-stats .val{color:var(--ink);}
+.msi-card-box{border-left:1px solid var(--line) !important;}
+.msi-toggle .toggle-hint{white-space:nowrap;}

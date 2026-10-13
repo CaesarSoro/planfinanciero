@@ -180,6 +180,8 @@
   let isFirstTimeUser = false;
 
   const fmt = new Intl.NumberFormat('es-MX', { style:'currency', currency:'MXN' });
+  // Resumen: sin centavos (más limpio). Los movimientos individuales conservan los centavos.
+  const fmt0 = new Intl.NumberFormat('es-MX', { style:'currency', currency:'MXN', maximumFractionDigits:0 });
 
   const els = {
     toast: document.getElementById('toast'),
@@ -295,9 +297,6 @@
     statIncomeTrend: document.getElementById('statIncomeTrend'),
     statExpense: document.getElementById('statExpense'),
     statUtilidad: document.getElementById('statUtilidad'),
-    statSavings: document.getElementById('statSavings'),
-    statTopCategory: document.getElementById('statTopCategory'),
-    statTopCategoryAmount: document.getElementById('statTopCategoryAmount'),
     groupDonut: document.getElementById('groupDonut'),
     groupBreakdownDetail: document.getElementById('groupBreakdownDetail'),
     paymentDonut: document.getElementById('paymentDonut'),
@@ -1063,6 +1062,34 @@
     if(lbl) lbl.textContent = showing ? 'Ver' : 'Ocultar';
   });
 
+  /* ---------- Resumen: selector Mes · Tarjetas · Ahorro y agrupación de gastos ---------- */
+  function setResumenView(v){
+    document.querySelectorAll('#resumenSeg button').forEach(b=>{
+      const on = b.dataset.rview === v;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    document.querySelectorAll('#tabPanelResumen [data-rview-panel]').forEach(p=>{
+      p.style.display = p.dataset.rviewPanel === v ? '' : 'none';
+    });
+    try{ window.scrollTo({ top:0 }); }catch(_){}
+  }
+  document.getElementById('resumenSeg').addEventListener('click', (e)=>{
+    const b = e.target.closest('button[data-rview]');
+    if(b) setResumenView(b.dataset.rview);
+  });
+  document.getElementById('tabPanelResumen').addEventListener('click', (e)=>{
+    const go = e.target.closest('[data-rview-go]');
+    if(go) setResumenView(go.dataset.rviewGo);
+  });
+  document.getElementById('expChips').addEventListener('click', (e)=>{
+    const c = e.target.closest('.chip[data-exp]');
+    if(!c) return;
+    document.querySelectorAll('#expChips .chip').forEach(x=> x.classList.toggle('on', x === c));
+    document.querySelectorAll('#tabPanelResumen [data-exp-pane]').forEach(p=>{
+      p.style.display = p.dataset.expPane === c.dataset.exp ? '' : 'none';
+    });
+  });
 
 
   /* ---------- Pago de tarjeta ---------- */
@@ -2448,9 +2475,30 @@
       return `<div class="cat-row">
         <div class="cat-name">${escapeHtml(cat)}</div>
         <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${pct}%;background:${color};"></div></div>
-        <div class="cat-amount">${fmt.format(amt)}</div>
+        <div class="cat-amount">${fmt0.format(amt)}</div>
       </div>`;
     }).join('');
+  }
+  // Barras para el Resumen: máx. 7 filas + "Otras" y sin centavos, con el % del total.
+  function buildTopBarsHtml(entries, limit){
+    limit = limit || 7;
+    if(entries.length === 0) return '<p class="ledger-empty">Sin datos en este periodo.</p>';
+    let rows = entries;
+    if(entries.length > limit + 1){
+      const rest = entries.slice(limit);
+      rows = entries.slice(0, limit).concat([['Otras (' + rest.length + ')', rest.reduce((s,[,v])=> s + v, 0)]]);
+    }
+    const total = entries.reduce((s,[,v])=> s + v, 0);
+    const max = Math.max(...rows.map(r=>r[1]));
+    return '<div class="rbars">' + rows.map(([name, amt])=>{
+      const w = max ? Math.max(4, (amt/max)*100) : 0;
+      const pct = total ? Math.round((amt/total)*100) : 0;
+      return `<div class="cat-row">
+        <div class="cat-name">${escapeHtml(name)}</div>
+        <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${w}%;"></div></div>
+        <div class="cat-amount">${fmt0.format(amt)} <span class="cat-pct">${pct}%</span></div>
+      </div>`;
+    }).join('') + '</div>';
   }
   function computeCategoryBreakdownByGroup(groupName){
     const map = _expenseCache.byGroupCategory[groupName] || {};
@@ -2546,26 +2594,45 @@
     buildExpenseBreakdownCache();
     const { income, expense, savingsIn, savingsOut, savingsNetPeriod, utilidad, balance } = computeTotals();
     const savingsFundTotal = computeAllTimeSavingsFund();
-    els.statIncome.textContent = fmt.format(income);
+    els.statIncome.textContent = fmt0.format(income);
     const momChange = computeIncomeMoMChange();
     if(momChange.prevTotal > 0){
       const pct = ((momChange.curTotal - momChange.prevTotal) / momChange.prevTotal) * 100;
       const up = pct >= 0;
-      els.statIncomeTrend.textContent = `${up ? '↑' : '↓'} ${Math.abs(pct).toFixed(1)}% vs. ${momChange.prevLabel}`;
+      els.statIncomeTrend.textContent = `${up ? '↑' : '↓'} ${Math.abs(Math.round(pct))}% vs. ${momChange.prevLabel}`;
       els.statIncomeTrend.classList.remove('up','down');
       els.statIncomeTrend.classList.add(up ? 'up' : 'down');
-    } else if(momChange.curTotal > 0){
-      els.statIncomeTrend.textContent = `Sin ingresos en ${momChange.prevLabel} para comparar`;
-      els.statIncomeTrend.classList.remove('up','down');
     } else {
       els.statIncomeTrend.textContent = '';
       els.statIncomeTrend.classList.remove('up','down');
     }
-    els.statExpense.textContent = fmt.format(expense);
-    els.statSavings.textContent = fmt.format(savingsFundTotal);
-    els.statUtilidad.textContent = fmt.format(utilidad);
+    els.statExpense.textContent = fmt0.format(expense);
+    els.statUtilidad.textContent = fmt0.format(utilidad);
     els.statUtilidad.classList.remove('pos','neg');
     els.statUtilidad.classList.add(utilidad >= 0 ? 'pos' : 'neg');
+    (function renderSentence(){
+      const box = document.getElementById('resumenSentence');
+      if(!box) return;
+      const per = periodMode === 'todo' ? 'En todo el historial' : 'En ' + periodLabel();
+      if(income === 0 && expense === 0){ box.textContent = 'Aún no hay ingresos ni gastos en este periodo.'; return; }
+      const tail = utilidad >= 0
+        ? `te quedan ${fmt0.format(utilidad)}.`
+        : `gastaste ${fmt0.format(-utilidad)} más de lo que entró.`;
+      box.textContent = `${per} entró ${fmt0.format(income)}, salió ${fmt0.format(expense)} y ${tail}`;
+    })();
+    (function renderLinks(){
+      const box = document.getElementById('resumenLinks');
+      if(!box) return;
+      const debt = Object.values(computeCardBalances()).reduce((s,c)=> s + Math.max(0, c.saldo), 0);
+      const hasCards = Object.keys(computeCardBalances()).length > 0;
+      const rows = [];
+      if(hasCards) rows.push(`<button type="button" class="r-link" data-rview-go="tarjetas"><span>Tarjetas</span><span class="r-link-val">Debes ${fmt0.format(debt)} <em>hoy</em> ›</span></button>`);
+      if(savingsFundTotal > 0 || transactions.some(t=>t.type==='ahorro')) rows.push(`<button type="button" class="r-link" data-rview-go="ahorro"><span>Ahorro</span><span class="r-link-val">Tienes ${fmt0.format(savingsFundTotal)} <em>acumulado</em> ›</span></button>`);
+      box.innerHTML = rows.join('');
+      box.style.display = rows.length ? '' : 'none';
+    })();
+    const expScope = document.getElementById('expScope');
+    if(expScope) expScope.textContent = periodMode === 'todo' ? 'todo el historial' : periodLabel();
 
     const allTimeBalance = computeAllTimeBalance();
     els.tapeAmount.textContent = fmt.format(allTimeBalance);
@@ -2589,9 +2656,7 @@
     renderReceivables();
 
     const groupBreakdown = computeGroupBreakdown();
-    els.groupDonut.innerHTML = groupBreakdown.length > 0
-      ? buildDonutCircleHtml(groupBreakdown, GROUP_COLORS, 'Gastos')
-      : '<p class="ledger-empty">Sin gastos registrados en este periodo.</p>';
+    els.groupDonut.innerHTML = groupBreakdown.length > 0 ? '' : '<p class="ledger-empty">Sin gastos registrados en este periodo.</p>';
     const groupGrandTotal = groupBreakdown.reduce((s,[,v])=> s + v, 0);
 
     // Cada grupo con su total, % y cuántas categorías tiene — para decidir el acomodo.
@@ -2602,7 +2667,7 @@
       const html = `<div class="group-detail-block">
         <div class="group-detail-title">
           <span class="group-detail-name"><span class="group-detail-dot" style="background:${GROUP_COLORS[groupName] || '#8a8578'};"></span>${escapeHtml(groupName)}</span>
-          <span class="group-detail-right"><span class="group-detail-pct">${pct}%</span><span class="group-detail-total">${fmt.format(total)}</span></span>
+          <span class="group-detail-right"><span class="group-detail-pct">${Math.round(pct)}%</span><span class="group-detail-total">${fmt0.format(total)}</span></span>
         </div>
         <div class="${cats.length > 4 ? 'cat-bars-2col' : ''}">${barsHtml}</div>
       </div>`;
@@ -2629,30 +2694,21 @@
 
     const paymentBreakdown = computePaymentBreakdown();
     els.paymentDonut.innerHTML = paymentBreakdown.length > 0
-      ? buildDonutHtml(paymentBreakdown, 'Gastos')
+      ? buildTopBarsHtml(paymentBreakdown)
       : '<p class="ledger-empty">Sin gastos registrados en este periodo.</p>';
 
     const breakdown = computeCategoryBreakdown();
-    if(breakdown.length > 0){
-      els.statTopCategory.textContent = breakdown[0][0];
-      els.statTopCategoryAmount.textContent = fmt.format(breakdown[0][1]);
-    } else {
-      els.statTopCategory.textContent = periodMode === 'todo' ? 'Sin gastos aún' : 'Sin gastos en este periodo';
-      els.statTopCategoryAmount.textContent = '';
-    }
-
     if(breakdown.length === 0){
       els.expenseDonut.innerHTML = '<p class="ledger-empty">Sin gastos registrados en este periodo.</p>';
     } else {
-      els.expenseDonut.innerHTML = buildDonutHtml(breakdown, 'Gastos');
+      els.expenseDonut.innerHTML = buildTopBarsHtml(breakdown);
     }
 
     const incomeBreakdown = computeIncomeBreakdown();
-    if(incomeBreakdown.length === 0){
-      els.incomeDonut.innerHTML = '<p class="ledger-empty">Sin ingresos registrados en este periodo.</p>';
-    } else {
-      els.incomeDonut.innerHTML = buildDonutHtml(incomeBreakdown, 'Ingresos');
-    }
+    // Con una sola fuente de ingreso la gráfica no dice nada: se oculta.
+    const incSec = document.getElementById('incomeSection');
+    if(incSec) incSec.style.display = incomeBreakdown.length > 1 ? '' : 'none';
+    els.incomeDonut.innerHTML = incomeBreakdown.length > 1 ? buildTopBarsHtml(incomeBreakdown) : '';
 
     const savingsMoves = transactions.filter(t=>t.type==='ahorro' && isInPeriod(t.date)).sort((a,b)=> b.date.localeCompare(a.date) || b.id - a.id);
     const hasUsdActivity = transactions.some(t=>t.type==='ahorro' && t.moneda==='USD');
@@ -2664,122 +2720,113 @@
         if(t.subtype==='retiro') savingsOut_USD += t.amount; else savingsIn_USD += t.amount;
       }
     });
-    let savingsHtml = `<div class="savings-total">${fmt.format(savingsFundTotal)}</div>`;
-    if(hasUsdActivity){
-      savingsHtml += `<div class="savings-total-usd">${fmt.format(computeAllTimeSavingsFund('USD'))} USD</div>`;
-    }
-    savingsHtml += `<p class="backup-note" style="margin-top:${hasUsdActivity ? '2px' : '-10px'};margin-bottom:14px;">Saldo acumulado histórico (no cambia con el filtro de periodo)${hasUsdActivity ? ' · pesos y dólares se muestran por separado, sin convertir' : ''}</p>`;
+    const per = periodMode === 'todo' ? 'todo el historial' : periodLabel();
+    let savingsHtml = `<div class="r-hero">
+      <div class="r-hero-lbl">Tienes ahorrado <span class="scope-tag">acumulado</span></div>
+      <div class="r-hero-val gold">${fmt0.format(savingsFundTotal)}</div>
+      ${hasUsdActivity ? `<div class="r-hero-sub">${fmt0.format(computeAllTimeSavingsFund('USD'))} USD · pesos y dólares van por separado</div>` : ''}
+    </div>`;
     if(savingsFundByCategory.length > 0){
-      savingsHtml += `<div class="savings-diversification">
-        <div class="savings-diversification-title">Cómo está repartido tu fondo${hasUsdActivity ? ' (MXN)' : ''}</div>
-        ${buildDonutHtml(savingsFundByCategory, 'Ahorro', 130)}
-      </div>`;
+      savingsHtml += `<div class="resumen-section"><h3 class="section-title">Dónde está tu ahorro${hasUsdActivity ? ' (MXN)' : ''}</h3>${buildTopBarsHtml(savingsFundByCategory)}</div>`;
+    } else {
+      savingsHtml += '<p class="ledger-empty">Aún no tienes ahorro. Registra un aporte desde Movimientos → Ahorro.</p>';
     }
     if(hasUsdActivity){
       const savingsFundByCategoryUSD = computeSavingsFundByCategory('USD');
       if(savingsFundByCategoryUSD.length > 0){
-        savingsHtml += `<div class="savings-diversification">
-          <div class="savings-diversification-title">Cómo está repartido tu fondo (USD)</div>
-          ${buildDonutHtml(savingsFundByCategoryUSD, 'Ahorro USD', 130)}
-        </div>`;
+        savingsHtml += `<div class="resumen-section"><h3 class="section-title">Dónde está tu ahorro (USD)</h3>${buildTopBarsHtml(savingsFundByCategoryUSD)}</div>`;
       }
     }
-    savingsHtml += `<div class="savings-mini-stats">
-      <div><span class="lbl">Aportado (${escapeHtml(periodLabel())})</span><span class="val" style="color:var(--income);">${fmt.format(savingsIn)}</span></div>
-      <div><span class="lbl">Retirado (${escapeHtml(periodLabel())})</span><span class="val" style="color:var(--expense);">${fmt.format(savingsOut)}</span></div>
-    </div>`;
+    savingsHtml += `<div class="resumen-section"><h3 class="section-title">Movimiento de ahorro <span class="scope-tag">${escapeHtml(per)}</span></h3>
+      <div class="savings-mini-stats">
+        <div><span class="lbl">Aportado</span><span class="val" style="color:var(--income);">${fmt0.format(savingsIn)}</span></div>
+        <div><span class="lbl">Retirado</span><span class="val">${fmt0.format(savingsOut)}</span></div>
+      </div>`;
     if(hasUsdActivity && (savingsIn_USD > 0 || savingsOut_USD > 0)){
       savingsHtml += `<div class="savings-mini-stats">
-        <div><span class="lbl">Aportado USD (${escapeHtml(periodLabel())})</span><span class="val" style="color:var(--income);">${fmt.format(savingsIn_USD)} USD</span></div>
-        <div><span class="lbl">Retirado USD (${escapeHtml(periodLabel())})</span><span class="val" style="color:var(--expense);">${fmt.format(savingsOut_USD)} USD</span></div>
+        <div><span class="lbl">Aportado USD</span><span class="val" style="color:var(--income);">${fmt0.format(savingsIn_USD)}</span></div>
+        <div><span class="lbl">Retirado USD</span><span class="val">${fmt0.format(savingsOut_USD)}</span></div>
       </div>`;
     }
-    if(savingsByFund.length > 0){
-      const maxFund = Math.max(...savingsByFund.map(([,amt])=>Math.abs(amt)));
-      savingsHtml += savingsByFund.map(([fund, amt], i)=>{
-        const pct = maxFund ? Math.max(6, (Math.abs(amt)/maxFund)*100) : 0;
-        const color = CAT_COLORS[i % CAT_COLORS.length];
-        return `<div class="cat-row">
-          <div class="cat-name">${escapeHtml(fund)}</div>
-          <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${pct}%;background:${color};"></div></div>
-          <div class="cat-amount">${fmt.format(amt)}</div>
-        </div>`;
-      }).join('');
-    }
-    if(savingsMoves.length === 0){
-      savingsHtml += '<p class="ledger-empty">Sin movimientos de ahorro en este periodo.</p>';
-    } else {
-      savingsHtml += savingsMoves.map(t=>{
-        const shortDate = t.date.slice(5).split('-').reverse().join('/');
-        const desc = t.description ? t.description : t.category;
-        const sign = t.subtype === 'retiro' ? '−' : '+';
-        const monedaBadge = t.moneda === 'USD' ? '<span class="ledger-moneda-badge">USD</span>' : '';
-        return `<div class="ledger-row">
-          <div class="ledger-row-line1">
-            <span class="ledger-date">${shortDate}</span>
-            <span class="ledger-desc">${escapeHtml(desc)}</span>
-          </div>
-          <div class="ledger-row-line2">
-            <div class="ledger-badges">
-              <span class="ledger-cat">${escapeHtml(t.category)}</span>
-              <span class="ledger-subtype-badge ${t.subtype}">${SUBTYPE_LABEL[t.subtype] || 'Aporte'}</span>
-              ${monedaBadge}
-            </div>
-            <span class="ledger-amount ${t.subtype}">${sign} ${fmt.format(t.amount)}${t.moneda === 'USD' ? ' USD' : ''}</span>
-          </div>
-        </div>`;
-      }).join('');
-    }
+    savingsHtml += savingsMoves.length === 0
+      ? '<p class="ledger-empty">Sin aportes ni retiros en este periodo.</p>'
+      : `<p class="r-foot">${savingsMoves.length} movimiento${savingsMoves.length === 1 ? '' : 's'} · el detalle está en Movimientos.</p>`;
+    savingsHtml += '</div>';
     els.savingsPanel.innerHTML = savingsHtml;
 
-    // Tarjetas de crédito: lo que se carga a cada tarjeta en el periodo (compras normales + mensualidades MSI).
-    // Es lo que normalmente toca pagar en el siguiente corte. No cambia el Balance disponible.
+    // Tarjetas: por cada tarjeta, lo que debes HOY (acumulado), lo cargado en el periodo y su MSI.
     (function renderCardsPanel(){
+      const ref = periodReferenceDate();
+      const plans = transactions.filter(t=>t.isMsi && msiIsActiveInPeriod(t) && String(t.paymentMethod || '').startsWith('Crédito'));
       const cards = {};
+      const get = (n)=> cards[n] || (cards[n] = { periodo:0, msiMes:0, msiQuedan:0, saldo:0, hasBal:false });
       transactions.forEach(t=>{
         if(t.type !== 'gasto' || !String(t.paymentMethod || '').startsWith('Crédito')) return;
-        let amt, isMsi = false;
-        if(t.isMsi){ amt = msiPeriodContribution(t); isMsi = true; }
+        let amt;
+        if(t.isMsi) amt = msiPeriodContribution(t);
         else { if(!isInPeriod(t.date)) return; amt = t.amount; }
-        if(!(amt > 0)) return;
-        const c = cards[t.paymentMethod] || (cards[t.paymentMethod] = { compras:0, msi:0 });
-        if(isMsi) c.msi += amt; else c.compras += amt;
+        if(amt > 0) get(t.paymentMethod).periodo += amt;
       });
-      const entries = Object.entries(cards).map(([name,c])=>[name, c, c.compras + c.msi]).sort((a,b)=> b[2]-a[2]);
+      plans.forEach(t=>{
+        const info = msiInfo(t, ref);
+        const c = get(t.paymentMethod);
+        if(!info.finished) c.msiMes += info.monthlyPayment;
+        c.msiQuedan += info.remaining;
+      });
       const balances = computeCardBalances();
-      const hasPagos = transactions.some(t=>t.type === 'pago');
-      const balEntries = Object.entries(balances).sort((a,b)=> b[1].saldo - a[1].saldo);
-      const saldoHtml = balEntries.length === 0 ? '' : `<div class="card-saldo-box">
-          <div class="msi-card-breakdown-title">Saldo acumulado por pagar</div>
-          ${balEntries.map(([name, c])=>`<div class="card-saldo-row">
-            <span class="card-pay-name">${escapeHtml(name)}</span>
-            <span class="card-pay-amt">${fmt.format(c.saldo)}</span>
-            <span class="card-pay-btns">
-              <button type="button" class="card-pay-btn" data-pay-card="${escapeHtml(name)}">Registrar pago</button>
-              <button type="button" class="card-pay-btn ghost" data-adj-card="${escapeHtml(name)}">Ajustar a mi saldo</button>
-            </span>
-          </div>`).join('')}
-          <p class="card-pay-detail">${hasPagos ? 'Cargos acumulados menos los pagos que registraste.' : 'Todavía no registras pagos: este saldo suma todos tus cargos. Registra los pagos que ya hiciste para que sea real.'}</p>
-        </div>`;
-      if(entries.length === 0){
-        els.cardsPanel.innerHTML = '<p class="ledger-empty">Sin cargos a tarjetas de crédito en este periodo.</p>' + saldoHtml;
+      Object.entries(balances).forEach(([n, b])=>{ const c = get(n); c.saldo = b.saldo; c.hasBal = true; });
+      const names = Object.keys(cards).sort((a,b)=> cards[b].saldo - cards[a].saldo || cards[b].periodo - cards[a].periodo);
+      if(names.length === 0){
+        els.cardsPanel.innerHTML = '<div class="r-empty"><p>Aún no tienes compras con tarjeta de crédito.</p><p class="r-foot">Cuando registres un gasto con una tarjeta, aquí verás cuánto debes y qué se paga cada mes.</p></div>';
         return;
       }
-      const total = entries.reduce((s,e)=> s + e[2], 0);
-      const max = entries[0][2];
-      els.cardsPanel.innerHTML =
-        `<p class="cards-total">Total a pagar en tarjetas: <strong>${fmt.format(total)}</strong> · ${escapeHtml(periodLabel())}</p>` +
-        entries.map(([name, c, sum])=>{
-          const pct = max ? Math.max(6, (sum/max)*100) : 0;
-          const detail = [];
-          if(c.compras > 0) detail.push('Compras ' + fmt.format(c.compras));
-          if(c.msi > 0) detail.push('MSI ' + fmt.format(c.msi));
-          return `<div class="card-pay-row">
-            <div class="card-pay-line"><span class="card-pay-name">${escapeHtml(name)}</span><span class="card-pay-amt">${fmt.format(sum)}</span></div>
-            <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${pct}%;"></div></div>
-            <div class="card-pay-detail">${detail.join(' · ')}</div>
-          </div>`;
-        }).join('') + saldoHtml;
+      const hasPagos = transactions.some(t=>t.type === 'pago');
+      const debt = names.reduce((s,n)=> s + Math.max(0, cards[n].saldo), 0);
+      const per = periodMode === 'todo' ? 'todo el historial' : periodLabel();
+      let html = `<div class="r-hero">
+        <div class="r-hero-lbl">Debes en tarjetas hoy <span class="scope-tag">acumulado</span></div>
+        <div class="r-hero-val">${fmt0.format(debt)}</div>
+        <div class="r-hero-sub">${hasPagos ? 'Cargos menos los pagos que registraste.' : 'Suma todos tus cargos. Registra los pagos que ya hiciste para que sea real.'}</div>
+      </div>`;
+      html += names.map(n=>{
+        const c = cards[n];
+        const owe = c.saldo > 0.5;
+        const fav = c.saldo < -0.5;
+        const big = fav ? `<span class="tc-fav">A favor ${fmt0.format(-c.saldo)}</span>` : `<span class="tc-owe">${fmt0.format(Math.max(0, c.saldo))}</span>`;
+        const lbl = fav ? '' : (owe ? 'Debes hoy' : 'Sin deuda');
+        const meta = [`Cargos de ${escapeHtml(per)}: ${fmt0.format(c.periodo)}`];
+        if(c.msiMes > 0) meta.push(`MSI: ${fmt0.format(c.msiMes)}/mes (quedan ${fmt0.format(c.msiQuedan)})`);
+        return `<div class="tcard">
+          <div class="tcard-top"><span class="tcard-name">${escapeHtml(n)}</span><span class="tcard-amt">${lbl ? `<span class="tcard-lbl">${lbl}</span>` : ''}${big}</span></div>
+          <div class="tcard-meta">${meta.map(m=>`<span>${m}</span>`).join('')}</div>
+          <div class="tcard-btns">
+            <button type="button" class="card-pay-btn" data-pay-card="${escapeHtml(n)}">Registrar pago</button>
+            <button type="button" class="card-pay-btn ghost" data-adj-card="${escapeHtml(n)}">Ajustar a mi saldo</button>
+          </div>
+        </div>`;
+      }).join('');
+      // Próximos meses: cuánto de MSI se paga cada mes.
+      const allPlans = transactions.filter(t=>t.isMsi && String(t.paymentMethod || '').startsWith('Crédito'));
+      const refIdx = ref.getFullYear() * 12 + ref.getMonth();
+      const SHORT = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+      const future = [];
+      for(let k = 1; k <= 6; k++){
+        const idx = refIdx + k;
+        let sum = 0;
+        allPlans.forEach(t=>{
+          const st = new Date(t.date + 'T00:00:00');
+          const off = idx - (st.getFullYear() * 12 + st.getMonth());
+          if(off >= 1 && off <= t.months) sum += t.amount / t.months;
+        });
+        future.push([SHORT[idx % 12] + ' ' + String(Math.floor(idx / 12)).slice(2), sum]);
+      }
+      if(future.some(f=>f[1] > 0)){
+        const mx = Math.max(...future.map(f=>f[1]));
+        html += `<div class="resumen-section"><h3 class="section-title">Próximos meses <span class="scope-tag">MSI</span></h3><div class="rbars">` +
+          future.map(([m, v])=>`<div class="cat-row"><div class="cat-name">${m}</div><div class="cat-bar-track"><div class="cat-bar-fill" style="width:${mx ? Math.max(v > 0 ? 4 : 0, (v/mx)*100) : 0}%;"></div></div><div class="cat-amount">${v > 0 ? fmt0.format(v) : '—'}</div></div>`).join('') +
+          `</div></div>`;
+      }
+      els.cardsPanel.innerHTML = html;
     })();
 
     const msiRefDate = periodReferenceDate();
@@ -2791,29 +2838,8 @@
       const totalPending = msiPlans.reduce((sum,t)=> sum + msiInfo(t, msiRefDate).remaining, 0);
       const totalMonthly = msiPlans.reduce((sum,t)=> { const info = msiInfo(t, msiRefDate); return sum + (info.finished ? 0 : info.monthlyPayment); }, 0);
       const asOfLabel = periodMode === 'todo' ? 'hoy' : `al cierre de ${periodLabel()}`;
-      els.msiPendingNote.innerHTML = 'Mensualidad total: <strong>' + fmt.format(totalMonthly) + '</strong> · Pendiente total: <strong>' + fmt.format(totalPending) + '</strong> · ' + asOfLabel;
-
-      const pendingByCard = {};
-      const monthlyByCard = {};
-      msiPlans.forEach(t=>{
-        const info = msiInfo(t, msiRefDate);
-        if(info.remaining > 0){
-          pendingByCard[t.paymentMethod] = (pendingByCard[t.paymentMethod] || 0) + info.remaining;
-        }
-        if(!info.finished){
-          monthlyByCard[t.paymentMethod] = (monthlyByCard[t.paymentMethod] || 0) + info.monthlyPayment;
-        }
-      });
-      const cardEntries = Object.entries(pendingByCard).sort((a,b)=> b[1]-a[1]);
-      const monthlyCardEntries = Object.entries(monthlyByCard).sort((a,b)=> b[1]-a[1]);
-      let breakdownHtml = '';
-      if(cardEntries.length > 1){
-        breakdownHtml += `<div class="msi-card-breakdown"><div class="msi-card-breakdown-title">Pendiente por tarjeta</div>${buildCategoryBarsHtml(cardEntries)}</div>`;
-      }
-      if(monthlyCardEntries.length > 1){
-        breakdownHtml += `<div class="msi-card-breakdown"><div class="msi-card-breakdown-title">Mensualidad por tarjeta</div>${buildCategoryBarsHtml(monthlyCardEntries)}</div>`;
-      }
-      els.msiCardBreakdown.innerHTML = breakdownHtml;
+      els.msiPendingNote.innerHTML = 'Pagas <strong>' + fmt0.format(totalMonthly) + '</strong> al mes · quedan <strong>' + fmt0.format(totalPending) + '</strong> por pagar · ' + asOfLabel;
+      els.msiCardBreakdown.innerHTML = '';
       els.msiPanel.innerHTML = [...msiPlans].sort((a,b)=> b.date.localeCompare(a.date)).map(t=>{
         const info = msiInfo(t, msiRefDate);
         const pct = Math.round((info.monthsElapsed / t.months) * 100);

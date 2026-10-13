@@ -579,103 +579,71 @@
     </div>
 
     <div class="tab-panel" id="tabPanelResumen" style="display:none;">
-      <div class="resumen-section">
-        <h3 class="section-title">Resumen general</h3>
-        <div class="stats">
+      <div class="rseg" id="resumenSeg" role="tablist" aria-label="Vista del resumen">
+        <button type="button" role="tab" class="active" aria-selected="true" data-rview="mes">Mes</button>
+        <button type="button" role="tab" aria-selected="false" data-rview="tarjetas">Tarjetas</button>
+        <button type="button" role="tab" aria-selected="false" data-rview="ahorro">Ahorro</button>
+      </div>
+
+      <div class="rview" data-rview-panel="mes">
+        <p class="r-sentence" id="resumenSentence"></p>
+        <div class="stats stats3">
           <div class="stat income">
             <div class="stat-label">Ingresos</div>
-            <div class="stat-value" id="statIncome">$0.00</div>
+            <div class="stat-value" id="statIncome">$0</div>
             <div class="stat-subvalue" id="statIncomeTrend"></div>
           </div>
           <div class="stat expense">
             <div class="stat-label">Gastos</div>
-            <div class="stat-value" id="statExpense">$0.00</div>
+            <div class="stat-value" id="statExpense">$0</div>
           </div>
           <div class="stat">
             <div class="stat-label">Saldo del mes</div>
-            <div class="stat-value" id="statUtilidad">$0.00</div>
-          </div>
-          <div class="stat savings">
-            <div class="stat-label">Total ahorrado</div>
-            <div class="stat-value" id="statSavings">$0.00</div>
-          </div>
-          <div class="stat expense stat-top-category">
-            <div class="stat-label">Categoría con más gasto</div>
-            <div class="stat-value text" id="statTopCategory">—</div>
-            <div class="stat-subvalue" id="statTopCategoryAmount"></div>
+            <div class="stat-value" id="statUtilidad">$0</div>
           </div>
         </div>
-      </div>
 
-      <div class="resumen-section msi-card-box" id="msiCard" style="display:none;">
-        <div class="msi-toggle" id="msiToggle" role="button" tabindex="0">
-          <span class="section-title-text">Meses sin intereses<button type="button" class="help-icon" data-help="msi">?</button></span>
-          <span class="toggle-hint"><span id="msiToggleLabel">Ver compras</span> <span class="msi-chevron" id="msiChevron">▾</span></span>
+        <div class="r-links" id="resumenLinks"></div>
+
+        <div class="resumen-section">
+          <h3 class="section-title">En qué gastaste <span class="scope-tag" id="expScope"></span></h3>
+          <div class="chips r-chips" id="expChips" role="tablist" aria-label="Agrupar gastos por">
+            <button type="button" class="chip on" data-exp="categoria">Categoría</button>
+            <button type="button" class="chip" data-exp="pago">Forma de pago</button>
+            <button type="button" class="chip" data-exp="grupo">Grupo</button>
+          </div>
+          <div data-exp-pane="categoria"><div id="expenseDonut"></div></div>
+          <div data-exp-pane="pago" style="display:none;"><div id="paymentDonut"></div></div>
+          <div data-exp-pane="grupo" style="display:none;"><div id="groupDonut"></div><div id="groupBreakdownDetail"></div></div>
         </div>
-        <p class="h2-note" id="msiPendingNote" style="display:block;margin:6px 0 8px;"></p>
-        <div id="msiCardBreakdown"></div>
-        <div id="msiPanel" style="display:none;"></div>
-      </div>
 
-      <div class="resumen-section" id="cardsCard">
-        <button type="button" class="resumen-toggle" data-resumen-key="tarjetas">
-          <span class="section-title-text">Tarjetas de crédito <span class="h2-note">por pagar</span></span>
-          <span class="toggle-hint"><span class="resumen-lbl">Ocultar</span> <span class="resumen-caret">▴</span></span>
-        </button>
-        <div class="resumen-collapsible" data-resumen-panel="tarjetas" style="display:block;">
-          <div id="cardsPanel"></div>
-        </div>
-      </div>
-
-      <div class="resumen-section" id="savingsCard">
-        <button type="button" class="resumen-toggle" data-resumen-key="ahorro">
-          <span class="section-title-text">Ahorro <span class="h2-note">tu alcancía</span></span>
-          <span class="toggle-hint"><span class="resumen-lbl">Ocultar</span> <span class="resumen-caret">▴</span></span>
-        </button>
-        <div class="resumen-collapsible" data-resumen-panel="ahorro" style="display:block;">
-          <div id="savingsPanel"></div>
+        <div class="resumen-section" id="incomeSection">
+          <button type="button" class="resumen-toggle" data-resumen-key="ingresos">
+            <span class="section-title-text">Ingresos por categoría</span>
+            <span class="toggle-hint"><span class="resumen-lbl">Ver</span> <span class="resumen-caret">▾</span></span>
+          </button>
+          <div class="resumen-collapsible" data-resumen-panel="ingresos" style="display:none;">
+            <div id="incomeDonut"></div>
+          </div>
         </div>
       </div>
 
-      <div class="resumen-section">
-        <button type="button" class="resumen-toggle" data-resumen-key="ingresos">
-          <span class="section-title-text">Ingresos por categoría</span>
-          <span class="toggle-hint"><span class="resumen-lbl">Ver</span> <span class="resumen-caret">▾</span></span>
-        </button>
-        <div class="resumen-collapsible" data-resumen-panel="ingresos" style="display:none;">
-          <div id="incomeDonut"></div>
+      <div class="rview" data-rview-panel="tarjetas" style="display:none;">
+        <div id="cardsPanel"></div>
+
+        <div class="resumen-section msi-card-box" id="msiCard" style="display:none;">
+          <div class="msi-toggle" id="msiToggle" role="button" tabindex="0">
+            <span class="section-title-text">Compras a meses sin intereses<button type="button" class="help-icon" data-help="msi">?</button></span>
+            <span class="toggle-hint"><span id="msiToggleLabel">Ver compras</span> <span class="msi-chevron" id="msiChevron">▾</span></span>
+          </div>
+          <p class="h2-note" id="msiPendingNote" style="display:block;margin:6px 0 8px;"></p>
+          <div id="msiCardBreakdown"></div>
+          <div id="msiPanel" style="display:none;"></div>
         </div>
       </div>
 
-      <div class="resumen-section">
-        <button type="button" class="resumen-toggle" data-resumen-key="pago">
-          <span class="section-title-text">Gastos por forma de pago</span>
-          <span class="toggle-hint"><span class="resumen-lbl">Ver</span> <span class="resumen-caret">▾</span></span>
-        </button>
-        <div class="resumen-collapsible" data-resumen-panel="pago" style="display:none;">
-          <div id="paymentDonut"></div>
-        </div>
-      </div>
-
-      <div class="resumen-section">
-        <button type="button" class="resumen-toggle" data-resumen-key="categoria">
-          <span class="section-title-text">Gastos por categoría</span>
-          <span class="toggle-hint"><span class="resumen-lbl">Ocultar</span> <span class="resumen-caret">▴</span></span>
-        </button>
-        <div class="resumen-collapsible" data-resumen-panel="categoria" style="display:block;">
-          <div id="expenseDonut"></div>
-        </div>
-      </div>
-
-      <div class="resumen-section">
-        <button type="button" class="resumen-toggle" data-resumen-key="grupo">
-          <span class="section-title-text">Gastos por Grupos</span>
-          <span class="toggle-hint"><span class="resumen-lbl">Ver</span> <span class="resumen-caret">▾</span></span>
-        </button>
-        <div class="resumen-collapsible" data-resumen-panel="grupo" style="display:none;">
-          <div id="groupDonut"></div>
-          <div id="groupBreakdownDetail"></div>
-        </div>
+      <div class="rview" data-rview-panel="ahorro" style="display:none;">
+        <div id="savingsPanel"></div>
       </div>
     </div>
   </div>
