@@ -2311,7 +2311,7 @@
   }
   function cutDueHint(card){
     const C = cardCutDay(card), L = cardDueDay(card);
-    if(!C && !L) return 'Define tu corte y tu fecha límite para que el MSI cuadre con tu banco y no se te pase el pago.';
+    if(!C && !L) return 'Define corte y límite para que el MSI cuadre con tu banco.';
     const MS = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
     const today = new Date(); today.setHours(0,0,0,0);
     const fmtD = (d)=>{ const n = Math.round((d - today) / 86400000); return `${d.getDate()} ${MS[d.getMonth()]} (${n === 0 ? 'hoy' : n === 1 ? 'mañana' : n + ' días'})`; };
