@@ -909,3 +909,15 @@ html[data-theme="dark"] .rseg button.active{background:var(--line);}
   .rbars .cat-amount{font-size:11.5px;gap:4px;}
   .rbars .cat-pct{min-width:28px;font-size:10.5px;}
 }
+.tcard-cut{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;margin:0 0 12px;font-size:12px;color:var(--ink-soft);}
+.tcard-cut label{display:flex;align-items:center;gap:8px;font-weight:600;color:var(--ink);}
+.cut-select{font-family:inherit;font-size:13px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--input-bg);color:var(--ink);min-height:34px;}
+.tcard-cut{gap:8px 16px;margin-bottom:6px;}
+.tcard-cut-hint{font-size:12px;color:var(--ink-soft);margin:0 0 12px;line-height:1.45;}
+.tcard-cut-hint strong{color:var(--ink);}
+/* corte y límite: una sola línea, compacto */
+.tcard-cut{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 6px;}
+.tcard-cut label{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:12px;font-weight:500;color:var(--ink-soft);background:var(--input-bg);border:1px solid var(--line);border-radius:10px;padding:4px 6px 4px 10px;min-height:38px;}
+.tcard-cut .cut-select{border:none;background:transparent;font-weight:600;font-size:14px;padding:4px 2px;min-height:30px;width:auto;max-width:70px;color:var(--ink);}
+.tcard-cut-hint{font-size:11.5px;margin:0 0 12px;}
+@media (max-width:360px){ .tcard-cut label{font-size:11px;padding-left:8px;} }

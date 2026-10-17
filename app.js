@@ -1135,6 +1135,19 @@
   document.getElementById('payCancel').addEventListener('click', closePayModal);
   payEls.backdrop.addEventListener('click', closePayModal);
   document.getElementById('openPayBtn').addEventListener('click', ()=>{ closeDrawer(); openPayModal(); });
+  els.cardsPanel.addEventListener('change', async (e)=>{
+    const sel = e.target.closest('.cut-select');
+    if(!sel) return;
+    const isDue = sel.dataset.dueCard !== undefined;
+    const field = isDue ? 'limites' : 'cortes';
+    const card = isDue ? sel.dataset.dueCard : sel.dataset.cutCard;
+    if(!paymentMethods[field]) paymentMethods[field] = {};
+    const v = Number(sel.value);
+    if(v >= 1 && v <= 31) paymentMethods[field][card] = v;
+    else delete paymentMethods[field][card];
+    render();
+    await savePaymentMethods();
+  });
   els.cardsPanel.addEventListener('click', (e)=>{
     const btn = e.target.closest('[data-pay-card]');
     if(btn) openPayModal(btn.dataset.payCard);
@@ -1188,7 +1201,7 @@
     adjEls.preview.innerHTML =
       'Saldo en la app: <strong>' + fmt.format(c.saldo) + '</strong><br>' +
       'Tu deuda en el banco: <strong>' + fmt.format(c.real) + '</strong>' +
-      (c.msiPending > 0 ? ' − MSI pendiente <strong>' + fmt.format(c.msiPending) + '</strong> = <strong>' + fmt.format(c.expected) + '</strong>' : '') + '<br>' +
+      (c.msiPending > 0 ? ' − MSI que el banco aún no te cobra <strong>' + fmt.format(c.msiPending) + '</strong> = <strong>' + fmt.format(c.expected) + '</strong>' : '') + '<br>' +
       (c.pago > 0.005 ? 'Se registrará un pago de <strong>' + fmt.format(c.pago) + '</strong> (dinero libre).'
         : c.pago < -0.005 ? 'La app debe <strong>' + fmt.format(-c.pago) + '</strong> menos que tu banco: falta registrar algún gasto con esta tarjeta.'
         : 'Ya coincide, no hace falta ajustar.');
@@ -2275,12 +2288,54 @@
   }
 
   /* ---------- MSI math ---------- */
+  // Día de corte por tarjeta (opcional). Se guarda dentro de paymentMethods.cortes = { 'Crédito - Oro': 15 }.
+  // Sin corte definido, todo funciona como antes (primera mensualidad el mes siguiente a la compra).
+  function cardCutDay(card){
+    const d = Number(paymentMethods && paymentMethods.cortes && paymentMethods.cortes[card]);
+    return d >= 1 && d <= 31 ? d : 0;
+  }
+  function cardDueDay(card){
+    const d = Number(paymentMethods && paymentMethods.limites && paymentMethods.limites[card]);
+    return d >= 1 && d <= 31 ? d : 0;
+  }
+  function dayOpts(sel){ return Array.from({length:31}, (_,i)=> `<option value="${i+1}"${sel === i+1 ? ' selected' : ''}>${i+1}</option>`).join(''); }
+  // Próxima fecha con ese día de mes, hoy o después (si el mes no tiene ese día, usa el último).
+  function nextDayOfMonth(day){
+    const today = new Date(); today.setHours(0,0,0,0);
+    for(let k = 0; k < 3; k++){
+      const last = new Date(today.getFullYear(), today.getMonth() + k + 1, 0).getDate();
+      const d = new Date(today.getFullYear(), today.getMonth() + k, Math.min(day, last));
+      if(d >= today) return d;
+    }
+    return today;
+  }
+  function cutDueHint(card){
+    const C = cardCutDay(card), L = cardDueDay(card);
+    if(!C && !L) return 'Define tu corte y tu fecha límite para que el MSI cuadre con tu banco y no se te pase el pago.';
+    const MS = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    const today = new Date(); today.setHours(0,0,0,0);
+    const fmtD = (d)=>{ const n = Math.round((d - today) / 86400000); return `${d.getDate()} ${MS[d.getMonth()]} (${n === 0 ? 'hoy' : n === 1 ? 'mañana' : n + ' días'})`; };
+    const parts = [];
+    if(L) parts.push('Pagar antes del <strong>' + fmtD(nextDayOfMonth(L)) + '</strong>');
+    if(C) parts.push('Corte ' + fmtD(nextDayOfMonth(C)));
+    return parts.join(' · ');
+  }
+  // Índice (año*12+mes) "base" del MSI: la mensualidad k cae en el mes base + k.
+  // Con corte: una compra hecha en o antes del día de corte ya entra al estado de cuenta de ese mismo mes.
+  function msiStartIndex(t){
+    const s = new Date(t.date + 'T00:00:00');
+    let idx = s.getFullYear() * 12 + s.getMonth();
+    const D = cardCutDay(t.paymentMethod);
+    if(D && s.getDate() <= D) idx -= 1;
+    return idx;
+  }
   function msiInfo(t, refDate){
-    const start = new Date(t.date + 'T00:00:00');
     const now = refDate || new Date();
     // Sin el "+1": el mes de la compra cuenta como mes 0 (nada pagado todavía).
     // La primera mensualidad se empieza a contar hasta el mes siguiente, como cobra tu tarjeta en la vida real.
-    let monthsElapsed = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
+    let monthsElapsed = (now.getFullYear() * 12 + now.getMonth()) - msiStartIndex(t);
+    const D = cardCutDay(t.paymentMethod);
+    if(D && now.getDate() < D) monthsElapsed -= 1; // el corte de este mes todavía no llega
     monthsElapsed = Math.max(0, Math.min(monthsElapsed, t.months));
     const monthlyPayment = t.amount / t.months;
     const paid = monthlyPayment * monthsElapsed;
@@ -2297,7 +2352,7 @@
   function msiPeriodContribution(t){
     const monthly = t.amount / t.months;
     const start = new Date(t.date + 'T00:00:00');
-    const startIndex = start.getFullYear() * 12 + start.getMonth();
+    const startIndex = msiStartIndex(t);
     if(periodMode === 'todo') return msiInfo(t).paid;
     if(periodMode === 'mes'){
       const [py, pm] = periodValue.split('-').map(Number);
@@ -2314,7 +2369,8 @@
     }
     if(periodMode === 'dia'){
       const pdate = new Date(periodValue + 'T00:00:00');
-      if(pdate.getDate() !== start.getDate()) return 0;
+      const cutD = cardCutDay(t.paymentMethod);
+      if(pdate.getDate() !== (cutD || start.getDate())) return 0;
       const offset = (pdate.getFullYear() * 12 + pdate.getMonth()) - startIndex;
       return (offset >= 1 && offset <= t.months) ? monthly : 0;
     }
@@ -2325,8 +2381,7 @@
   // en cualquier mes posterior.
   function msiIsActiveInPeriod(t){
     if(periodMode === 'todo') return true;
-    const start = new Date(t.date + 'T00:00:00');
-    const startIndex = start.getFullYear() * 12 + start.getMonth();
+    const startIndex = msiStartIndex(t);
     if(periodMode === 'mes'){
       const [py, pm] = periodValue.split('-').map(Number);
       const offset = (py * 12 + (pm - 1)) - startIndex;
@@ -2810,6 +2865,19 @@
         return `<div class="tcard">
           <div class="tcard-top"><span class="tcard-name">${escapeHtml(n)}</span><span class="tcard-amt">${lbl ? `<span class="tcard-lbl">${lbl}</span>` : ''}${big}</span></div>
           <div class="tcard-meta">${meta.map(m=>`<span>${m}</span>`).join('')}</div>
+          <div class="tcard-cut">
+            <label><span>Corte</span>
+              <select class="cut-select" data-cut-card="${escapeHtml(n)}" aria-label="Día de corte de ${escapeHtml(n)}">
+                <option value="">día</option>
+                ${dayOpts(cardCutDay(n))}
+              </select></label>
+            <label><span>Límite</span>
+              <select class="cut-select" data-due-card="${escapeHtml(n)}" aria-label="Día límite de pago de ${escapeHtml(n)}">
+                <option value="">día</option>
+                ${dayOpts(cardDueDay(n))}
+              </select></label>
+          </div>
+          <div class="tcard-cut-hint">${cutDueHint(n)}</div>
           <div class="tcard-btns">
             <button type="button" class="card-pay-btn" data-pay-card="${escapeHtml(n)}">Registrar pago</button>
             <button type="button" class="card-pay-btn ghost" data-adj-card="${escapeHtml(n)}">Ajustar a mi saldo</button>
@@ -2825,8 +2893,7 @@
         const idx = refIdx + k;
         let sum = 0;
         allPlans.forEach(t=>{
-          const st = new Date(t.date + 'T00:00:00');
-          const off = idx - (st.getFullYear() * 12 + st.getMonth());
+          const off = idx - msiStartIndex(t);
           if(off >= 1 && off <= t.months) sum += t.amount / t.months;
         });
         future.push([SHORT[idx % 12] + ' ' + String(Math.floor(idx / 12)).slice(2), sum]);
