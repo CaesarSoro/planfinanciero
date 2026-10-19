@@ -113,6 +113,10 @@
       </button>
     </div>
     <div class="drawer-divider"></div>
+    <button type="button" id="backupDownloadBtn" class="account-menu-item">Descargar respaldo (JSON)</button>
+    <button type="button" id="backupRestoreBtn" class="account-menu-item">Restaurar respaldo</button>
+    <input type="file" id="backupFile" accept="application/json,.json" hidden>
+    <div class="drawer-divider"></div>
 
     <p class="account-menu-email" id="accountEmail"></p>
     <button type="button" id="logoutBtn" class="account-menu-item danger">Cerrar sesión</button>
@@ -348,6 +352,7 @@
       <span class="tape-sub" id="tapeSub" style="display:none;"></span>
     </div>
       <div class="header-filter">
+  <button type="button" class="hf-nav" id="hfPrev" aria-label="Periodo anterior">‹</button>
   <button type="button" class="filter-summary-toggle" id="filterSummaryToggle">
     <span class="filter-summary-left">
       
@@ -358,6 +363,7 @@
     </span>
     <span class="toggle-hint"><span id="filterToggleLabel">Cambiar</span> <span class="resumen-caret" id="filterCaret">›</span></span>
   </button>
+  <button type="button" class="hf-nav" id="hfNext" aria-label="Periodo siguiente">›</button>
       </div>
     </div>
   </header>
@@ -586,24 +592,22 @@
       </div>
 
       <div class="rview" data-rview-panel="mes">
-        <p class="r-sentence" id="resumenSentence"></p>
-        <div class="stats stats3">
-          <div class="stat income">
-            <div class="stat-label">Ingresos</div>
-            <div class="stat-value" id="statIncome">$0</div>
-            <div class="stat-subvalue" id="statIncomeTrend"></div>
-          </div>
-          <div class="stat expense">
-            <div class="stat-label">Gastos</div>
-            <div class="stat-value" id="statExpense">$0</div>
-          </div>
-          <div class="stat">
-            <div class="stat-label">Saldo del mes</div>
-            <div class="stat-value" id="statUtilidad">$0</div>
+        <div id="resumenAlerts" class="r-alerts" style="display:none;"></div>
+        <div class="mes-top">
+        <div class="mes-hero">
+          <span class="r-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9M10 19V5M16 19v-7M21 19H3"/></svg></span>
+          <div class="mes-lbl" id="mesLabel">Saldo del mes</div>
+          <div class="mes-big" id="statUtilidad">$0</div>
+          <p class="mes-note" id="resumenSentence"></p>
+          <div class="mes-split" id="mesSplit" aria-hidden="true"><i class="in"></i><i class="out"></i></div>
+          <div class="mes-legend">
+            <div><span class="mes-dot in"></span>Ingresos<b id="statIncome">$0</b><span class="stat-subvalue" id="statIncomeTrend"></span></div>
+            <div class="r"><span class="mes-dot out"></span>Gastos<b id="statExpense">$0</b></div>
           </div>
         </div>
 
         <div class="r-links" id="resumenLinks"></div>
+        </div>
 
         <div class="resumen-section">
           <h3 class="section-title">En qué gastaste <span class="scope-tag" id="expScope"></span></h3>

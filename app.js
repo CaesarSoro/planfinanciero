@@ -326,9 +326,7 @@
   els.date.value = todayStr();
 
   function escapeHtml(str){
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
+    return String(str == null ? '' : str).replace(/[&<>"']/g, ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   }
   // Saldo acumulado por pagar de cada tarjeta de crédito: lo cargado (compras + MSI ya cobrados)
   // menos los pagos registrados. Solo es exacto si registras los pagos que ya hiciste.
@@ -1318,7 +1316,7 @@
   function recallPayment(type){ try{ return localStorage.getItem('lastPay:' + type) || ''; }catch(e){ return ''; } }
   function populatePaymentMethods(){
     els.paymentMethod.innerHTML = '<option value="">Elige una forma de pago…</option>' + paymentMethods[currentType]
-      .map(p => `<option value="${p}">${p}</option>`).join('');
+      .map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
     // Sugiere la última forma de pago que usaste en este tipo (solo en registros nuevos).
     if(!editingTransactionId){
       const last = recallPayment(currentType);
@@ -2240,7 +2238,7 @@
           <div class="rec-abono-row">
             <input type="number" class="rec-abono-amount" data-id="${r.id}" min="0.01" step="0.01" placeholder="Monto abono">
             <select class="rec-abono-pay" data-id="${r.id}">
-              ${paymentMethods.ingreso.map(p=>`<option value="${p}">${p}</option>`).join('')}
+              ${paymentMethods.ingreso.map(p=>`<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('')}
             </select>
             <input type="date" class="rec-abono-date" data-id="${r.id}" value="${todayStr()}">
             <button type="button" class="rec-abono-btn" data-id="${r.id}">Registrar abono</button>
@@ -2676,26 +2674,104 @@
     els.statUtilidad.textContent = fmt0.format(utilidad);
     els.statUtilidad.classList.remove('pos','neg');
     els.statUtilidad.classList.add(utilidad >= 0 ? 'pos' : 'neg');
-    (function renderSentence(){
+    (function renderMesHero(){
       const box = document.getElementById('resumenSentence');
       if(!box) return;
-      const per = periodMode === 'todo' ? 'En todo el historial' : 'En ' + periodLabel();
+      const lbl = document.getElementById('mesLabel');
+      if(lbl) lbl.textContent = 'Saldo de ' + (periodMode === 'todo' ? 'todo el historial' : periodLabel());
+      const split = document.getElementById('mesSplit');
+      const total = income + expense;
+      if(split){
+        split.style.display = total > 0 ? '' : 'none';
+        const inEl = split.querySelector('.in'), outEl = split.querySelector('.out');
+        const pIn = total > 0 ? (income / total) * 100 : 0;
+        inEl.style.width = pIn + '%';
+        outEl.style.width = (100 - pIn) + '%';
+      }
       if(income === 0 && expense === 0){ box.textContent = 'Aún no hay ingresos ni gastos en este periodo.'; return; }
-      const tail = utilidad >= 0
-        ? `te quedan ${fmt0.format(utilidad)}.`
-        : `gastaste ${fmt0.format(-utilidad)} más de lo que entró.`;
-      box.textContent = `${per} entró ${fmt0.format(income)}, salió ${fmt0.format(expense)} y ${tail}`;
+      box.textContent = utilidad >= 0
+        ? `Te quedaron ${fmt0.format(utilidad)} después de tus gastos.`
+        : `Tus gastos superaron tus ingresos por ${fmt0.format(-utilidad)}.`;
     })();
     (function renderLinks(){
       const box = document.getElementById('resumenLinks');
       if(!box) return;
-      const debt = Object.values(computeCardBalances()).reduce((s,c)=> s + Math.max(0, c.saldo), 0);
-      const hasCards = Object.keys(computeCardBalances()).length > 0;
+      const balances = computeCardBalances();
+      const names = Object.keys(balances);
+      const debt = Object.values(balances).reduce((s,c)=> s + Math.max(0, c.saldo), 0);
+      const MS = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+      const today = new Date(); today.setHours(0,0,0,0);
+      // --- Tarjetas: próxima fecha límite (de las que deben) y MSI al mes ---
+      const tSub = [];
+      let nextDue = null;
+      names.forEach(n=>{
+        if(balances[n].saldo <= 0.5 || !cardDueDay(n)) return;
+        const d = nextDayOfMonth(cardDueDay(n));
+        if(!nextDue || d < nextDue) nextDue = d;
+      });
+      if(nextDue){
+        const days = Math.round((nextDue - today) / 86400000);
+        tSub.push(`Pagar antes del <strong>${nextDue.getDate()} ${MS[nextDue.getMonth()]}</strong> (${days === 0 ? 'hoy' : days === 1 ? 'mañana' : days + ' días'})`);
+      }
+      const msiMes = transactions.filter(t=>t.isMsi && String(t.paymentMethod || '').startsWith('Crédito'))
+        .reduce((s,t)=>{ const i = msiInfo(t); return s + (i.finished ? 0 : i.monthlyPayment); }, 0);
+      if(msiMes > 0) tSub.push(`MSI: ${fmt0.format(msiMes)} al mes`);
+      // --- Ahorro: aportado en el periodo y meses de respaldo ---
+      const aSub = [];
+      const per = periodMode === 'todo' ? 'todo el historial' : periodLabel();
+      if(savingsIn > 0 || savingsOut > 0){
+        const net = savingsIn - savingsOut;
+        aSub.push(`${net >= 0 ? '+' : '−'}${fmt0.format(Math.abs(net))} <span class="r-sub-soft">en ${escapeHtml(per)}</span>`);
+      }
+      (function runway(){
+        if(!(savingsFundTotal > 0)) return;
+        const monthExp = {};
+        const add = (idx, v)=>{ monthExp[idx] = (monthExp[idx] || 0) + v; };
+        transactions.forEach(t=>{
+          if(t.type !== 'gasto') return;
+          if(t.isMsi){
+            const base = msiStartIndex(t), m = t.amount / t.months;
+            for(let k = 1; k <= t.months; k++) add(base + k, m);
+          } else {
+            const d = new Date(t.date + 'T00:00:00');
+            add(d.getFullYear() * 12 + d.getMonth(), t.amount);
+          }
+        });
+        const curIdx = today.getFullYear() * 12 + today.getMonth();
+        const past = [curIdx - 1, curIdx - 2, curIdx - 3].map(i=> monthExp[i] || 0).filter(v=> v > 0);
+        if(past.length < 2) return;
+        const avg = past.reduce((s,v)=> s + v, 0) / past.length;
+        const months = savingsFundTotal / avg;
+        aSub.push(`Cubre ~${months >= 10 ? Math.round(months) : months.toFixed(1)} meses de gastos`);
+      })();
       const rows = [];
-      if(hasCards) rows.push(`<button type="button" class="r-link" data-rview-go="tarjetas"><span>Tarjetas</span><span class="r-link-val">Debes ${fmt0.format(debt)} <em>hoy</em> ›</span></button>`);
-      if(savingsFundTotal > 0 || transactions.some(t=>t.type==='ahorro')) rows.push(`<button type="button" class="r-link" data-rview-go="ahorro"><span>Ahorro</span><span class="r-link-val">Tienes ${fmt0.format(savingsFundTotal)} <em>acumulado</em> ›</span></button>`);
+      if(names.length) rows.push(`<button type="button" class="r-link" data-rview-go="tarjetas"><span class="r-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6.5 15h4"/></svg></span><span class="r-link-lbl">Tarjetas</span><span class="r-link-val">Debes ${fmt0.format(debt)} <em>hoy</em> <span class="r-chev">›</span></span>${tSub.length ? `<span class="r-link-sub">${tSub.map(x=>`<span>${x}</span>`).join('')}</span>` : ''}</button>`);
+      if(savingsFundTotal > 0 || transactions.some(t=>t.type==='ahorro')) rows.push(`<button type="button" class="r-link" data-rview-go="ahorro"><span class="r-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l7 3v5c0 4.2-2.9 7.6-7 9-4.1-1.4-7-4.8-7-9v-5z"/><path d="M9 12l2.2 2.2L15.5 10"/></svg></span><span class="r-link-lbl">Ahorro</span><span class="r-link-val">Tienes ${fmt0.format(savingsFundTotal)} <em>acumulado</em> <span class="r-chev">›</span></span>${aSub.length ? `<span class="r-link-sub">${aSub.map(x=>`<span>${x}</span>`).join('')}</span>` : ''}</button>`);
       box.innerHTML = rows.join('');
       box.style.display = rows.length ? '' : 'none';
+    })();
+    (function renderAlerts(){
+      const box = document.getElementById('resumenAlerts');
+      if(!box) return;
+      const items = [];
+      const today = new Date(); today.setHours(0,0,0,0);
+      // Vencimientos de tarjeta en los próximos 5 días
+      const bal = computeCardBalances();
+      Object.keys(bal).forEach(n=>{
+        const dd = cardDueDay(n);
+        if(!dd || bal[n].saldo <= 0.5) return;
+        const days = Math.round((nextDayOfMonth(dd) - today) / 86400000);
+        if(days > 5) return;
+        const cuando = days <= 0 ? 'vence hoy' : days === 1 ? 'vence mañana' : `vence en ${days} días`;
+        items.push({tone:'warn', html:`<strong>${escapeHtml(n.replace(/^Crédito\s*-\s*/,''))}</strong> ${cuando}: debes ${fmt0.format(bal[n].saldo)}.`, act:'tarjetas', actLbl:'Ver tarjeta'});
+      });
+      // Mes en curso sin ingresos
+      const curKey = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0');
+      if(periodMode === 'mes' && periodValue === curKey && income === 0 && transactions.some(t=>t.type==='gasto')){
+        items.push({tone:'info', html:`Aún no registras <strong>ingresos</strong> de ${escapeHtml(periodLabel())}, por eso el saldo sale negativo.`, act:'ingreso', actLbl:'Registrar ingreso'});
+      }
+      box.innerHTML = items.map(i=>`<div class="r-alert ${i.tone}" role="status"><span class="r-alert-t">${i.html}</span><button type="button" class="r-alert-btn" data-alert-act="${i.act}">${i.actLbl}</button></div>`).join('');
+      box.style.display = items.length ? '' : 'none';
     })();
     const expScope = document.getElementById('expScope');
     if(expScope) expScope.textContent = periodMode === 'todo' ? 'todo el historial' : periodLabel();
@@ -3291,6 +3367,7 @@
     els.periodMonth.style.display = periodMode === 'mes' ? 'inline-block' : 'none';
     els.periodYear.style.display = periodMode === 'anio' ? 'inline-block' : 'none';
     els.periodNav.style.display = periodMode === 'todo' ? 'none' : 'flex';
+    ['hfPrev','hfNext'].forEach(id=>{ const b = document.getElementById(id); if(b) b.style.display = periodMode === 'todo' ? 'none' : ''; });
     els.periodDisplay.textContent = periodMode === 'todo' ? 'Todo el historial' : periodLabel();
   }
   function shiftPeriod(direction){
@@ -3405,6 +3482,72 @@
     }
     els.authSubmitBtn.disabled = false;
   });
+
+  document.addEventListener('click', e=>{
+    const b = e.target.closest('[data-alert-act]');
+    if(!b) return;
+    const act = b.dataset.alertAct;
+    if(act === 'tarjetas') setResumenView('tarjetas');
+    else if(act === 'ingreso'){ switchTab('form'); showRegistroView('form'); setType('ingreso'); }
+  });
+  const hfPrev = document.getElementById('hfPrev'), hfNext = document.getElementById('hfNext');
+  if(hfPrev) hfPrev.addEventListener('click', ()=> shiftPeriod(-1));
+  if(hfNext) hfNext.addEventListener('click', ()=> shiftPeriod(1));
+
+  /* ---------- Respaldo completo (JSON) ---------- */
+  const BACKUP_VERSION = 1;
+  function buildBackup(){
+    return {
+      app: 'finanzas-personales', version: BACKUP_VERSION, exportedAt: new Date().toISOString(),
+      data: { transactions, categories, paymentMethods, budget, receivables, travelBudgets, customCategoryGroups }
+    };
+  }
+  const backupDownloadBtn = document.getElementById('backupDownloadBtn');
+  const backupRestoreBtn = document.getElementById('backupRestoreBtn');
+  const backupFile = document.getElementById('backupFile');
+  if(backupDownloadBtn) backupDownloadBtn.addEventListener('click', ()=>{
+    try{
+      const blob = new Blob([JSON.stringify(buildBackup(), null, 2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `respaldo-finanzas-${todayStr()}.json`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=> URL.revokeObjectURL(url), 1500);
+      showToast('Respaldo descargado');
+    }catch(err){ showToast('No se pudo crear el respaldo', true); }
+  });
+  if(backupRestoreBtn && backupFile){
+    backupRestoreBtn.addEventListener('click', ()=> backupFile.click());
+    backupFile.addEventListener('change', async ()=>{
+      const f = backupFile.files && backupFile.files[0];
+      backupFile.value = '';
+      if(!f) return;
+      let obj;
+      try{ obj = JSON.parse(await f.text()); }catch(err){ showToast('El archivo no es un respaldo válido', true); return; }
+      const d = obj && obj.app === 'finanzas-personales' && obj.data;
+      if(!d || !Array.isArray(d.transactions) || !d.categories || !d.paymentMethods){ showToast('El archivo no es un respaldo válido', true); return; }
+      const when = obj.exportedAt ? new Date(obj.exportedAt).toLocaleString('es-MX') : 'fecha desconocida';
+      if(!confirm(`Restaurar respaldo del ${when} (${d.transactions.length} movimientos).\n\nEsto REEMPLAZA todos tus datos actuales. ¿Continuar?`)) return;
+      try{
+        transactions = d.transactions;
+        categories = d.categories;
+        paymentMethods = d.paymentMethods;
+        if(d.budget) budget = d.budget;
+        receivables = Array.isArray(d.receivables) ? d.receivables : [];
+        travelBudgets = Array.isArray(d.travelBudgets) ? d.travelBudgets : [];
+        customCategoryGroups = d.customCategoryGroups || {};
+        await saveTransactions(true);
+        await saveCategories(true);
+        await savePaymentMethods(true);
+        await saveBudget(true);
+        await saveReceivables();
+        await saveTravelBudgets();
+        await saveCategoryGroups();
+        render();
+        showToast('Respaldo restaurado');
+      }catch(err){ showToast('Error al restaurar. Revisa tu conexión.', true); }
+    });
+  }
 
   els.logoutBtn.addEventListener('click', async ()=>{
     await fbAuth.signOut();
