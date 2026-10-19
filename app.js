@@ -330,19 +330,7 @@
   }
   // Saldo acumulado por pagar de cada tarjeta de crédito: lo cargado (compras + MSI ya cobrados)
   // menos los pagos registrados. Solo es exacto si registras los pagos que ya hiciste.
-  function computeCardBalances(){
-    const cards = {};
-    const get = (name)=> cards[name] || (cards[name] = { cargos:0, pagos:0 });
-    transactions.forEach(t=>{
-      if(t.type === 'gasto' && String(t.paymentMethod || '').startsWith('Crédito')){
-        get(t.paymentMethod).cargos += t.isMsi ? msiInfo(t).paid : t.amount;
-      } else if(t.type === 'pago'){
-        get(t.paymentMethod).pagos += t.amount;
-      }
-    });
-    Object.values(cards).forEach(c=>{ c.saldo = c.cargos - c.pagos; });
-    return cards;
-  }
+  function computeCardBalances(){ return FinCalc.computeCardBalances(paymentMethods, transactions); }
   // Un ingreso "Saldo inicial" es dinero que ya tenías antes de usar la app: suma a tu Balance
   // disponible, pero NO cuenta como ingreso del mes ni de ningún periodo.
   function isOpeningIncome(t){
@@ -622,14 +610,46 @@
   function openDrawer(){
     els.accountMenuPanel.classList.add('open');
     els.drawerBackdrop.classList.add('open');
+    els.accountMenuBtn.classList.add('is-open');
+    els.accountMenuBtn.setAttribute('aria-expanded', 'true');
+    document.body.classList.add('drawer-lock');
     document.querySelectorAll('.drawer-nav-item').forEach(btn=>{
       btn.classList.toggle('active', btn.dataset.nav === currentTab);
     });
+    // Cabecera de cuenta: nombre, inicial y balance al momento de abrir.
+    const email = (currentUser && currentUser.email) || els.accountEmail.textContent || '';
+    const pn = (els.profileNombre && els.profileNombre.value || '').trim();
+    const nombre = pn || (email.split('@')[0] || 'Mi cuenta');
+    const nm = document.getElementById('drawerName'), av = document.getElementById('drawerAvatar'), bal = document.getElementById('drawerBalance');
+    if(nm) nm.textContent = nombre;
+    if(av) av.textContent = (nombre.trim()[0] || 'C').toUpperCase();
+    if(bal){ bal.textContent = els.tapeAmount ? els.tapeAmount.textContent : ''; bal.classList.toggle('neg', !!(els.tapeAmount && els.tapeAmount.classList.contains('neg'))); }
+    const first = els.accountMenuPanel.querySelector('.drawer-nav-item.active') || els.accountMenuPanel.querySelector('.drawer-nav-item');
+    if(first) setTimeout(()=> first.focus({ preventScroll:true }), 120);
   }
   function closeDrawer(){
     els.accountMenuPanel.classList.remove('open');
     els.drawerBackdrop.classList.remove('open');
+    els.accountMenuBtn.classList.remove('is-open');
+    els.accountMenuBtn.setAttribute('aria-expanded', 'false');
+    document.body.classList.remove('drawer-lock');
   }
+  // Escalonado de entrada de las opciones
+  els.accountMenuPanel.querySelectorAll('.drawer-nav-item, .drawer-extra .account-menu-item').forEach((el, i)=> el.style.setProperty('--i', i));
+  document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && els.accountMenuPanel.classList.contains('open')) closeDrawer(); });
+  // Deslizar para cerrar: hacia la izquierda en panel lateral, hacia abajo en móvil
+  (function swipeToClose(){
+    let sx = 0, sy = 0, active = false;
+    const p = els.accountMenuPanel;
+    p.addEventListener('touchstart', e=>{ const t = e.touches[0]; sx = t.clientX; sy = t.clientY; active = true; }, { passive:true });
+    p.addEventListener('touchend', e=>{
+      if(!active) return; active = false;
+      const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+      const mobile = window.matchMedia('(max-width:770px)').matches;
+      if(mobile){ if(dy > 70 && Math.abs(dy) > Math.abs(dx) && p.scrollTop <= 0) closeDrawer(); }
+      else if(dx < -70 && Math.abs(dx) > Math.abs(dy)) closeDrawer();
+    }, { passive:true });
+  })();
   els.accountMenuBtn.addEventListener('click', (e)=>{
     e.stopPropagation();
     if(els.accountMenuPanel.classList.contains('open')) closeDrawer(); else openDrawer();
@@ -2288,25 +2308,11 @@
   /* ---------- MSI math ---------- */
   // Día de corte por tarjeta (opcional). Se guarda dentro de paymentMethods.cortes = { 'Crédito - Oro': 15 }.
   // Sin corte definido, todo funciona como antes (primera mensualidad el mes siguiente a la compra).
-  function cardCutDay(card){
-    const d = Number(paymentMethods && paymentMethods.cortes && paymentMethods.cortes[card]);
-    return d >= 1 && d <= 31 ? d : 0;
-  }
-  function cardDueDay(card){
-    const d = Number(paymentMethods && paymentMethods.limites && paymentMethods.limites[card]);
-    return d >= 1 && d <= 31 ? d : 0;
-  }
+  function cardCutDay(card){ return FinCalc.cardCutDay(paymentMethods, card); }
+  function cardDueDay(card){ return FinCalc.cardDueDay(paymentMethods, card); }
   function dayOpts(sel){ return Array.from({length:31}, (_,i)=> `<option value="${i+1}"${sel === i+1 ? ' selected' : ''}>${i+1}</option>`).join(''); }
   // Próxima fecha con ese día de mes, hoy o después (si el mes no tiene ese día, usa el último).
-  function nextDayOfMonth(day){
-    const today = new Date(); today.setHours(0,0,0,0);
-    for(let k = 0; k < 3; k++){
-      const last = new Date(today.getFullYear(), today.getMonth() + k + 1, 0).getDate();
-      const d = new Date(today.getFullYear(), today.getMonth() + k, Math.min(day, last));
-      if(d >= today) return d;
-    }
-    return today;
-  }
+  function nextDayOfMonth(day){ return FinCalc.nextDayOfMonth(day); }
   function cutDueHint(card){
     const C = cardCutDay(card), L = cardDueDay(card);
     if(!C && !L) return 'Define corte y límite para que el MSI cuadre con tu banco.';
@@ -2320,83 +2326,16 @@
   }
   // Índice (año*12+mes) "base" del MSI: la mensualidad k cae en el mes base + k.
   // Con corte: una compra hecha en o antes del día de corte ya entra al estado de cuenta de ese mismo mes.
-  function msiStartIndex(t){
-    const s = new Date(t.date + 'T00:00:00');
-    let idx = s.getFullYear() * 12 + s.getMonth();
-    const D = cardCutDay(t.paymentMethod);
-    if(D && s.getDate() <= D) idx -= 1;
-    return idx;
-  }
-  function msiInfo(t, refDate){
-    const now = refDate || new Date();
-    // Sin el "+1": el mes de la compra cuenta como mes 0 (nada pagado todavía).
-    // La primera mensualidad se empieza a contar hasta el mes siguiente, como cobra tu tarjeta en la vida real.
-    let monthsElapsed = (now.getFullYear() * 12 + now.getMonth()) - msiStartIndex(t);
-    const D = cardCutDay(t.paymentMethod);
-    if(D && now.getDate() < D) monthsElapsed -= 1; // el corte de este mes todavía no llega
-    monthsElapsed = Math.max(0, Math.min(monthsElapsed, t.months));
-    const monthlyPayment = t.amount / t.months;
-    const paid = monthlyPayment * monthsElapsed;
-    const remaining = Math.max(0, t.amount - paid);
-    return { monthlyPayment, monthsElapsed, paid, remaining, finished: monthsElapsed >= t.months };
-  }
-  function expenseContribution(t){
-    if(t.type !== 'gasto') return 0;
-    if(t.isMsi) return msiInfo(t).paid;
-    return t.amount;
-  }
+  function msiStartIndex(t){ return FinCalc.msiStartIndex(paymentMethods, t); }
+  function msiInfo(t, refDate){ return FinCalc.msiInfo(paymentMethods, t, refDate); }
+  function expenseContribution(t){ return FinCalc.expenseContribution(paymentMethods, t); }
   // Cuánto de un MSI corresponde exactamente al periodo que se está viendo (mes/año/día/todo),
   // en vez de acumular todo lo pagado a hoy en el mes de la compra original.
-  function msiPeriodContribution(t){
-    const monthly = t.amount / t.months;
-    const start = new Date(t.date + 'T00:00:00');
-    const startIndex = msiStartIndex(t);
-    if(periodMode === 'todo') return msiInfo(t).paid;
-    if(periodMode === 'mes'){
-      const [py, pm] = periodValue.split('-').map(Number);
-      const offset = (py * 12 + (pm - 1)) - startIndex;
-      return (offset >= 1 && offset <= t.months) ? monthly : 0;
-    }
-    if(periodMode === 'anio'){
-      const py = Number(periodValue);
-      let monthsInYear = 0;
-      for(let i = 1; i <= t.months; i++){
-        if(Math.floor((startIndex + i) / 12) === py) monthsInYear++;
-      }
-      return monthly * monthsInYear;
-    }
-    if(periodMode === 'dia'){
-      const pdate = new Date(periodValue + 'T00:00:00');
-      const cutD = cardCutDay(t.paymentMethod);
-      if(pdate.getDate() !== (cutD || start.getDate())) return 0;
-      const offset = (pdate.getFullYear() * 12 + pdate.getMonth()) - startIndex;
-      return (offset >= 1 && offset <= t.months) ? monthly : 0;
-    }
-    return 0;
-  }
+  function msiPeriodContribution(t){ return FinCalc.msiPeriodContribution(paymentMethods, t, { mode: periodMode, value: periodValue }); }
   // Si el MSI sigue "vivo" para el periodo que se está viendo: existía ya y todavía no
   // se había liquidado. Evita que un MSI pagado hace meses siga apareciendo para siempre
   // en cualquier mes posterior.
-  function msiIsActiveInPeriod(t){
-    if(periodMode === 'todo') return true;
-    const startIndex = msiStartIndex(t);
-    if(periodMode === 'mes'){
-      const [py, pm] = periodValue.split('-').map(Number);
-      const offset = (py * 12 + (pm - 1)) - startIndex;
-      return offset >= 0 && offset <= t.months;
-    }
-    if(periodMode === 'anio'){
-      const py = Number(periodValue);
-      const planStart = startIndex, planEnd = startIndex + t.months;
-      return planStart <= (py * 12 + 11) && planEnd >= (py * 12);
-    }
-    if(periodMode === 'dia'){
-      const pdate = new Date(periodValue + 'T00:00:00');
-      const offset = (pdate.getFullYear() * 12 + pdate.getMonth()) - startIndex;
-      return offset >= 0 && offset <= t.months;
-    }
-    return true;
-  }
+  function msiIsActiveInPeriod(t){ return FinCalc.msiIsActiveInPeriod(paymentMethods, t, { mode: periodMode, value: periodValue }); }
 
   /* ---------- Totals ---------- */
   function computeTotals(){
@@ -2447,26 +2386,8 @@
       document.getElementById('balanceNotice').style.display = 'none';
     });
   })();
-  function computeAllTimeBalance(){
-    let income = 0, expense = 0, savingsIn = 0, savingsOut = 0;
-    transactions.forEach(t=>{
-      if(t.type === 'ingreso') income += t.amount;
-      else if(t.type === 'gasto') expense += expenseContribution(t);
-      else if(t.type === 'ahorro' && (t.moneda || 'MXN') === 'MXN'){
-        if(t.subtype === 'retiro') savingsOut += t.amount; else if(t.subtype !== 'inicial') savingsIn += t.amount;
-      }
-    });
-    return income - expense - (savingsIn - savingsOut);
-  }
-  function computeAllTimeSavingsFund(moneda){
-    moneda = moneda || 'MXN';
-    let inAll = 0, outAll = 0;
-    transactions.forEach(t=>{
-      if(t.type !== 'ahorro' || (t.moneda || 'MXN') !== moneda) return;
-      if(t.subtype === 'retiro') outAll += t.amount; else inAll += t.amount;
-    });
-    return inAll - outAll;
-  }
+  function computeAllTimeBalance(){ return FinCalc.computeAllTimeBalance(paymentMethods, transactions); }
+  function computeAllTimeSavingsFund(moneda){ return FinCalc.computeAllTimeSavingsFund(transactions, moneda); }
   // Igual que computeAllTimeSavingsFund pero desglosado por categoría (Ahorro Emergencia,
   // Inversiones, etc.) — para ver cómo está repartido tu fondo de ahorro, no solo el total.
   function computeSavingsFundByCategory(moneda){
@@ -3607,6 +3528,7 @@
   async function loadAllDataAndRender(){
     await Promise.all([loadCategories(), loadBudget(), loadTransactions(), loadReceivables(), loadCategoryGroups(), loadTravelBudgets(), loadPaymentMethods()]);
     await pruneOrphanedMsiBudgetLines();
+    loadProfileIntoForm(); // para mostrar tu nombre en el menú
     setType('gasto');
     showRegistroView('list');
     render();

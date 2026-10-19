@@ -90,41 +90,50 @@
 <div class="wrap" id="appRoot" style="display:none;">
 
   <div class="drawer-backdrop" id="drawerBackdrop"></div>
-  <div class="account-drawer" id="accountMenuPanel">
+  <div class="account-drawer" id="accountMenuPanel" role="dialog" aria-modal="true" aria-label="Menú">
+    <span class="drawer-grip" aria-hidden="true"></span>
     <button type="button" id="drawerCloseBtn" class="drawer-close" aria-label="Cerrar menú">✕</button>
 
-    <div class="drawer-nav" id="drawerNav">
-      <button type="button" class="drawer-nav-item" data-nav="form">Movimientos</button>
-      <button type="button" class="drawer-nav-item" data-nav="resumen">Resumen</button>
-      <button type="button" class="drawer-nav-item" data-nav="budget">Presupuesto</button>
-      <button type="button" class="drawer-nav-item" id="openPayBtn">Pagar tarjeta</button>
-      <button type="button" class="drawer-nav-item" id="openSetupBtn">Saldos iniciales</button>
-      <button type="button" class="drawer-nav-item" data-nav="metas">Metas y Proyectos</button>
-      <button type="button" class="drawer-nav-item" data-nav="cobrar">Por cobrar</button>
-      <button type="button" class="drawer-nav-item nav-sep" id="openReportBtn">Reporte / Exportar</button>
-      <button type="button" class="drawer-nav-item" data-nav="perfil">Mi perfil</button>
+    <div class="drawer-user">
+      <span class="drawer-avatar" id="drawerAvatar" aria-hidden="true">C</span>
+      <span class="drawer-user-txt"><b id="drawerName">Mi cuenta</b><small id="accountEmail"></small></span>
     </div>
-    <div class="drawer-divider"></div>
-    <button type="button" id="openHelpBtn" class="account-menu-item">¿Cómo funciona?</button>
-    <div class="drawer-theme-row">
-      <span>Tema oscuro</span>
-      <button type="button" id="themeToggle" class="theme-switch" role="switch" aria-checked="false" aria-label="Activar tema oscuro">
-        <span class="theme-switch-knob"></span>
-      </button>
-    </div>
-    <div class="drawer-divider"></div>
-    <button type="button" id="backupDownloadBtn" class="account-menu-item">Descargar respaldo (JSON)</button>
-    <button type="button" id="backupRestoreBtn" class="account-menu-item">Restaurar respaldo</button>
-    <input type="file" id="backupFile" accept="application/json,.json" hidden>
-    <div class="drawer-divider"></div>
+    <div class="drawer-bal"><span>Balance disponible</span><b id="drawerBalance">$0.00</b></div>
 
-    <p class="account-menu-email" id="accountEmail"></p>
-    <button type="button" id="logoutBtn" class="account-menu-item danger">Cerrar sesión</button>
-    <div class="danger-zone">
-      <button type="button" id="resetDataBtn" class="account-menu-item danger">Borrar todos mis datos</button>
-      <p class="danger-zone-note">Borra movimientos, presupuesto, categorías, por cobrar y metas de esta cuenta. No se puede deshacer.</p>
+    <p class="drawer-sec">Navegar</p>
+    <div class="drawer-nav" id="drawerNav">
+      <button type="button" class="drawer-nav-item" data-nav="form"><svg class="dn-ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg><span>Movimientos</span></button>
+      <button type="button" class="drawer-nav-item" data-nav="resumen"><svg class="dn-ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V9M10 19V5M16 19v-7M21 19H3"/></svg><span>Resumen</span></button>
+      <button type="button" class="drawer-nav-item" data-nav="budget"><svg class="dn-ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 12V3.5M12 12l6 6"/></svg><span>Presupuesto</span></button>
+      <button type="button" class="drawer-nav-item" id="openPayBtn"><svg class="dn-ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6.5 15h4"/></svg><span>Pagar tarjeta</span></button>
+      <button type="button" class="drawer-nav-item" id="openSetupBtn"><svg class="dn-ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M16.5 7.5c-.8-1.2-2.4-1.8-4.5-1.8-2.5 0-4 1.1-4 2.8 0 4 9 1.8 9 6 0 1.7-1.7 2.8-4.5 2.8-2 0-3.7-.7-4.5-2"/></svg><span>Saldos iniciales</span></button>
+      <button type="button" class="drawer-nav-item" data-nav="metas"><svg class="dn-ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></svg><span>Metas y Proyectos</span></button>
+      <button type="button" class="drawer-nav-item" data-nav="cobrar"><svg class="dn-ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10l3 4-8 9-8-9z"/><path d="M9 11h6"/></svg><span>Por cobrar</span></button>
+      <button type="button" class="drawer-nav-item" id="openReportBtn"><svg class="dn-ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h6"/></svg><span>Reporte / Exportar</span></button>
+      <button type="button" class="drawer-nav-item" data-nav="perfil"><svg class="dn-ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c.8-4 3.8-6 7.5-6s6.7 2 7.5 6"/></svg><span>Mi perfil</span></button>
     </div>
-    <p style="text-align:center;margin-top:16px;"><a href="aviso-privacidad.html" target="_blank" style="font-size:11px;color:var(--ink-soft);">Aviso de Privacidad</a></p>
+
+    <div class="drawer-extra">
+      <button type="button" id="openHelpBtn" class="account-menu-item"><svg class="dn-ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.6 2.6 0 015 .8c0 1.8-2.5 2.2-2.5 3.9M12 17.3v.2"/></svg><span class="lbl-long">¿Cómo funciona?</span><span class="lbl-short">Ayuda</span></button>
+      <button type="button" id="backupDownloadBtn" class="account-menu-item"><svg class="dn-ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19h14"/></svg><span>Respaldo</span></button>
+      <button type="button" id="backupRestoreBtn" class="account-menu-item"><svg class="dn-ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20V9M7.5 13.5L12 9l4.5 4.5M5 5h14"/></svg><span>Restaurar</span></button>
+      <input type="file" id="backupFile" accept="application/json,.json" hidden>
+    </div>
+
+    <div class="drawer-foot">
+      <div class="drawer-theme-row">
+        <span>Tema oscuro</span>
+        <button type="button" id="themeToggle" class="theme-switch" role="switch" aria-checked="false" aria-label="Activar tema oscuro">
+          <span class="theme-switch-knob"></span>
+        </button>
+      </div>
+      <button type="button" id="logoutBtn" class="account-menu-item danger"><svg class="dn-ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4H5v16h4M16 8l4 4-4 4M20 12H9"/></svg><span>Cerrar sesión</span></button>
+      <div class="danger-zone">
+        <button type="button" id="resetDataBtn" class="account-menu-item danger small">Borrar todos mis datos</button>
+        <p class="danger-zone-note">Borra movimientos, presupuesto, categorías, por cobrar y metas de esta cuenta. No se puede deshacer.</p>
+      </div>
+      <p class="drawer-legal"><a href="aviso-privacidad.html" target="_blank">Aviso de Privacidad</a></p>
+    </div>
   </div>
 
   <div class="drawer-backdrop" id="adjBackdrop"></div>
@@ -340,7 +349,7 @@
       <h1>Finanzas Personales</h1>
       <div class="account-menu-wrap">
         <button type="button" id="accountMenuBtn" class="account-menu-btn" aria-label="Abrir menú">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M3 6h12M3 12h12"/></svg>
+          <span class="burger" aria-hidden="true"><i></i><i></i></span>
           <span class="account-menu-btn-label">Menú</span>
         </button>
       </div>
@@ -660,6 +669,7 @@
 
 </div>
 
+<script src="calc.js"></script>
 <script src="app.js"></script>
 
 </body>
