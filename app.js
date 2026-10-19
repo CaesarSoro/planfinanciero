@@ -3597,7 +3597,21 @@
     }));
   }
 
+  // Quita la pantalla de arranque (se llama cuando ya se sabe si hay sesión y, con sesión, ya cargaron los datos).
+  let bootDone = false;
+  function endBoot(){
+    if(bootDone) return; bootDone = true;
+    document.documentElement.classList.remove('booting');
+    const sp = document.getElementById('bootSplash');
+    if(sp){ sp.classList.add('fade'); setTimeout(()=>{ if(sp.parentNode) sp.parentNode.removeChild(sp); }, 400); }
+  }
+  // Red de seguridad: si Firebase no responde (sin internet, bloqueo), muestra el login en vez de quedarse cargando.
+  setTimeout(()=>{ if(!bootDone){ if(!currentUser){ els.appRoot.style.display = 'none'; els.authScreen.style.display = 'grid'; } endBoot(); } }, 8000);
+
   fbAuth.onAuthStateChanged(async (user)=>{
+    try{ await handleAuthChange(user); } finally { endBoot(); }
+  });
+  async function handleAuthChange(user){
     if(hasClaudeStorage){
       // Vista previa dentro de Claude.ai: sigue usando window.storage como siempre, sin pedir login.
       els.authScreen.style.display = 'none';
@@ -3622,7 +3636,7 @@
       els.authEmail.value = '';
       els.authPassword.value = '';
     }
-  });
+  }
 
   (function init(){
     els.periodDate.value = todayStr();

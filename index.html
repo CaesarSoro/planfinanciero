@@ -36,9 +36,18 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script>
+/* Arranque: aplica el tema guardado y oculta login/app hasta saber si hay sesión (evita el "parpadeo" del login). */
+(function(){try{if(localStorage.getItem('libro-cuentas:theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}document.documentElement.classList.add('booting');})();
+</script>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+
+<div id="bootSplash" class="boot-splash" role="status" aria-label="Cargando">
+  <div class="boot-brand">Finanzas Personales</div>
+  <div class="boot-bar" aria-hidden="true"><i></i></div>
+</div>
 
 <div id="authScreen" class="auth-screen">
   <section class="auth-card">
