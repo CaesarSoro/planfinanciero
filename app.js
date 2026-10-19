@@ -2557,12 +2557,8 @@
         <div class="cat-amount">${fmt0.format(amt)} <span class="cat-pct">${pct}%</span></div>
       </div>`;
     };
-    if(entries.length <= limit + 1) return '<div class="rbars">' + entries.map(r=>row(r)).join('') + '</div>';
-    const head = entries.slice(0, limit), rest = entries.slice(limit);
-    const otras = [`Otras (${rest.length})`, rest.reduce((s,[,v])=> s + v, 0)];
-    return '<div class="rbars">' + head.map(r=>row(r)).join('') +
-      `<button type="button" class="rbars-more-btn" aria-expanded="false">${row(otras)}<span class="rbars-more-hint">Ver ${rest.length} más ▾</span></button>` +
-      `<div class="rbars-more" style="display:none;">${rest.map(r=>row(r)).join('')}</div></div>`;
+    // Se muestran todas las filas, sin colapsar en "Otras".
+    return '<div class="rbars">' + entries.map(r=>row(r)).join('') + '</div>';
   }
   function computeCategoryBreakdownByGroup(groupName){
     const map = _expenseCache.byGroupCategory[groupName] || {};
