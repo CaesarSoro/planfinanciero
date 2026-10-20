@@ -158,6 +158,19 @@
     {key:"inversiones", label:"Inversiones y seguros"},
     {key:"ingresos", label:"Ingresos fijos"},
   ];
+  const BUDGET_GROUP_STYLE = {
+    fijos:{ color:'var(--c-fijos)' }, variables:{ color:'var(--c-var)' },
+    inversiones:{ color:'var(--c-inv)' }, ingresos:{ color:'var(--c-ing)' }
+  };
+  const BUDGET_SUGGESTIONS = {
+    fijos:['Renta','Luz','Agua','Internet','Celular','Seguro'],
+    variables:['Súper','Gasolina','Salidas','Ropa'],
+    inversiones:['Seguro de auto','Seguro de vida','Inversión mensual'],
+    ingresos:['Nómina','Freelance','Otros ingresos']
+  };
+  // Grupos que cerraste en web (en móvil todo va abierto). Se recuerda en este navegador.
+  let budgetCollapsed = new Set();
+  try{ budgetCollapsed = new Set(JSON.parse(localStorage.getItem('budgetCollapsed') || '[]')); }catch(e){}
   const FREQ_LABELS = {mensual:"Mensual", bimestral:"Bimestral", trimestral:"Trimestral", cuatrimestral:"Cuatrimestral", semestral:"Semestral", anual:"Anual"};
   const FREQ_MONTHS = {mensual:1, bimestral:2, trimestral:3, cuatrimestral:4, semestral:6, anual:12};
 
@@ -1697,7 +1710,7 @@
     render();
   }
 
-  function renderBudgetGroup(meta){
+  function renderBudgetGroup(meta, row, idx){
     const items = budget[meta.key] || [];
     const total = groupTotal(meta.key);
     const rows = items.length
@@ -1725,7 +1738,7 @@
           <div class="budget-row-main">
             <button type="button" class="budget-row-toggle" data-toggle="${itemKey}">
               <span class="budget-name">${escapeHtml(i.nombre)}</span>
-              <span class="budget-equiv-compact">${fmt.format(monthlyEq(i))}${i.frecuencia !== 'mensual' ? '<span class="budget-equiv-note">/mes eq.</span>' : ''}</span>
+              <span class="budget-equiv-compact">${fmt0.format(monthlyEq(i))}${i.frecuencia !== 'mensual' ? '<span class="budget-equiv-note">/mes</span>' : ''}</span>
               <span class="budget-caret">${isOpen ? '▴' : '▾'}</span>
             </button>
             <div class="budget-row-actions">
@@ -1735,37 +1748,59 @@
           </div>
           <div class="budget-row-detail" style="display:${isOpen ? 'block' : 'none'};">
             <div class="budget-detail-line"><span>Frecuencia</span><span>${FREQ_LABELS[i.frecuencia] || i.frecuencia}</span></div>
-            <div class="budget-detail-line"><span>Costo (${FREQ_LABELS[i.frecuencia] || i.frecuencia})</span><span>${fmt.format(i.costo)}</span></div>
-            ${i.frecuencia !== 'mensual' ? `<div class="budget-detail-line"><span>Equivalente mensual</span><span>${fmt.format(monthlyEq(i))}</span></div>` : ''}
+            <div class="budget-detail-line"><span>Costo (${FREQ_LABELS[i.frecuencia] || i.frecuencia})</span><span>${fmt0.format(i.costo)}</span></div>
+            ${i.frecuencia !== 'mensual' ? `<div class="budget-detail-line"><span>Equivalente mensual</span><span>${fmt0.format(monthlyEq(i))}</span></div>` : ''}
           </div>
         </div>`;
         }).join('')
-      : `<p class="ledger-empty" style="padding:10px 0;">Sin elementos todavía.</p>`;
-
-    const syncBtn = meta.key === 'variables'
-      ? `<button type="button" id="syncMsiBtn" class="manage-cat-link" style="display:block;margin:2px 0 4px;">↻ Sincronizar mensualidades de MSI activos</button>
-         <p class="backup-note" style="margin-bottom:10px;">Crea o actualiza una línea aquí por cada MSI que no hayas terminado de pagar, con su mensualidad. Se quita sola cuando el MSI se liquida.</p>`
       : '';
 
-    return `<div class="budget-group" data-key="${meta.key}">
-      <div class="budget-group-title">
-        <span>${meta.label}</span>
-        <span class="subtotal">${fmt.format(total)}/mes</span>
-      </div>
-      ${syncBtn}
-      <div class="budget-rows-scroll">${rows}</div>
-      <div class="budget-add-row">
-        <input type="text" placeholder="Nombre" class="b-name" data-group="${meta.key}">
-        <input type="number" placeholder="Costo" min="0" step="0.01" class="b-cost" data-group="${meta.key}">
-        <select class="b-freq" data-group="${meta.key}">
-          <option value="mensual">Mensual</option>
-          <option value="bimestral">Bimestral</option>
-          <option value="trimestral">Trimestral</option>
-          <option value="cuatrimestral">Cuatrimestral</option>
-          <option value="semestral">Semestral</option>
-          <option value="anual">Anual</option>
-        </select>
-        <button type="button" class="b-add" data-group="${meta.key}">Agregar</button>
+    const cfg = BUDGET_GROUP_STYLE[meta.key];
+    const presu = row ? row.presu : 0, real = row ? row.real : 0;
+    const isIncome = meta.key === 'ingresos';
+    const hasPlan = presu > 0.005;
+    const pct = hasPlan ? Math.round((real / presu) * 100) : 0;
+    const over = !isIncome && hasPlan && real > presu + 0.005;
+    const diff = real - presu;
+    let chip;
+    if(!hasPlan) chip = real > 0.005 ? { cls:'mid', txt:'Sin plan · ' + fmt0.format(real) } : { cls:'mid', txt:'Sin plan' };
+    else if(isIncome) chip = real + 0.005 >= presu ? { cls:'ok', txt:'Al día' } : { cls:'mid', txt:'Faltan ' + fmt0.format(presu - real) };
+    else chip = over ? { cls:'bad', txt:'+' + fmt0.format(diff) + ' de más' } : { cls:'ok', txt:'Dentro del plan' };
+    const collapsed = budgetCollapsed.has(meta.key);
+    const ringTxt = hasPlan ? Math.min(pct, 999) + '%' : '—';
+
+    const syncBtn = meta.key === 'variables'
+      ? `<button type="button" id="syncMsiBtn" class="bgc-sync" title="Crea o actualiza una línea por cada MSI que no hayas terminado de pagar, con su mensualidad. Se quita sola cuando el MSI se liquida.">↻ Sincronizar MSI activos</button>`
+      : '';
+    const suggestions = items.length === 0
+      ? `<p class="bgc-empty-t">Empieza con lo más común:</p><div class="bgc-sugg">${BUDGET_SUGGESTIONS[meta.key].map(n=>`<button type="button" class="bgc-sugg-chip" data-group="${meta.key}" data-name="${escapeHtml(n)}">+ ${escapeHtml(n)}</button>`).join('')}</div>`
+      : '';
+    const rowsHtml = items.length ? rows : '';
+
+    return `<div class="bgc i${idx}${collapsed ? ' collapsed' : ''}" data-key="${meta.key}" style="--c:${cfg.color};--rc:${over ? 'var(--expense)' : cfg.color};--p:${hasPlan ? Math.min(100, pct) : 0};">
+      <button type="button" class="bgc-head" data-key="${meta.key}" aria-expanded="${!collapsed}">
+        <span class="bgc-ring"><b class="mono">${ringTxt}</b></span>
+        <span class="bgc-t"><span class="bgc-nm">${meta.label}</span><span class="bgc-am mono">${fmt0.format(real)}</span><span class="bgc-sm">de ${fmt0.format(presu)}</span></span>
+        <span class="bgc-chev" aria-hidden="true">⌃</span>
+        <span class="chip ${chip.cls} bgc-chip">${chip.txt}</span>
+      </button>
+      <div class="bgc-body">
+        ${syncBtn}
+        <div class="budget-rows-scroll">${rowsHtml}${suggestions}</div>
+        <button type="button" class="bgc-addbtn" data-group="${meta.key}">${items.length === 0 ? '+ Otro renglón' : '+ Agregar renglón'}</button>
+        <div class="budget-add-row" data-group="${meta.key}" style="display:none;">
+          <input type="text" placeholder="Nombre" aria-label="Nombre" class="b-name" data-group="${meta.key}">
+          <input type="number" inputmode="decimal" placeholder="Costo" aria-label="Costo" min="0" step="0.01" class="b-cost" data-group="${meta.key}">
+          <select class="b-freq" aria-label="Frecuencia" data-group="${meta.key}">
+            <option value="mensual">Mensual</option>
+            <option value="bimestral">Bimestral</option>
+            <option value="trimestral">Trimestral</option>
+            <option value="cuatrimestral">Cuatrimestral</option>
+            <option value="semestral">Semestral</option>
+            <option value="anual">Anual</option>
+          </select>
+          <button type="button" class="b-add" data-group="${meta.key}">Agregar</button>
+        </div>
       </div>
     </div>`;
   }
@@ -1838,25 +1873,32 @@
     const totalInversiones = groupTotal('inversiones');
     const totalIngresos = groupTotal('ingresos');
     const { realFijos, realVariables, realInversiones, realIngresos } = computeRealTotals();
-
     // Por categoría: usa lo Real si ya hay movimientos registrados este periodo;
-    // si aún no hay nada real, cae al Presupuestado como estimado. Así el balance
-    // se va volviendo más preciso conforme avanza el mes, en vez de asumir siempre
-    // el peor caso (gastar el 100% de lo presupuestado desde el día 1).
+    // si aún no hay nada real, cae al Presupuestado como estimado.
     const ingresosEfectivos = realIngresos > 0 ? realIngresos : totalIngresos;
     const fijosEfectivos = realFijos > 0 ? realFijos : totalFijos;
     const variablesEfectivos = realVariables > 0 ? realVariables : totalVariables;
     const inversionesEfectivos = realInversiones > 0 ? realInversiones : totalInversiones;
-    const balanceRestante = ingresosEfectivos - (fijosEfectivos + variablesEfectivos + inversionesEfectivos);
-
-    return `<div class="budget-summary">
-      <div class="b-item" style="border-left-color:var(--expense);"><span class="lbl">Fijos/mes</span><span class="val" style="color:var(--expense);">${fmt.format(totalFijos)}</span></div>
-      <div class="b-item" style="border-left-color:#A15C4A;"><span class="lbl">Variables/mes</span><span class="val" style="color:#A15C4A;">${fmt.format(totalVariables)}</span></div>
-      <div class="b-item" style="border-left-color:var(--gold);"><span class="lbl">Inversiones y seguros/mes</span><span class="val" style="color:var(--gold);">${fmt.format(totalInversiones)}</span></div>
-      <div class="b-item" style="border-left-color:var(--income);"><span class="lbl">Ingresos fijos/mes</span><span class="val" style="color:var(--income);">${fmt.format(totalIngresos)}</span></div>
-      <div class="b-item balance" style="border-left-color:${balanceRestante>=0?'var(--income)':'var(--expense)'};"><span class="lbl">Balance restante del mes<button type="button" class="help-icon" data-help="real">?</button></span><span class="val" style="color:${balanceRestante>=0?'var(--income)':'var(--expense)'};">${fmt.format(balanceRestante)}</span></div>
-    </div>
-    ${buildBudgetCompareHtml()}`;
+    const gastos = fijosEfectivos + variablesEfectivos + inversionesEfectivos;
+    const balanceRestante = ingresosEfectivos - gastos;
+    const none = ingresosEfectivos === 0 && gastos === 0;
+    const base = Math.max(ingresosEfectivos, gastos, 1);
+    const w = v => Math.max(0, (v / base) * 100).toFixed(1);
+    const per = periodMode === 'todo' ? 'todo el historial' : periodLabel();
+    if(none){
+      return `<div class="bplan"><div class="bplan-lbl">Tu plan · ${escapeHtml(per)}<button type="button" class="help-icon" data-help="real">?</button></div>
+        <p class="bplan-empty">Agrega tus gastos fijos e ingresos para ver cuánto te sobra cada mes.</p></div>`;
+    }
+    const pos = balanceRestante >= 0;
+    return `<div class="bplan">
+      <div class="bplan-lbl">Tu plan · ${escapeHtml(per)}<button type="button" class="help-icon" data-help="real">?</button></div>
+      <div class="bplan-main">
+        <div><div class="bplan-sub">${pos ? 'Te sobra' : 'Te faltan'} al mes</div><div class="bplan-big mono ${pos ? 'pos' : 'neg'}">${fmt0.format(Math.abs(balanceRestante))}</div></div>
+        <div class="bplan-inc">Ingresos fijos<span class="mono">${fmt0.format(ingresosEfectivos)}</span></div>
+      </div>
+      <div class="bplan-seg" aria-hidden="true"><i style="width:${w(fijosEfectivos)}%;background:var(--c-fijos)"></i><i style="width:${w(variablesEfectivos)}%;background:var(--c-var)"></i><i style="width:${w(inversionesEfectivos)}%;background:var(--c-inv)"></i></div>
+      <div class="bplan-leg"><span style="--c:var(--c-fijos)">Fijos ${fmt0.format(fijosEfectivos)}</span><span style="--c:var(--c-var)">Variables ${fmt0.format(variablesEfectivos)}</span><span style="--c:var(--c-inv)">Inversión ${fmt0.format(inversionesEfectivos)}</span>${pos && balanceRestante > 0 ? `<span style="--c:var(--line)">Sobra ${fmt0.format(balanceRestante)}</span>` : ''}</div>
+    </div>`;
   }
 
   function buildTravelBudgetsHtml(){
@@ -2007,7 +2049,11 @@
   }
 
   function renderBudget(){
-    let html = buildBudgetSummaryHtml() + '<div class="budget-groups-wrap">' + BUDGET_GROUP_META.map(renderBudgetGroup).join('') + '</div>';
+    const vsRows = computeBudgetVsRealRows();
+    const notes = `<details class="b-notes"><summary>Cómo se calcula</summary>
+      <p>"Inversiones y seguros" solo compara categorías de gasto que hayas clasificado así al crearlas.</p>
+      <p>Si tienes gastos que no son mensuales (bimestrales, trimestrales, cuatrimestrales, semestrales o anuales, como seguros), Presupuestado normalmente muestra su equivalente mensual, pero Real muestra el cobro completo solo en el mes que se aplica. Cambia el filtro de periodo a "Año" para comparar el total anual de ambos de forma justa.</p></details>`;
+    let html = buildBudgetSummaryHtml() + '<div class="bg-grid">' + BUDGET_GROUP_META.map((m,i)=> renderBudgetGroup(m, vsRows[i], i)).join('') + '</div>' + notes;
     els.budgetPanel.innerHTML = html;
 
     const syncMsiBtn = els.budgetPanel.querySelector('#syncMsiBtn');
@@ -2069,6 +2115,42 @@
         const costo = parseFloat(costInput.value);
         if(!nombre || !costo || costo <= 0) return;
         addBudgetItem(g, nombre, costo, freqInput.value);
+      });
+    });
+    // Encabezado de cada grupo: en web (≥900px) permite cerrar/abrir; en móvil todo va abierto.
+    els.budgetPanel.querySelectorAll('.bgc-head').forEach(h=>{
+      h.addEventListener('click', ()=>{
+        if(!window.matchMedia('(min-width:900px)').matches) return;
+        const key = h.dataset.key, card = h.closest('.bgc');
+        const nowCollapsed = !budgetCollapsed.has(key);
+        if(nowCollapsed) budgetCollapsed.add(key); else budgetCollapsed.delete(key);
+        card.classList.toggle('collapsed', nowCollapsed);
+        h.setAttribute('aria-expanded', String(!nowCollapsed));
+        try{ localStorage.setItem('budgetCollapsed', JSON.stringify([...budgetCollapsed])); }catch(e){}
+      });
+    });
+    // "+ Agregar renglón": muestra la fila de captura
+    els.budgetPanel.querySelectorAll('.bgc-addbtn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const row = els.budgetPanel.querySelector(`.budget-add-row[data-group="${btn.dataset.group}"]`);
+        if(!row) return;
+        row.style.display = '';
+        btn.style.display = 'none';
+        const n = row.querySelector('.b-name'); if(n) n.focus();
+      });
+    });
+    // Sugerencias de un toque (grupo vacío): rellenan el nombre y piden el costo
+    els.budgetPanel.querySelectorAll('.bgc-sugg-chip').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const g = btn.dataset.group;
+        const n = els.budgetPanel.querySelector(`.b-name[data-group="${g}"]`);
+        const c = els.budgetPanel.querySelector(`.b-cost[data-group="${g}"]`);
+        const row = els.budgetPanel.querySelector(`.budget-add-row[data-group="${g}"]`);
+        const ab = els.budgetPanel.querySelector(`.bgc-addbtn[data-group="${g}"]`);
+        if(row) row.style.display = '';
+        if(ab) ab.style.display = 'none';
+        if(n) n.value = btn.dataset.name;
+        if(c) c.focus();
       });
     });
   }
